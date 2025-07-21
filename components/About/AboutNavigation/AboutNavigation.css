@@ -1,0 +1,194 @@
+/* 좌측 사이드바 네비게이션 전체 스타일 */
+
+.about-nav-section {
+  width: 280px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 120px;
+  height: fit-content;
+}
+
+/* 네비게이션 컨테이너 박스 스타일 */
+.about-navigation {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 32px 24px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* 네비게이션 제목 ("둘러보기") 스타일 */
+.about-nav-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  color: #111827;
+  text-align: center;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #8b5a3c;
+}
+
+/* 네비게이션 메뉴 리스트 스타일 */
+.about-nav-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  counter-reset: about-nav-counter;
+}
+
+/* 각 네비게이션 버튼 스타일 */
+.about-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 16px 20px;
+  border: none;
+  background: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  color: #374151;
+  transition: all 0.3s ease;
+  margin-bottom: 8px;
+  text-align: left;
+  position: relative;
+  border-left: 3px solid transparent;
+}
+
+/* 네비게이션 버튼 호버 효과 */
+.about-nav-item:hover {
+  background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f4 100%);
+  color: #8b5a3c;
+  transform: translateX(4px);
+  border-left-color: #8b5a3c;
+  box-shadow: 0 2px 8px rgba(139, 90, 60, 0.1);
+}
+
+/* 현재 활성 섹션 버튼 스타일 */
+.about-nav-item.active {
+  background: linear-gradient(135deg, #8b5a3c 0%, #7c4d34 100%);
+  color: white;
+  border-left-color: #6d3d26;
+  box-shadow: 0 4px 12px rgba(139, 90, 60, 0.3);
+}
+
+.about-nav-item.active .about-nav-icon {
+  filter: brightness(0) invert(1);
+}
+
+/* 네비게이션 아이콘 스타일 */
+.about-nav-icon {
+  font-size: 18px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(139, 90, 60, 0.1);
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.about-nav-item:hover .about-nav-icon {
+  background: rgba(139, 90, 60, 0.2);
+  transform: scale(1.1);
+}
+
+.about-nav-item.active .about-nav-icon {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* 네비게이션 텍스트 스타일 */
+.about-nav-text {
+  flex: 1;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+/* 번호 표시 스타일 (호버시 나타남) */
+.about-nav-item::before {
+  content: counter(about-nav-counter);
+  counter-increment: about-nav-counter;
+  position: absolute;
+  left: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  background: #8b5a3c;
+  color: white;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.about-nav-item:hover::before {
+  opacity: 1;
+  left: -12px;
+}
+
+.about-nav-item.active::before {
+  opacity: 1;
+  left: -12px;
+  background: white;
+  color: #8b5a3c;
+}
+
+/* 반응형 디자인 - 모바일에서는 가로 스크롤 메뉴로 변경 */
+@media (max-width: 1024px) {
+  .about-nav-section {
+    width: 260px;
+  }
+}
+
+@media (max-width: 768px) {
+  .about-nav-section {
+    width: 100%;
+    position: static;
+    order: 2;
+  }
+  
+  .about-navigation {
+    padding: 20px 16px;
+  }
+  
+  .about-nav-menu {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 8px;
+    padding-bottom: 8px;
+  }
+  
+  .about-nav-item {
+    white-space: nowrap;
+    min-width: fit-content;
+    flex-shrink: 0;
+    padding: 12px 16px;
+    margin-bottom: 0;
+    border-left: none;
+    border-bottom: 3px solid transparent;
+  }
+  
+  .about-nav-item:hover,
+  .about-nav-item.active {
+    transform: none;
+    border-left: none;
+    border-bottom-color: #8b5a3c;
+  }
+  
+  .about-nav-item::before {
+    display: none;
+  }
+}
