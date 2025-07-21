@@ -1,0 +1,288 @@
+/* UserSignupForm.css - 일반 사용자 회원가입 폼 전용 스타일 */
+
+.user-signup-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 40px 20px;
+}
+
+.user-signup-content {
+  width: 100%;
+  max-width: 600px;
+  position: relative;
+}
+
+.user-signup-title {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 32px;
+  margin-top: 20px;
+}
+
+.user-signup-form {
+  background: white;
+  border-radius: 16px;
+  padding: 40px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* 일반 사용자용 특별 스타일 */
+.user-form-group {
+  margin-bottom: 24px;
+}
+
+.user-form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.user-form-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: all 0.2s ease;
+  background-color: #ffffff;
+  box-sizing: border-box;
+}
+
+.user-form-input:focus {
+  outline: none;
+  border-color: #8b5a3c;
+  box-shadow: 0 0 0 3px rgba(139, 90, 60, 0.1);
+}
+
+.user-form-input.error {
+  border-color: #ef4444;
+  background-color: #fef2f2;
+}
+
+.user-form-input.success {
+  border-color: #10b981;
+  background-color: #f0fdf4;
+}
+
+.user-form-input::placeholder {
+  color: #9ca3af;
+}
+
+/* 이메일 중복확인 - 일반 사용자용 */
+.user-email-input-group {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.user-email-input-group .user-form-input {
+  flex: 1;
+}
+
+.user-email-check-btn {
+  padding: 14px 20px;
+  background-color: #8b5a3c;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  min-width: 100px;
+}
+
+.user-email-check-btn:hover:not(:disabled) {
+  background-color: #7c4d34;
+  transform: translateY(-1px);
+}
+
+.user-email-check-btn:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 체크박스 - 일반 사용자용 */
+.user-checkbox-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.user-checkbox-input {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #d1d5db;
+  border-radius: 4px;
+  cursor: pointer;
+  appearance: none;
+  position: relative;
+  background-color: #ffffff;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.user-checkbox-input:checked {
+  background-color: #8b5a3c;
+  border-color: #8b5a3c;
+}
+
+.user-checkbox-input:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.user-checkbox-label {
+  font-size: 14px;
+  color: #374151;
+  cursor: pointer;
+  line-height: 1.5;
+}
+
+/* 에러 및 성공 메시지 */
+.user-error-message {
+  display: block;
+  color: #ef4444;
+  font-size: 13px;
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+.user-success-message {
+  display: block;
+  color: #10b981;
+  font-size: 13px;
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+/* 제출 버튼 - 일반 사용자용 */
+.user-submit-button {
+  width: 100%;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, #8b5a3c, #7c4d34);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 16px;
+  box-shadow: 0 4px 8px rgba(139, 90, 60, 0.3);
+}
+
+.user-submit-button:hover {
+  background: linear-gradient(135deg, #7c4d34, #6d3f2a);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(139, 90, 60, 0.4);
+}
+
+.user-submit-button:active {
+  transform: translateY(0);
+}
+
+/* 뒤로가기 버튼 */
+.user-back-button {
+  position: absolute;
+  top: -10px;
+  left: 0;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 12px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.user-back-button:hover {
+  background-color: rgba(107, 114, 128, 0.1);
+  color: #374151;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .user-signup-container {
+    padding: 20px 16px;
+  }
+  
+  .user-signup-title {
+    font-size: 1.75rem;
+  }
+  
+  .user-signup-form {
+    padding: 32px 24px;
+  }
+  
+  .user-email-input-group {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .user-email-check-btn {
+    width: 100%;
+    min-width: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .user-signup-container {
+    padding: 16px 12px;
+  }
+  
+  .user-signup-title {
+    font-size: 1.5rem;
+    margin-bottom: 24px;
+  }
+  
+  .user-signup-form {
+    padding: 24px 20px;
+  }
+  
+  .user-form-group {
+    margin-bottom: 20px;
+  }
+  
+  .user-form-input,
+  .user-email-check-btn,
+  .user-submit-button {
+    padding: 12px 16px;
+  }
+}
+
+/* 접근성 개선 */
+@media (prefers-reduced-motion: reduce) {
+  .user-form-input,
+  .user-email-check-btn,
+  .user-submit-button,
+  .user-back-button {
+    transition: none;
+  }
+}
+
+/* 포커스 표시 개선 */
+.user-form-input:focus,
+.user-email-check-btn:focus,
+.user-submit-button:focus,
+.user-checkbox-input:focus {
+  outline: 2px solid #8b5a3c;
+  outline-offset: 2px;
+}
