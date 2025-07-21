@@ -1,0 +1,237 @@
+/* 좌측 네비게이션 섹션 */
+.brewery-nav-section {
+  width: 280px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 120px; 
+  height: fit-content;
+}
+
+/* 네비게이션 메인 컨테이너 */
+.brewery-navigation {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 32px 24px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* 네비게이션 제목 */
+.brewery-nav-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  color: #111827;
+  text-align: center;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #8b5a3c;
+}
+
+/* 네비게이션 메뉴 리스트 */
+.brewery-nav-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  counter-reset: brewery-nav-counter;
+}
+
+/* 각 네비게이션 아이템 */
+.brewery-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 16px 20px;
+  border: none;
+  background: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  color: #374151;
+  transition: all 0.3s ease;
+  margin-bottom: 8px;
+  text-align: left;
+  position: relative;
+  border-left: 3px solid transparent;
+}
+
+/* 네비게이션 아이템 호버 효과 */
+.brewery-nav-item:hover {
+  background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f4 100%);
+  color: #8b5a3c;
+  transform: translateX(4px);
+  border-left-color: #8b5a3c;
+  box-shadow: 0 2px 8px rgba(139, 90, 60, 0.1);
+}
+
+.brewery-nav-item:active {
+  transform: translateX(2px);
+  background: #f3f4f6;
+}
+
+/* 현재 활성 섹션 스타일 */
+.brewery-nav-item.active {
+  background: linear-gradient(135deg, #8b5a3c 0%, #7c4d34 100%);
+  color: white;
+  border-left-color: #6d3d26;
+  box-shadow: 0 4px 12px rgba(139, 90, 60, 0.3);
+}
+
+.brewery-nav-item.active .brewery-nav-icon {
+  filter: brightness(0) invert(1);
+}
+
+/* 네비게이션 아이콘 */
+.brewery-nav-icon {
+  font-size: 18px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(139, 90, 60, 0.1);
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.brewery-nav-item:hover .brewery-nav-icon {
+  background: rgba(139, 90, 60, 0.2);
+  transform: scale(1.1);
+}
+
+.brewery-nav-item.active .brewery-nav-icon {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* 네비게이션 텍스트 */
+.brewery-nav-text {
+  flex: 1;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+/* 네비게이션 아이템 번호 (호버시 표시) */
+.brewery-nav-item::before {
+  content: counter(brewery-nav-counter);
+  counter-increment: brewery-nav-counter;
+  position: absolute;
+  left: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  background: #8b5a3c;
+  color: white;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.brewery-nav-item:hover::before {
+  opacity: 1;
+  left: -12px;
+}
+
+.brewery-nav-item.active::before {
+  opacity: 1;
+  left: -12px;
+  background: white;
+  color: #8b5a3c;
+}
+
+/* 태블릿 반응형 */
+@media (max-width: 1024px) {
+  .brewery-nav-section {
+    width: 260px;
+  }
+  
+  .brewery-navigation {
+    padding: 24px 20px;
+  }
+  
+  .brewery-nav-title {
+    font-size: 18px;
+    margin-bottom: 20px;
+  }
+  
+  .brewery-nav-item {
+    padding: 14px 16px;
+    font-size: 14px;
+  }
+  
+  .brewery-nav-icon {
+    font-size: 16px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* 모바일 반응형 - 가로 스크롤 네비게이션 */
+@media (max-width: 768px) {
+  .brewery-nav-section {
+    width: 100%;
+    position: static;
+    order: 2;
+  }
+  
+  .brewery-navigation {
+    padding: 20px 16px;
+  }
+  
+  .brewery-nav-menu {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 8px;
+    padding-bottom: 8px;
+  }
+  
+  .brewery-nav-item {
+    white-space: nowrap;
+    min-width: fit-content;
+    flex-shrink: 0;
+    padding: 12px 16px;
+    margin-bottom: 0;
+    border-left: none;
+    border-bottom: 3px solid transparent;
+  }
+  
+  .brewery-nav-item:hover,
+  .brewery-nav-item.active {
+    transform: none;
+    border-left: none;
+    border-bottom-color: #8b5a3c;
+  }
+  
+  .brewery-nav-item::before {
+    display: none;
+  }
+}
+
+/* 작은 모바일 반응형 */
+@media (max-width: 480px) {
+  .brewery-nav-menu {
+    gap: 4px;
+  }
+  
+  .brewery-nav-item {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+  
+  .brewery-nav-icon {
+    font-size: 14px;
+    width: 18px;
+    height: 18px;
+  }
+}

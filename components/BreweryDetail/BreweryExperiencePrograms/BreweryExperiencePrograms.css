@@ -1,0 +1,192 @@
+/* 체험 프로그램 그리드 */
+.brewery-experience-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+/* 각 체험 프로그램 카드 */
+.brewery-experience-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+/* 카드 호버 효과 */
+.brewery-experience-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* 프로그램 헤더 (제목 + 가격) */
+.brewery-experience-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+/* 프로그램 제목 */
+.brewery-experience-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+  flex: 1;
+}
+
+/* 프로그램 가격 */
+.brewery-experience-price {
+  font-size: 18px;
+  font-weight: 700;
+  color: #8b5a3c;
+  margin-left: 12px;
+}
+
+/* 프로그램 장소 */
+.brewery-experience-place {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 12px;
+}
+
+/* 장소 아이콘 */
+.brewery-place-icon {
+  font-size: 16px;
+}
+
+/* 프로그램 설명 */
+.brewery-experience-description {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #374151;
+  margin: 0 0 20px 0;
+}
+
+/* 예약하기 버튼 */
+.brewery-experience-reserve-btn {
+  width: 100%;
+  background: #8b5a3c;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.brewery-experience-reserve-btn:hover {
+  background: #7c4d34;
+  transform: translateY(-1px);
+}
+
+/* 빈 상태 (체험 프로그램이 없을 때) */
+.brewery-empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6b7280;
+}
+
+.brewery-empty-state p {
+  font-size: 16px;
+  margin: 0 0 8px 0;
+}
+
+.brewery-empty-state small {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+/* 예약 모달 래퍼 */
+.reservation-modal-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
+  overflow-y: auto;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 예약 모달 내부 콘텐츠 스타일 */
+.reservation-modal-wrapper .experience-reservation {
+  background-color: #f9fafb;
+  min-height: 100vh;
+  padding: 20px;
+  margin: 0;
+  max-width: none;
+}
+
+/* 모달 내 콘텐츠 최대 너비 설정 */
+.reservation-modal-wrapper .reservation-content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* 모바일 반응형 - 1열로 변경 */
+@media (max-width: 768px) {
+  .brewery-experience-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .reservation-modal-wrapper .experience-reservation {
+    padding: 12px;
+  }
+}
+
+/* 작은 모바일 반응형 */
+@media (max-width: 480px) {
+  .brewery-experience-card {
+    padding: 16px;
+  }
+  
+  .brewery-experience-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .brewery-experience-price {
+    margin-left: 0;
+  }
+
+  .reservation-modal-wrapper .experience-reservation {
+    padding: 8px;
+  }
+}
+
+/* 접근성 - 모션 줄이기 */
+@media (prefers-reduced-motion: reduce) {
+  .brewery-experience-card,
+  .brewery-experience-reserve-btn,
+  .reservation-modal-wrapper {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* 포커스 스타일 */
+.brewery-experience-reserve-btn:focus {
+  outline: 2px solid #8b5a3c;
+  outline-offset: 2px;
+}

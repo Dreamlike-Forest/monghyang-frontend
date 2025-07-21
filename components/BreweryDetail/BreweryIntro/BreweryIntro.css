@@ -1,0 +1,77 @@
+/* 양조장 소개 컨테이너 */
+.brewery-intro-content {
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+/* 소개 설명 영역 */
+.brewery-intro-description {
+  margin-bottom: 24px;
+}
+
+.brewery-intro-description p {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #374151;
+  margin: 0;
+}
+
+/* 상세 정보 2열 그리드 */
+.brewery-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* 각 정보 항목 */
+.brewery-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* 정보 라벨 */
+.brewery-detail-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* 정보 값 */
+.brewery-detail-value {
+  font-size: 14px;
+  color: #111827;
+  font-weight: 500;
+}
+
+/* 링크 스타일 */
+.brewery-detail-link {
+  font-size: 14px;
+  color: #8b5a3c;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.brewery-detail-link:hover {
+  color: #7c4d34;
+  text-decoration: underline;
+}
+
+/* 태블릿 반응형 - 1열로 변경 */
+@media (max-width: 1024px) {
+  .brewery-detail-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+/* 작은 모바일 반응형 */
+@media (max-width: 480px) {
+  .brewery-intro-content {
+    padding: 16px;
+  }
+}
