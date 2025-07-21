@@ -1,0 +1,162 @@
+/* 체험 선택 컨테이너 */
+.reservation-experience-selector {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+/* 체험 프로그램 목록 */
+.reservation-experience-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 각 체험 프로그램 옵션 */
+.reservation-experience-option {
+  width: 100%;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.reservation-experience-option:hover {
+  border-color: #8b5a3c;
+  box-shadow: 0 4px 12px rgba(139, 90, 60, 0.1);
+}
+
+/* 선택된 체험 프로그램 */
+.reservation-experience-option.selected {
+  border-color: #8b5a3c;
+  background: #fefbf7;
+  box-shadow: 0 4px 12px rgba(139, 90, 60, 0.15);
+}
+
+/* 체험 프로그램 콘텐츠 */
+.reservation-experience-option-content {
+  width: 100%;
+}
+
+/* 체험 프로그램 헤더 (제목 + 가격) */
+.reservation-experience-option-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+  gap: 16px;
+}
+
+/* 체험 프로그램명 */
+.reservation-experience-option-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+  flex: 1;
+}
+
+/* 체험 프로그램 가격 */
+.reservation-experience-option-price {
+  font-size: 18px;
+  font-weight: 700;
+  color: #8b5a3c;
+  white-space: nowrap;
+}
+
+/* 체험 장소 */
+.reservation-experience-option-place {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.reservation-experience-place-icon {
+  font-size: 14px;
+}
+
+/* 체험 프로그램 상세 설명 */
+.reservation-experience-option-detail {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #374151;
+  margin: 0;
+}
+
+/* 빈 상태 (체험 프로그램이 없을 때) */
+.reservation-experience-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6b7280;
+}
+
+.reservation-experience-empty p {
+  font-size: 16px;
+  margin: 0;
+}
+
+/* 에러 메시지 */
+.reservation-experience-error {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  color: #dc2626;
+  font-size: 14px;
+}
+
+/* 선택된 상태 강조 효과 */
+.reservation-experience-option.selected .reservation-experience-option-name {
+  color: #8b5a3c;
+}
+
+.reservation-experience-option.selected .reservation-experience-option-price {
+  color: #7c4d34;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+  .reservation-experience-selector {
+    padding: 16px;
+  }
+
+  .reservation-experience-option {
+    padding: 16px;
+  }
+
+  .reservation-experience-option-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .reservation-experience-option-price {
+    font-size: 16px;
+  }
+
+  .reservation-experience-option-name {
+    font-size: 16px;
+  }
+}
+
+/* 접근성 - 모션 줄이기 */
+@media (prefers-reduced-motion: reduce) {
+  .reservation-experience-option {
+    transition: none;
+  }
+}
+
+/* 포커스 스타일 */
+.reservation-experience-option:focus {
+  outline: 2px solid #8b5a3c;
+  outline-offset: 2px;
+}

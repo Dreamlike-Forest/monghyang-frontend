@@ -1,0 +1,295 @@
+/* 예약 완료 모달 오버레이 */
+.reservation-success-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+  backdrop-filter: blur(2px);
+  pointer-events: auto;
+  opacity: 1;
+  visibility: visible;
+}
+
+/* 모달 콘텐츠 */
+.reservation-success-modal-content {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
+  animation: reservationSuccessModalSlideUp 0.3s ease-out;
+  pointer-events: auto;
+  position: relative;
+  transform: scale(1);
+  z-index: 1000000;
+}
+
+@keyframes reservationSuccessModalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 모달 헤더 */
+.reservation-success-modal-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+/* 성공 아이콘 */
+.reservation-success-icon {
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: bold;
+  margin: 0 auto 16px;
+  box-shadow: 0 8px 16px rgba(16, 185, 129, 0.3);
+}
+
+/* 성공 제목과 부제목 */
+.reservation-success-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.02em;
+}
+
+.reservation-success-subtitle {
+  font-size: 16px;
+  color: #6b7280;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* 예약 상세 정보 박스 */
+.reservation-success-details {
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  border: 1px solid #e5e7eb;
+}
+
+/* 각 상세 정보 항목 */
+.reservation-success-detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.reservation-success-detail-item:last-child {
+  border-bottom: none;
+}
+
+/* 총 금액 항목 강조 */
+.reservation-success-detail-item.total {
+  margin-top: 12px;
+  padding-top: 16px;
+  border-top: 2px solid #d1d5db;
+  border-bottom: none;
+}
+
+/* 상세 정보 라벨과 값 */
+.reservation-success-detail-label {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.reservation-success-detail-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  text-align: right;
+}
+
+/* 예약번호 스타일 */
+.reservation-success-number {
+  font-family: 'Courier New', monospace;
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: #92400e;
+  font-weight: 600;
+  border: 1px solid #f3d894;
+}
+
+/* 총 금액 강조 */
+.reservation-success-total-amount {
+  font-size: 18px;
+  color: #8b5a3c;
+  font-weight: 700;
+}
+
+/* 안내사항 박스 */
+.reservation-success-notice {
+  background: linear-gradient(135deg, #fefbf7, #fef7ed);
+  border: 1px solid #f3d894;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.reservation-success-notice h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #92400e;
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.reservation-success-notice h4::before {
+  content: "ℹ️";
+  font-size: 16px;
+}
+
+.reservation-success-notice ul {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.reservation-success-notice li {
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
+
+.reservation-success-notice li:last-child {
+  margin-bottom: 0;
+}
+
+/* 모달 액션 버튼 */
+.reservation-success-modal-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.reservation-success-confirm-btn {
+  background: linear-gradient(135deg, #8b5a3c, #7c4d34);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+  box-shadow: 0 2px 8px rgba(139, 90, 60, 0.2);
+}
+
+.reservation-success-confirm-btn:hover {
+  background: linear-gradient(135deg, #7c4d34, #6d4128);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 90, 60, 0.3);
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+  .reservation-success-modal-overlay {
+    padding: 12px;
+  }
+
+  .reservation-success-modal-content {
+    padding: 24px;
+    max-height: 95vh;
+  }
+
+  .reservation-success-icon {
+    width: 56px;
+    height: 56px;
+    font-size: 28px;
+  }
+
+  .reservation-success-title {
+    font-size: 20px;
+  }
+
+  .reservation-success-details {
+    padding: 16px;
+  }
+
+  .reservation-success-detail-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .reservation-success-detail-value {
+    text-align: left;
+  }
+
+  .reservation-success-total-amount {
+    font-size: 16px;
+  }
+}
+
+/* 작은 모바일 반응형 */
+@media (max-width: 480px) {
+  .reservation-success-modal-content {
+    padding: 20px;
+  }
+
+  .reservation-success-title {
+    font-size: 18px;
+  }
+
+  .reservation-success-subtitle {
+    font-size: 14px;
+  }
+
+  .reservation-success-notice {
+    padding: 12px;
+  }
+
+  .reservation-success-notice li {
+    font-size: 12px;
+  }
+}
+
+/* 접근성 - 모션 줄이기 */
+@media (prefers-reduced-motion: reduce) {
+  .reservation-success-modal-content {
+    animation: none;
+  }
+
+  .reservation-success-confirm-btn {
+    transition: none;
+  }
+}
+
+/* 포커스 스타일 */
+.reservation-success-confirm-btn:focus {
+  outline: 2px solid #8b5a3c;
+  outline-offset: 2px;
+}
