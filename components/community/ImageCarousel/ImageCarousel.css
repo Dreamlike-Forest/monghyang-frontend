@@ -1,0 +1,274 @@
+.image-carousel {
+  position: relative;
+  width: 100%;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.carousel-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.carousel-track {
+  display: flex;
+  transition: transform 0.3s ease-in-out;
+  height: 100%;
+}
+
+.carousel-slide {
+  flex: 0 0 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.carousel-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.carousel-image.contain {
+  object-fit: contain;
+}
+
+/* 이미지가 없을 때 플레이스홀더 */
+.carousel-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  color: #6c757d;
+  position: relative;
+  overflow: hidden;
+}
+
+.carousel-placeholder::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 70%
+  );
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+  }
+}
+
+.placeholder-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.6;
+  color: #8b5a3c;
+  z-index: 1;
+  position: relative;
+}
+
+.placeholder-text {
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  opacity: 0.7;
+  z-index: 1;
+  position: relative;
+}
+
+/* 네비게이션 버튼 */
+.carousel-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: all 0.2s ease;
+  z-index: 2;
+}
+
+.carousel-nav:hover {
+  background: rgba(0, 0, 0, 0.7);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-nav:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.carousel-nav.prev {
+  left: 12px;
+}
+
+.carousel-nav.next {
+  right: 12px;
+}
+
+.carousel-nav:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.carousel-nav:disabled:hover {
+  background: rgba(0, 0, 0, 0.5);
+  transform: translateY(-50%);
+}
+
+/* 인디케이터 */
+.carousel-indicators {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 2;
+}
+
+.carousel-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.carousel-indicator.active {
+  background: white;
+  transform: scale(1.2);
+}
+
+.carousel-indicator:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+/* 이미지 카운터 */
+.image-counter {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  z-index: 2;
+}
+
+/* 반응형 디자인 */
+.carousel-mobile {
+  /* 모바일에서는 네비게이션 버튼 숨김 */
+}
+
+.carousel-mobile .carousel-nav {
+  display: none;
+}
+
+.carousel-mobile .carousel-indicators {
+  bottom: 8px;
+}
+
+.carousel-mobile .image-counter {
+  top: 8px;
+  right: 8px;
+  font-size: 11px;
+}
+
+/* 썸네일 뷰 (목록에서 사용) */
+.carousel-thumbnail {
+  height: 200px;
+  border-radius: 8px;
+}
+
+.carousel-thumbnail .carousel-nav,
+.carousel-thumbnail .carousel-indicators {
+  display: none;
+}
+
+.carousel-thumbnail .image-counter {
+  top: 8px;
+  right: 8px;
+  font-size: 11px;
+  padding: 2px 6px;
+}
+
+/* 상세보기 (모달에서 사용) */
+.carousel-detail {
+  height: 60vh;
+  max-height: 600px;
+  min-height: 400px;
+}
+
+.carousel-detail .carousel-image {
+  object-fit: contain;
+}
+
+/* 로딩 상태 */
+.carousel-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top: 3px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 접근성 개선 */
+@media (prefers-reduced-motion: reduce) {
+  .carousel-track {
+    transition: none;
+  }
+  
+  .carousel-nav,
+  .carousel-indicator {
+    transition: none;
+  }
+  
+  .carousel-placeholder::before {
+    animation: none;
+  }
+}
