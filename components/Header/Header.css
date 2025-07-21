@@ -1,4 +1,4 @@
-/* Header.css - 강력한 정렬 버전 */
+/* Header.css - 강력한 정렬 버전 + 로그인 상태 스타일 */
 .header {
   position: fixed;
   top: 0;
@@ -74,6 +74,7 @@
   margin-left: auto;
   color: #6b7280;
   font-size: 12px;
+  transition: transform 0.2s ease;
 }
 
 .language-arrow.open {
@@ -123,6 +124,111 @@
   font-weight: 500;
 }
 
+/* 사용자 닉네임 표시 */
+.user-greeting {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 9px 0 !important;
+  vertical-align: baseline !important;
+  box-sizing: border-box !important;
+}
+
+.user-nickname {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  white-space: nowrap;
+}
+
+/* 프로필 드롭다운 */
+.profile-selector {
+  position: relative;
+}
+
+.profile-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px;
+  padding: 9px 12px !important;
+  background-color: #8b5a3c;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  vertical-align: baseline !important;
+  box-sizing: border-box !important;
+  transition: background-color 0.2s ease;
+}
+
+.profile-button:hover {
+  background-color: #7c4d34;
+}
+
+.profile-arrow {
+  color: #ffffff;
+  font-size: 12px;
+  transition: transform 0.2s ease;
+}
+
+.profile-arrow.open {
+  transform: rotate(180deg);
+}
+
+/* 프로필 드롭다운 메뉴 */
+.profile-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 180px;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1001;
+}
+
+.profile-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+}
+
+.profile-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  color: #374151;
+  text-align: left;
+  transition: background-color 0.2s ease;
+}
+
+.profile-option:hover {
+  background-color: #f3f4f6;
+}
+
+.logout-item {
+  border-top: 1px solid #e5e7eb;
+  margin-top: 4px;
+  padding-top: 4px;
+}
+
+.logout-option {
+  color: #dc2626 !important;
+}
+
+.logout-option:hover {
+  background-color: #fef2f2 !important;
+}
+
 /* 헤더 버튼들 - 언어 버튼과 동일한 패딩 */
 .header-button {
   display: inline-flex !important;
@@ -138,6 +244,7 @@
   vertical-align: baseline !important;
   box-sizing: border-box !important;
   text-decoration: none;
+  transition: all 0.2s ease;
 }
 
 .login-button {
@@ -158,4 +265,63 @@
 .cart-button:hover {
   background-color: #f9fafb;
   border-color: #d1d5db;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .header-actions {
+    gap: 8px;
+  }
+  
+  .user-nickname {
+    font-size: 13px;
+  }
+  
+  .language-button {
+    width: 80px;
+    padding: 8px 8px !important;
+  }
+  
+  .header-button {
+    padding: 8px 10px !important;
+    font-size: 12px;
+  }
+  
+  .profile-button {
+    padding: 8px 10px !important;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-container {
+    padding: 0 12px;
+  }
+  
+  .header-actions {
+    gap: 6px;
+  }
+  
+  .user-nickname {
+    display: none; /* 모바일에서는 닉네임 숨김 */
+  }
+  
+  .language-button {
+    width: 70px;
+    padding: 7px 6px !important;
+  }
+  
+  .language-name {
+    display: none; /* 모바일에서는 언어명 숨김, 플래그만 표시 */
+  }
+}
+
+/* 접근성 개선 */
+@media (prefers-reduced-motion: reduce) {
+  .language-arrow,
+  .profile-arrow,
+  .header-button,
+  .profile-button {
+    transition: none;
+  }
 }
