@@ -11,9 +11,10 @@ import './Brewery.css';
 
 interface BreweryProps {
   onBreweryClick?: (breweryId: number) => void;
+  className?: string;
 }
 
-const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick }) => {
+const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className }) => {
   const router = useRouter();
   const [breweryData] = useState<Brewery[]>(getBreweriesWithExperience());
   const [filters, setFilters] = useState<BreweryFilterOptions>({
@@ -25,7 +26,7 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick }) => {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const itemsPerPage = 12; // 한 페이지당 12개 양조장 표시
+  const itemsPerPage = 6; 
 
   // 검색 함수
   const isMatchingSearch = (brewery: Brewery, keyword: string): boolean => {
@@ -158,7 +159,7 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick }) => {
   const handleFilterChange = (newFilters: Partial<BreweryFilterOptions>) => {
     setIsLoading(true);
     setFilters(prev => ({ ...prev, ...newFilters }));
-    setCurrentPage(1); // 필터 변경 시 첫 페이지로 이동
+    setCurrentPage(1); 
     
     // 로딩 시뮬레이션
     setTimeout(() => {
@@ -203,85 +204,87 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick }) => {
   };
 
   return (
-    <div className="brewery-container">
-      {/* 사이드바 필터 */}
-      <aside className="brewery-sidebar">
-        <BreweryFilter
-          filters={filters}
-          onFilterChange={handleFilterChange}
-          breweryCount={breweryCount}
-        />
-      </aside>
-
-      {/* 메인 콘텐츠 */}
-      <main className="brewery-main">
-        {/* 헤더 */}
-        <div className="brewery-header">
-          <h1>전국 양조장 찾기</h1>
-          <p className="brewery-header-subtitle">
-            전통주 양조장을 탐방하고 특별한 체험을 즐겨보세요
-          </p>
-          <div className="brewery-stats">
-            <div className="brewery-stat">
-              <span className="brewery-stat-icon">🏭</span>
-              <span>총 {breweryCount.total}개 양조장</span>
-            </div>
-            <div className="brewery-stat">
-              <span className="brewery-stat-icon">🎯</span>
-              <span>{filteredBreweries.length}개 검색 결과</span>
-            </div>
-            <div className="brewery-stat">
-              <span className="brewery-stat-icon">🎪</span>
-              <span>{breweryCount.priceStats.withExperience}개 체험 프로그램</span>
-            </div>
-            {filteredBreweries.length > 0 && (
-              <div className="brewery-stat">
-                <span className="brewery-stat-icon">📄</span>
-                <span>{pageInfo.currentStart}-{pageInfo.currentEnd} / {pageInfo.total}개 표시</span>
-              </div>
-            )}
-          </div>
+    <div className={`brewery-container ${className || ''}`}>
+      <div className="brewery-content">
+        {/* 사이드바 필터 */}
+        <div className="brewery-filter-section">
+          <BreweryFilter
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            breweryCount={breweryCount}
+          />
         </div>
 
-        {/* 양조장 그리드 */}
-        {isLoading ? (
-          <div className="brewery-loading">
-            <div className="brewery-loading-spinner"></div>
-            양조장을 검색하고 있습니다...
-          </div>
-        ) : currentBreweries.length > 0 ? (
-          <>
-            <div className="brewery-grid">
-              {currentBreweries.map((brewery) => (
-                <BreweryCard
-                  key={brewery.brewery_id}
-                  brewery={brewery}
-                  onClick={handleBreweryClick}
-                />
-              ))}
-            </div>
-
-            {/* 페이지네이션 */}
-            {totalPages > 1 && (
-              <div className="brewery-pagination">
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={handlePageChange}
-                />
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="brewery-empty">
-            <div className="brewery-empty-icon">🔍</div>
-            <h3 className="brewery-empty-title">검색 결과가 없습니다</h3>
-            <p className="brewery-empty-description">
-              다른 검색 조건을 시도해보세요
+        {/* 메인 콘텐츠 */}
+        <div className="brewery-main-section">
+          {/* 헤더 */}
+          <div className="brewery-header">
+            <h1>전국 양조장 찾기</h1>
+            <p className="brewery-header-subtitle">
+              전통주 양조장을 탐방하고 특별한 체험을 즐겨보세요
             </p>
+            <div className="brewery-stats">
+              <div className="brewery-stat">
+                <span className="brewery-stat-icon">🏭</span>
+                <span>총 {breweryCount.total}개 양조장</span>
+              </div>
+              <div className="brewery-stat">
+                <span className="brewery-stat-icon">🎯</span>
+                <span>{filteredBreweries.length}개 검색 결과</span>
+              </div>
+              <div className="brewery-stat">
+                <span className="brewery-stat-icon">🎪</span>
+                <span>{breweryCount.priceStats.withExperience}개 체험 프로그램</span>
+              </div>
+              {filteredBreweries.length > 0 && (
+                <div className="brewery-stat">
+                  <span className="brewery-stat-icon">📄</span>
+                  <span>{pageInfo.currentStart}-{pageInfo.currentEnd} / {pageInfo.total}개 표시</span>
+                </div>
+              )}
+            </div>
           </div>
-        )}
-      </main>
+
+          {/* 양조장 그리드 */}
+          {isLoading ? (
+            <div className="brewery-loading">
+              <div className="brewery-loading-spinner"></div>
+              양조장을 검색하고 있습니다...
+            </div>
+          ) : currentBreweries.length > 0 ? (
+            <>
+              <div className="brewery-grid">
+                {currentBreweries.map((brewery) => (
+                  <BreweryCard
+                    key={brewery.brewery_id}
+                    brewery={brewery}
+                    onClick={handleBreweryClick}
+                  />
+                ))}
+              </div>
+
+              {/* 페이지네이션 */}
+              {totalPages > 1 && (
+                <div className="brewery-pagination">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                  />
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="brewery-empty">
+              <div className="brewery-empty-icon">🔍</div>
+              <h3 className="brewery-empty-title">검색 결과가 없습니다</h3>
+              <p className="brewery-empty-description">
+                다른 검색 조건을 시도해보세요
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

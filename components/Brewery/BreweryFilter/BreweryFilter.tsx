@@ -93,7 +93,7 @@ const BreweryFilter: React.FC<BreweryFilterProps> = ({ filters, onFilterChange, 
   const handlePriceInputChange = (type: 'min' | 'max', value: string) => {
     const numericValue = value.replace(/[^\d]/g, '');
     
-    if (numericValue.length > 8) return; // 최대 8자리 제한
+    if (numericValue.length > 8) return; 
     
     const finalValue: number | '' = numericValue === '' ? '' : parseInt(numericValue, 10);
     

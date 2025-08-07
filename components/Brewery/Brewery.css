@@ -1,16 +1,26 @@
 .brewery-container {
   display: flex;
-  max-width: 1400px;
+  max-width: 1200px; 
   margin: 0 auto;
-  gap: 24px;
   padding: 20px;
-  min-height: calc(100vh - 110px);
+  gap: 24px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  min-height: calc(100vh - 110px); 
 }
 
-/* 메인 콘텐츠 영역 */
-.brewery-main {
+.brewery-content {
+  display: flex;
+  width: 100%;
+  gap: 24px;
+}
+
+.brewery-filter-section {
+  flex-shrink: 0;
+}
+
+.brewery-main-section {
   flex: 1;
-  min-width: 0; /* 플렉스 아이템 축소 허용 */
+  min-width: 0; 
 }
 
 /* 양조장 헤더 */
@@ -57,7 +67,7 @@
 /* 양조장 그리드 */
 .brewery-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 20px;
   margin-bottom: 40px;
 }
@@ -168,67 +178,6 @@
   margin-top: 40px;
 }
 
-/* 반응형 디자인 */
-@media (max-width: 1200px) {
-  .brewery-container {
-    padding: 16px;
-    gap: 20px;
-  }
-  
-  .brewery-sidebar {
-    width: 260px;
-  }
-  
-  .brewery-grid {
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: 16px;
-  }
-}
-
-@media (max-width: 968px) {
-  .brewery-container {
-    flex-direction: column;
-  }
-  
-  .brewery-sidebar {
-    width: 100%;
-    position: static;
-    margin-bottom: 20px;
-  }
-  
-  .brewery-grid {
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  }
-}
-
-@media (max-width: 640px) {
-  .brewery-container {
-    padding: 12px;
-  }
-  
-  .brewery-sidebar {
-    padding: 20px;
-  }
-  
-  .brewery-header {
-    padding: 20px;
-  }
-  
-  .brewery-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  
-  .brewery-card {
-    padding: 20px;
-  }
-  
-  .brewery-stats {
-    flex-direction: column;
-    gap: 12px;
-  }
-}
-
 /* 로딩 상태 */
 .brewery-loading {
   display: flex;
@@ -276,4 +225,92 @@
 .brewery-empty-description {
   font-size: 14px;
   color: #666;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1200px) {
+  .brewery-container {
+    max-width: 100%;
+    padding: 16px;
+    gap: 20px;
+  }
+  
+  .brewery-content {
+    gap: 20px;
+  }
+  
+  .brewery-grid {
+    grid-template-columns: repeat(2, 1fr); /* 계속 2열 유지 */
+    gap: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .brewery-container {
+    padding: 12px;
+    gap: 16px;
+  }
+  
+  .brewery-content {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .brewery-filter-section {
+    order: 2; 
+  }
+  
+  .brewery-main-section {
+    order: 1;
+  }
+  
+  .brewery-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .brewery-card {
+    padding: 20px;
+  }
+  
+  .brewery-stats {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .brewery-container {
+    padding: 8px;
+    gap: 12px;
+  }
+  
+  .brewery-content {
+    gap: 12px;
+  }
+  
+  .brewery-header {
+    padding: 20px;
+  }
+}
+
+/* 접근성 개선 */
+@media (prefers-reduced-motion: reduce) {
+  .brewery-loading-spinner,
+  .brewery-card,
+  .brewery-view-button {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+  .brewery-container {
+    border: 1px solid;
+  }
+  
+  .brewery-card {
+    border: 2px solid;
+  }
 }

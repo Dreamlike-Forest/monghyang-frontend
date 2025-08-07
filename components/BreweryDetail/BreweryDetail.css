@@ -25,8 +25,35 @@
 
 /* 섹션 공통 컨테이너 */
 .brewery-section-container {
-  margin-bottom: 48px;
+  margin-bottom: 60px !important; 
   scroll-margin-top: 120px; 
+  padding-bottom: 20px; 
+}
+
+/* 마지막 섹션도 하단 마진 유지 */
+.brewery-section-container:last-child {
+  margin-bottom: 40px !important; 
+}
+
+/* 개별 섹션들에 특별히 간격 적용 */
+#images {
+  margin-bottom: 60px !important;
+}
+
+#intro {
+  margin-bottom: 60px !important;
+}
+
+#experience {
+  margin-bottom: 60px !important;
+}
+
+#products {
+  margin-bottom: 60px !important;
+}
+
+#reviews {
+  margin-bottom: 40px !important;
 }
 
 /* 섹션 제목 스타일 */
@@ -126,6 +153,15 @@ html {
     padding: 16px;
     gap: 20px;
   }
+  
+  /* 태블릿에서 섹션 간격 조정 */
+  .brewery-section-container {
+    margin-bottom: 50px !important; 
+  }
+  
+  .brewery-section-container:last-child {
+    margin-bottom: 30px !important;
+  }
 }
 
 /* 모바일 반응형 - 세로 레이아웃 */
@@ -144,6 +180,15 @@ html {
     align-items: flex-start;
     gap: 16px;
   }
+  
+  /* 모바일에서 섹션 간격 조정 */
+  .brewery-section-container {
+    margin-bottom: 40px !important; 
+  }
+  
+  .brewery-section-container:last-child {
+    margin-bottom: 24px !important;
+  }
 }
 
 /* 작은 모바일 반응형 */
@@ -152,8 +197,13 @@ html {
     padding: 8px;
   }
   
+  /* 작은 모바일에서 섹션 간격 조정 */
   .brewery-section-container {
-    margin-bottom: 32px;
+    margin-bottom: 32px !important; 
+  }
+  
+  .brewery-section-container:last-child {
+    margin-bottom: 20px !important;
   }
   
   .brewery-section-title {

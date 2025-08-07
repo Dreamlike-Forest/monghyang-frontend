@@ -12,6 +12,7 @@
   overflow: hidden;
   background: #f3f4f6;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  user-select: none;
 }
 
 /* 메인 이미지 */
@@ -20,6 +21,7 @@
   height: 100%;
   object-fit: cover;
   transition: transform 0.3s ease;
+  cursor: pointer;
 }
 
 .brewery-main-image:hover {
@@ -31,30 +33,51 @@
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.7);
   color: white;
   border: none;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   cursor: pointer;
-  font-size: 18px;
+  font-size: 20px;
+  font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
-  z-index: 2;
+  transition: all 0.3s ease;
+  z-index: 3;
   backdrop-filter: blur(4px);
+  opacity: 0;
+  visibility: hidden;
 }
 
-.brewery-image-nav-btn:hover {
-  background: rgba(0, 0, 0, 0.8);
+/* 컨테이너 호버 시 버튼 표시 */
+.brewery-main-image-container:hover .brewery-image-nav-btn {
+  opacity: 1;
+  visibility: visible;
+}
+
+.brewery-image-nav-btn:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.9);
   transform: translateY(-50%) scale(1.1);
+}
+
+.brewery-image-nav-btn:active:not(:disabled) {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.brewery-image-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: translateY(-50%);
 }
 
 .brewery-image-nav-btn:focus {
   outline: 2px solid #ffffff;
   outline-offset: 2px;
+  opacity: 1;
+  visibility: visible;
 }
 
 /* 이전/다음 버튼 위치 */
@@ -74,8 +97,8 @@
   transform: translateX(-50%);
   display: flex;
   gap: 8px;
-  z-index: 2;
-  background: rgba(0, 0, 0, 0.3);
+  z-index: 3;
+  background: rgba(0, 0, 0, 0.4);
   padding: 8px 12px;
   border-radius: 20px;
   backdrop-filter: blur(4px);
@@ -163,14 +186,65 @@
   position: absolute;
   top: 16px;
   right: 16px;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.7);
   color: white;
   padding: 6px 12px;
   border-radius: 16px;
   font-size: 12px;
   font-weight: 600;
-  z-index: 2;
+  z-index: 3;
   backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.brewery-image-counter .error-count {
+  color: #fca5a5;
+  font-size: 11px;
+}
+
+/* 자동재생 버튼 (좌상단) */
+.brewery-autoplay-btn {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  z-index: 3;
+  backdrop-filter: blur(4px);
+  transition: all 0.3s ease;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.brewery-main-image-container:hover .brewery-autoplay-btn {
+  opacity: 1;
+  visibility: visible;
+}
+
+.brewery-autoplay-btn:hover {
+  background: rgba(0, 0, 0, 0.9);
+  transform: scale(1.05);
+}
+
+.brewery-autoplay-btn.active {
+  background: rgba(139, 90, 60, 0.9);
+  color: white;
+  opacity: 1;
+  visibility: visible;
+}
+
+.brewery-autoplay-btn:focus {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+  opacity: 1;
+  visibility: visible;
 }
 
 /* 이미지 정보 */
@@ -179,6 +253,7 @@
   text-align: center;
   color: #6b7280;
   font-size: 14px;
+  line-height: 1.4;
 }
 
 /* 이미지 플레이스홀더 */
@@ -243,6 +318,7 @@
   font-size: 0.8rem;
   opacity: 0.6;
   margin-top: 0.5rem;
+  color: #8b5a3c;
 }
 
 /* 모바일 반응형 */
@@ -252,9 +328,11 @@
   }
   
   .brewery-image-nav-btn {
-    width: 36px;
-    height: 36px;
-    font-size: 16px;
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    opacity: 1; 
+    visibility: visible;
   }
   
   .brewery-prev-btn {
@@ -292,6 +370,15 @@
     font-size: 11px;
     padding: 4px 8px;
   }
+
+  .brewery-autoplay-btn {
+    top: 12px;
+    left: 12px;
+    padding: 6px;
+    font-size: 12px;
+    opacity: 1; 
+    visibility: visible;
+  }
 }
 
 /* 작은 모바일 반응형 */
@@ -301,9 +388,9 @@
   }
   
   .brewery-image-nav-btn {
-    width: 32px;
-    height: 32px;
-    font-size: 14px;
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
   }
   
   .brewery-prev-btn {
@@ -334,6 +421,10 @@
     width: 4px;
     height: 4px;
   }
+
+  .brewery-image-info {
+    font-size: 12px;
+  }
 }
 
 /* 접근성 - 모션 줄이기 */
@@ -341,7 +432,8 @@
   .brewery-main-image,
   .brewery-image-nav-btn,
   .brewery-indicator,
-  .brewery-image-placeholder::before {
+  .brewery-image-placeholder::before,
+  .brewery-autoplay-btn {
     transition: none;
     animation: none;
   }
@@ -358,7 +450,8 @@
     border-width: 3px;
   }
   
-  .brewery-image-counter {
+  .brewery-image-counter,
+  .brewery-autoplay-btn {
     background: rgba(0, 0, 0, 0.9);
     border: 1px solid white;
   }
@@ -367,8 +460,10 @@
 /* 터치 디바이스 최적화 */
 @media (hover: none) and (pointer: coarse) {
   .brewery-image-nav-btn {
-    width: 44px;
-    height: 44px;
+    width: 48px;
+    height: 48px;
+    opacity: 0.8;
+    visibility: visible;
   }
   
   .brewery-indicator {
@@ -385,4 +480,15 @@
     width: 10px;
     height: 10px;
   }
+
+  .brewery-autoplay-btn {
+    opacity: 0.8;
+    visibility: visible;
+  }
+}
+
+/* 포커스 관리 */
+.brewery-main-image-container:focus-within {
+  outline: 2px solid #8b5a3c;
+  outline-offset: 2px;
 }
