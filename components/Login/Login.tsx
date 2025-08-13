@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import './Login.css';
-import SignupContainer from './SignupContainer';
+import SignupContainer from './SignupContainer/SignupContainer';
 
 const Login: React.FC = () => {
   const [showSignup, setShowSignup] = useState(false);

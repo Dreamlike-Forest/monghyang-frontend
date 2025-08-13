@@ -1,0 +1,39 @@
+.signup-container {
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.signup-container-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 단계 전환 애니메이션 */
+.signup-step-transition {
+  opacity: 1;
+  transform: translateX(0);
+  transition: all 0.3s ease-in-out;
+}
+
+.signup-step-entering {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+.signup-step-exiting {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+/* 접근성 개선 */
+@media (prefers-reduced-motion: reduce) {
+  .signup-step-transition,
+  .signup-step-entering,
+  .signup-step-exiting {
+    transition: none;
+    transform: none;
+  }
+}
