@@ -1,0 +1,93 @@
+/* 양조장 역할 메인 컨테이너 */
+.about-brewery-role-content {
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
+}
+
+/* 상단 소개 텍스트 박스 */
+.about-role-intro {
+  text-align: center;
+  margin-bottom: 40px;
+  padding: 32px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 16px;
+}
+
+.about-role-intro p {
+  font-size: 16px;
+  line-height: 1.7;
+  color: #4b5563;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* 역할 2x2 그리드 */
+.about-role-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+/* 각 역할 카드 */
+.about-role-item {
+  background: #f9fafb;
+  padding: 32px 24px;
+  border-radius: 16px;
+  text-align: center;
+  border: 1px solid #e5e7eb;
+}
+
+/* 역할 아이콘 */
+.about-role-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+/* 역할 제목 */
+.about-role-item h4 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 12px;
+}
+
+/* 역할 설명 */
+.about-role-item p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #6b7280;
+}
+
+/* 태블릿 반응형 */
+@media (max-width: 1024px) {
+  .about-role-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+}
+
+/* 모바일 반응형 - 1열로 변경 */
+@media (max-width: 768px) {
+  .about-brewery-role-content {
+    padding: 24px;
+  }
+  
+  .about-role-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+/* 작은 모바일 반응형 */
+@media (max-width: 480px) {
+  .about-brewery-role-content {
+    padding: 20px;
+  }
+  
+  .about-role-item {
+    padding: 24px 16px;
+  }
+}

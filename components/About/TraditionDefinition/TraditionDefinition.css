@@ -1,0 +1,161 @@
+/* 전통주 정의 메인 컨테이너 */
+.about-tradition-content {
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
+}
+
+/* 전통주 의미 설명 박스 (갈색 배경) */
+.about-tradition-definition {
+  text-align: center;
+  margin-bottom: 48px;
+  padding: 32px;
+  background: linear-gradient(135deg, #8b5a3c 0%, #7c4d34 100%);
+  border-radius: 16px;
+  color: white;
+}
+
+.about-tradition-definition h3 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.about-tradition-definition p {
+  font-size: 16px;
+  line-height: 1.7;
+  opacity: 0.9;
+}
+
+/* 전통주 종류 섹션 */
+.about-tradition-types {
+  margin-bottom: 48px;
+}
+
+.about-tradition-types h4 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 24px;
+}
+
+/* 종류 2x2 그리드 */
+.about-types-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+/* 각 종류 카드 */
+.about-type-card {
+  background: #f9fafb;
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.about-type-card h5 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #8b5a3c;
+  margin-bottom: 8px;
+}
+
+.about-type-card p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #6b7280;
+}
+
+/* 전통주 가치 섹션 제목 */
+.about-tradition-value h4 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 24px;
+}
+
+/* 가치 항목 세로 리스트 */
+.about-value-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 각 가치 항목 (아이콘 + 텍스트) */
+.about-value-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 24px;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+/* 가치 아이콘 */
+.about-value-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(139, 90, 60, 0.1);
+}
+
+/* 가치 제목 */
+.about-value-item strong {
+  font-size: 16px;
+  font-weight: 600;
+  color: #8b5a3c;
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* 가치 설명 */
+.about-value-item p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* 모바일 반응형 - 종류 1열로 변경 */
+@media (max-width: 768px) {
+  .about-tradition-content {
+    padding: 24px;
+  }
+  
+  .about-types-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+/* 작은 모바일 반응형 - 가치 항목 세로 정렬 */
+@media (max-width: 480px) {
+  .about-tradition-content {
+    padding: 20px;
+  }
+  
+  .about-tradition-definition h3 {
+    font-size: 20px;
+  }
+  
+  .about-value-item {
+    padding: 20px;
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+  }
+  
+  .about-value-icon {
+    align-self: center;
+  }
+}

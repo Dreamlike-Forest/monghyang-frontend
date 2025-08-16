@@ -1,0 +1,233 @@
+/* 예약 요약 사이드바 */
+.reservation-summary {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  position: relative;
+  z-index: 10;
+  margin-bottom: 20px;
+}
+
+/* 사이드바 제목 */
+.reservation-summary-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 20px 0;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #8b5a3c;
+}
+
+/* 요약 콘텐츠 */
+.reservation-summary-content {
+  margin-bottom: 24px;
+}
+
+/* 상세 정보 */
+.reservation-summary-details {
+  margin-bottom: 20px;
+}
+
+/* 각 요약 항목 */
+.reservation-summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.reservation-summary-item:last-child {
+  border-bottom: none;
+}
+
+/* 가격 항목 강조 */
+.reservation-summary-item.price {
+  border-bottom: 2px solid #e5e7eb;
+  margin-bottom: 8px;
+}
+
+/* 라벨과 값 */
+.reservation-summary-label {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.reservation-summary-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  text-align: right;
+}
+
+/* 총 금액 박스 */
+.reservation-summary-total {
+  background: #fefbf7;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #f3d894;
+}
+
+/* 총 금액 계산 */
+.reservation-total-calculation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.reservation-total-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.reservation-total-amount {
+  font-size: 20px;
+  font-weight: 700;
+  color: #8b5a3c;
+}
+
+/* 계산식 안내 */
+.reservation-total-note {
+  font-size: 12px;
+  color: #6b7280;
+  text-align: right;
+  margin: 0;
+}
+
+/* 플레이스홀더 (정보 없을 때) */
+.reservation-summary-placeholder {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6b7280;
+}
+
+.reservation-summary-placeholder p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* 예약하기 버튼 */
+.reservation-submit-btn {
+  width: 100%;
+  background: #8b5a3c;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(139, 90, 60, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.reservation-submit-btn:hover:not(:disabled) {
+  background: #7c4d34;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(139, 90, 60, 0.3);
+}
+
+/* 비활성화 상태 */
+.reservation-submit-btn.disabled,
+.reservation-submit-btn:disabled {
+  background: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* 제출 중 상태 */
+.reservation-submit-btn.submitting {
+  background: #8b5a3c;
+  cursor: wait;
+  transform: none;
+}
+
+/* 제출 중 로딩 효과 */
+.reservation-submit-btn.submitting::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: loading-shimmer 1s infinite;
+}
+
+@keyframes loading-shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* 데스크탑 스티키 효과 강화 */
+@media (min-width: 1025px) {
+  .reservation-summary {
+    transition: box-shadow 0.2s ease;
+  }
+  
+  .reservation-summary:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+}
+
+/* 태블릿 반응형 - 스티키 해제 */
+@media (max-width: 1024px) {
+  .reservation-summary {
+    margin-bottom: 0;
+    margin-top: 20px;
+  }
+}
+
+/* 작은 모바일 반응형 */
+@media (max-width: 480px) {
+  .reservation-summary {
+    padding: 16px;
+    margin-top: 16px;
+  }
+
+  .reservation-summary-item {
+    padding: 10px 0;
+  }
+
+  .reservation-total-calculation {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .reservation-total-amount {
+    font-size: 18px;
+  }
+
+  .reservation-submit-btn {
+    padding: 14px;
+    font-size: 15px;
+  }
+}
+
+/* 접근성 - 모션 줄이기 */
+@media (prefers-reduced-motion: reduce) {
+  .reservation-submit-btn,
+  .reservation-summary {
+    transition: none;
+  }
+}
+
+/* 포커스 스타일 */
+.reservation-submit-btn:focus {
+  outline: 2px solid #8b5a3c;
+  outline-offset: 2px;
+}

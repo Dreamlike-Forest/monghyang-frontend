@@ -1,0 +1,86 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* 기본 폰트와 색상 */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+  color: #333;
+  background-color: #ffffff;
+  margin: 0;
+  padding: 0;
+}
+
+/* App 레이아웃 - Header/Nav */
+.App {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding-top: 50px;
+  margin: 0;
+}
+
+.main-content {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+}
+
+/* Header와 Nav 사이 간격 제거 */
+.App > nav {
+  margin-top: 0 !important;
+}
+
+/* 간단한 테스트 페이지 스타일 */
+.test-page {
+  min-height: calc(100vh - 110px); /* Header(50px) + Nav(60px) */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  background-color: #f9fafb;
+  margin: 0;
+}
+
+.test-page h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 16px;
+}
+
+.test-page p {
+  font-size: 1.125rem;
+  color: #6b7280;
+  max-width: 600px;
+}
+
+/* 접근성 개선 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Footer가 항상 하단에 고정 */
+html,
+body {
+  height: 100%;
+}
+
+#__next {
+  height: 100%;
+}

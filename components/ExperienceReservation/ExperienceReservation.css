@@ -1,0 +1,407 @@
+/* 체험 예약 메인 컨테이너 */
+.reservation-experience-reservation {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: #f9fafb;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* 예약 헤더 (제목 + 닫기 버튼) */
+.reservation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+/* 헤더 콘텐츠 */
+.reservation-header-content {
+  flex: 1;
+}
+
+.reservation-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 8px 0;
+}
+
+.reservation-brewery-name {
+  font-size: 18px;
+  color: #8b5a3c;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* 닫기 버튼 */
+.reservation-close-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: #f3f4f6;
+  border-radius: 8px;
+  color: #6b7280;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 20px;
+}
+
+.reservation-close-btn:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* 메인 콘텐츠 레이아웃 (좌측 폼 + 우측 사이드바) */
+.reservation-content {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+  align-items: flex-start;
+  min-height: calc(100vh - 200px);
+}
+
+/* 좌측 메인 예약 폼 */
+.reservation-main {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* 각 예약 섹션 */
+.reservation-section {
+  background: white;
+  border-radius: 12px;
+  padding: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+/* 섹션 제목 */
+.reservation-section-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+  padding: 20px 24px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* 우측 사이드바 */
+.reservation-sidebar {
+  position: relative;
+  height: fit-content;
+  min-height: 100%;
+}
+
+/* 사이드바 스티키 설정 */
+.reservation-sidebar-sticky {
+  position: sticky;
+  top: 20px;
+  z-index: 100;
+  align-self: flex-start;
+  bottom: 20px;
+}
+
+/* 시간 선택 영역 */
+.reservation-time-selection {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 2px solid #f1f5f9;
+}
+
+.reservation-time-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 16px 0;
+  text-align: center;
+}
+
+/* 시간 선택 3열 그리드 */
+.reservation-time-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+/* 각 시간 옵션 버튼 */
+.reservation-time-option {
+  padding: 12px 8px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  background: white;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.reservation-time-option:hover {
+  border-color: #8b5a3c;
+  background: #fef7f0;
+  color: #8b5a3c;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(139, 90, 60, 0.15);
+}
+
+/* 선택된 시간 옵션 */
+.reservation-time-option.selected {
+  border-color: #8b5a3c;
+  background: #8b5a3c;
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(139, 90, 60, 0.25);
+}
+
+.reservation-time-option.selected:hover {
+  background: #7c4d34;
+  border-color: #7c4d34;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(139, 90, 60, 0.3);
+}
+
+/* 예약 완료 모달 오버레이 */
+.reservation-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+  pointer-events: auto;
+}
+
+/* 모달 콘텐츠 */
+.reservation-modal-content {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  animation: reservationModalSlideUp 0.3s ease-out;
+  position: relative;
+  z-index: 10000;
+  pointer-events: auto;
+}
+
+/* 모달 열릴 때 body 스크롤 방지 */
+.reservation-modal-open {
+  overflow: hidden !important;
+  position: fixed !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+@keyframes reservationModalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 로딩 상태 */
+.reservation-loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* 에러 메시지 */
+.reservation-error-message {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: #dc2626;
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+/* 성공 메시지 */
+.reservation-success-message {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: #16a34a;
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+/* 태블릿 반응형 - 1열 레이아웃 */
+@media (max-width: 1024px) {
+  .reservation-experience-reservation {
+    padding: 16px;
+  }
+
+  .reservation-content {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .reservation-sidebar {
+    order: 1; /* 모바일에서 맨 아래로 */
+  }
+
+  .reservation-sidebar-sticky {
+    position: static; /* 모바일에서는 sticky 해제 */
+  }
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+  .reservation-experience-reservation {
+    padding: 12px;
+  }
+
+  .reservation-header {
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+
+  .reservation-title {
+    font-size: 24px;
+  }
+
+  .reservation-brewery-name {
+    font-size: 16px;
+  }
+
+  .reservation-close-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+    margin-left: 12px;
+  }
+
+  .reservation-main {
+    gap: 20px;
+  }
+
+  .reservation-section-title {
+    font-size: 18px;
+    padding: 16px 20px;
+  }
+
+  .reservation-sidebar {
+    order: 1; /* 모바일에서 맨 아래로 */
+  }
+}
+
+/* 작은 모바일 반응형 */
+@media (max-width: 480px) {
+  .reservation-experience-reservation {
+    padding: 8px;
+  }
+
+  .reservation-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .reservation-close-btn {
+    align-self: flex-end;
+    margin-left: 0;
+    margin-top: -8px;
+  }
+
+  .reservation-title {
+    font-size: 20px;
+  }
+
+  .reservation-brewery-name {
+    font-size: 14px;
+  }
+
+  .reservation-section-title {
+    font-size: 16px;
+    padding: 12px 16px;
+  }
+
+  .reservation-sidebar {
+    order: 1; /* 모바일에서 맨 아래로 */
+  }
+
+  .reservation-time-selection {
+    margin-top: 24px;
+    padding-top: 20px;
+  }
+
+  .reservation-time-title {
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+
+  .reservation-time-buttons {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .reservation-time-option {
+    padding: 10px 6px;
+    font-size: 13px;
+  }
+
+  .reservation-modal-overlay {
+    padding: 12px;
+  }
+
+  .reservation-modal-content {
+    padding: 24px;
+    max-height: 95vh;
+  }
+}
+
+/* 접근성 - 모션 줄이기 */
+@media (prefers-reduced-motion: reduce) {
+  .reservation-close-btn {
+    transition: none;
+  }
+
+  .reservation-sidebar-sticky {
+    position: static !important;
+  }
+}
+
+/* 포커스 스타일 */
+.reservation-close-btn:focus {
+  outline: 2px solid #8b5a3c;
+  outline-offset: 2px;
+}
+
+/* 스크롤바 커스터마이징 */
+.reservation-experience-reservation {
+  scroll-behavior: smooth;
+}
+
+.reservation-scroll-target {
+  scroll-margin-top: 20px;
+}

@@ -1,0 +1,141 @@
+.nav {
+  position: sticky;
+  top: 50px; 
+  z-index: 900;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.nav-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+}
+
+/* 로고 섹션 */
+.nav-logo {
+  flex-shrink: 0;
+}
+
+.logo-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.logo-button:hover {
+  background-color: #fef3c7;
+  transform: translateY(-1px);
+}
+
+.logo-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3);
+}
+
+.logo-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-image {
+  width: 35px;
+  height: 35px;
+  object-fit: contain;
+  transition: transform 0.2s ease;
+}
+
+.logo-button:hover .logo-image {
+  transform: scale(1.05);
+}
+
+/* 메뉴 */
+.nav-menu {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 40px;
+  justify-content: center;
+  flex: 1;
+}
+
+.nav-link {
+  display: block;
+  padding: 12px 20px;
+  background: none;
+  border: none;
+  color: #374151;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+  white-space: nowrap;
+}
+
+.nav-link:hover {
+  color: #f59e0b;
+  background-color: #fef3c7;
+  transform: translateY(-1px);
+}
+
+.nav-link:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3);
+}
+
+.nav-link.active {
+  color: #d97706;
+  background-color: #fed7aa;
+  font-weight: 600;
+}
+
+.nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 3px;
+  background-color: #f59e0b;
+  border-radius: 2px;
+}
+
+/* 중앙 정렬을 위한 컨테이너 조정 */
+@media (min-width: 1200px) {
+  .nav-container {
+    max-width: 1400px;
+  }
+}
+
+/* 큰 화면에서 메뉴 간격 조정 */
+@media (min-width: 1024px) {
+  .nav-menu {
+    gap: 50px;
+  }
+}
+
+/* 접근성 개선 */
+@media (prefers-reduced-motion: reduce) {
+  .logo-button,
+  .nav-link {
+    transition: none;
+  }
+}
