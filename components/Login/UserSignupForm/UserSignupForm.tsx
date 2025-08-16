@@ -10,6 +10,7 @@ interface UserSignupFormProps {
 
 const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
   const [formData, setFormData] = useState({
+    // 회원 테이블 필드
     email: '',
     password: '',
     passwordConfirm: '',
@@ -20,7 +21,7 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
     gender: '',
     address: '',
     address_detail: '',
-    role_id: 1 
+    is_agreed: false
   });
 
   const [emailChecked, setEmailChecked] = useState(false);
@@ -73,7 +74,7 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
     }, 1000);
   };
 
-  // 약관 동의 핸들러 추가
+  // 약관 동의 핸들러 
   const handleAgreementChange = (agreed: boolean) => {
     setIsAgreed(agreed);
     if (agreed && errors.terms) {
@@ -84,6 +85,7 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {};
 
+    // 회원 필드 검증
     if (!formData.email) newErrors.email = '이메일을 입력해주세요.';
     if (!emailChecked) newErrors.email = '이메일 중복확인을 해주세요.';
     if (!formData.password) newErrors.password = '비밀번호를 입력해주세요.';
@@ -98,7 +100,7 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
     if (!formData.address) newErrors.address = '주소를 입력해주세요.';
     if (!formData.address_detail) newErrors.address_detail = '상세 주소를 입력해주세요.';
     
-    // 약관 동의 검증 추가
+    // 약관 동의 검증
     if (!is_agreed) newErrors.terms = '약관에 동의해주세요.';
 
     setErrors(newErrors);
@@ -112,8 +114,13 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
       return;
     }
 
+    // 최종 제출 데이터에 약관 동의 포함
+    const submitData = {
+      ...formData,
+      is_agreed
+    };
     
-    console.log('일반 사용자 회원가입:', { ...formData, is_agreed });
+    console.log('일반 사용자 회원가입:', submitData);
     // 실제 회원가입 API 호출
   };
 

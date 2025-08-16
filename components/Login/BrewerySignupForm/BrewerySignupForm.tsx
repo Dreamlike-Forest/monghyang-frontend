@@ -10,12 +10,15 @@ interface BrewerySignupFormProps {
 
 const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
   const [formData, setFormData] = useState({
-    // 양조장 정보만 (ERD brewery 테이블 기준)
-    brewery_email: '',
+    // 양조장 정보들
+    email: '',
     password: '',
     passwordConfirm: '',
+    phone: '',
+    nickname: '',
+    gender: '',
+    birth: '',
     brewery_name: '',
-    brewery_phone: '',
     brewery_address: '',
     brewery_address_detail: '',
     business_registration_number: '',
@@ -23,8 +26,7 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
     brewery_account_number: '',
     brewery_bank_name: '',
     brewery_website: '',
-    introduction: '',
-    region_type_id: 1 // 기본값 설정
+    introduction: ''
   });
 
   const [emailChecked, setEmailChecked] = useState(false);
@@ -41,7 +43,7 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
     }));
 
     // 이메일이 변경되면 중복확인을 다시 해야 함
-    if (name === 'brewery_email') {
+    if (name === 'email') {
       setEmailChecked(false);
     }
 
@@ -55,14 +57,14 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
   };
 
   const handleEmailCheck = async () => {
-    if (!formData.brewery_email) {
-      setErrors(prev => ({ ...prev, brewery_email: '업무용 이메일을 입력해주세요.' }));
+    if (!formData.email) {
+      setErrors(prev => ({ ...prev, email: '업무용 이메일을 입력해주세요.' }));
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.brewery_email)) {
-      setErrors(prev => ({ ...prev, brewery_email: '올바른 이메일 형식을 입력해주세요.' }));
+    if (!emailRegex.test(formData.email)) {
+      setErrors(prev => ({ ...prev, email: '올바른 이메일 형식을 입력해주세요.' }));
       return;
     }
 
@@ -72,7 +74,7 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
     setTimeout(() => {
       setEmailChecked(true);
       setIsCheckingEmail(false);
-      setErrors(prev => ({ ...prev, brewery_email: '' }));
+      setErrors(prev => ({ ...prev, email: '' }));
     }, 1000);
   };
 
@@ -86,15 +88,18 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {};
 
-    // 양조장 정보 검증
-    if (!formData.brewery_email) newErrors.brewery_email = '업무용 이메일을 입력해주세요.';
-    if (!emailChecked) newErrors.brewery_email = '이메일 중복확인을 해주세요.';
+   // 양조장 정보 검증
+    if (!formData.email) newErrors.email = '업무용 이메일을 입력해주세요.';
+    if (!emailChecked) newErrors.email = '이메일 중복확인을 해주세요.';
     if (!formData.password) newErrors.password = '비밀번호를 입력해주세요.';
     if (formData.password.length < 8) newErrors.password = '비밀번호는 8자 이상이어야 합니다.';
     if (!formData.passwordConfirm) newErrors.passwordConfirm = '비밀번호 확인을 입력해주세요.';
     if (formData.password !== formData.passwordConfirm) newErrors.passwordConfirm = '비밀번호가 일치하지 않습니다.';
+    if (!formData.phone) newErrors.phone = '업무용 전화번호를 입력해주세요.';
+    if (!formData.nickname) newErrors.nickname = '닉네임을 입력해주세요.';
+    if (!formData.gender) newErrors.gender = '성별을 선택해주세요.';
+    if (!formData.birth) newErrors.birth = '생년월일을 입력해주세요.';
     if (!formData.brewery_name) newErrors.brewery_name = '양조장 상호명을 입력해주세요.';
-    if (!formData.brewery_phone) newErrors.brewery_phone = '업무용 전화번호를 입력해주세요.';
     if (!formData.brewery_address) newErrors.brewery_address = '양조장 주소를 입력해주세요.';
     if (!formData.brewery_address_detail) newErrors.brewery_address_detail = '양조장 상세 주소를 입력해주세요.';
     if (!formData.business_registration_number) newErrors.business_registration_number = '사업자 등록번호를 입력해주세요.';
@@ -151,15 +156,15 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
         <form className="brewery-signup-form" onSubmit={handleSubmit}>
           {/* 업무용 이메일 */}
           <div className="brewery-form-group">
-            <label htmlFor="brewery_email" className="brewery-form-label">업무용 이메일 (아이디) *</label>
+            <label htmlFor="email" className="brewery-form-label">업무용 이메일 (아이디) *</label>
             <div className="brewery-email-input-group">
               <input
                 type="email"
-                id="brewery_email"
-                name="brewery_email"
-                className={`brewery-form-input ${errors.brewery_email ? 'error' : ''} ${emailChecked ? 'success' : ''}`}
+                id="email"
+                name="email"
+                className={`brewery-form-input ${errors.email ? 'error' : ''} ${emailChecked ? 'success' : ''}`}
                 placeholder="brewery@company.com"
-                value={formData.brewery_email}
+                value={formData.email}
                 onChange={handleInputChange}
               />
               <button
@@ -171,8 +176,8 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
                 {isCheckingEmail ? '확인중...' : emailChecked ? '확인완료' : '중복확인'}
               </button>
             </div>
-            {errors.brewery_email && <span className="brewery-error-message">{errors.brewery_email}</span>}
-            {emailChecked && !errors.brewery_email && <span className="brewery-success-message">사용 가능한 이메일입니다.</span>}
+            {errors.email && <span className="brewery-error-message">{errors.email}</span>}
+            {emailChecked && !errors.email && <span className="brewery-success-message">사용 가능한 이메일입니다.</span>}
           </div>
 
           {/* 비밀번호 */}
@@ -205,6 +210,67 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
             {errors.passwordConfirm && <span className="brewery-error-message">{errors.passwordConfirm}</span>}
           </div>
 
+          {/* 업무용 전화번호 */}
+          <div className="brewery-form-group">
+            <label htmlFor="phone" className="brewery-form-label">업무용 전화번호 *</label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              className={`brewery-form-input ${errors.phone ? 'error' : ''}`}
+              placeholder="02-1234-5678"
+              value={formData.phone}
+              onChange={handleInputChange}
+            />
+            {errors.phone && <span className="brewery-error-message">{errors.phone}</span>}
+          </div>
+
+          {/* 닉네임 */}
+          <div className="brewery-form-group">
+            <label htmlFor="nickname" className="brewery-form-label">닉네임 *</label>
+            <input
+              type="text"
+              id="nickname"
+              name="nickname"
+              className={`brewery-form-input ${errors.nickname ? 'error' : ''}`}
+              placeholder="닉네임을 입력하세요"
+              value={formData.nickname}
+              onChange={handleInputChange}
+            />
+            {errors.nickname && <span className="brewery-error-message">{errors.nickname}</span>}
+          </div>
+
+          {/* 성별 */}
+          <div className="brewery-form-group">
+            <label htmlFor="gender" className="brewery-form-label">성별 *</label>
+            <select
+              id="gender"
+              name="gender"
+              className={`brewery-form-input ${errors.gender ? 'error' : ''}`}
+              value={formData.gender}
+              onChange={handleInputChange}
+            >
+              <option value="">성별을 선택하세요</option>
+              <option value="male">남성</option>
+              <option value="female">여성</option>
+            </select>
+            {errors.gender && <span className="brewery-error-message">{errors.gender}</span>}
+          </div>
+
+          {/* 생년월일 */}
+          <div className="brewery-form-group">
+            <label htmlFor="birth" className="brewery-form-label">생년월일 *</label>
+            <input
+              type="date"
+              id="birth"
+              name="birth"
+              className={`brewery-form-input ${errors.birth ? 'error' : ''}`}
+              value={formData.birth}
+              onChange={handleInputChange}
+            />
+            {errors.birth && <span className="brewery-error-message">{errors.birth}</span>}
+          </div>
+
           {/* 양조장 상호명 */}
           <div className="brewery-form-group">
             <label htmlFor="brewery_name" className="brewery-form-label">양조장 상호명 *</label>
@@ -218,21 +284,6 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
               onChange={handleInputChange}
             />
             {errors.brewery_name && <span className="brewery-error-message">{errors.brewery_name}</span>}
-          </div>
-
-          {/* 업무용 전화번호 */}
-          <div className="brewery-form-group">
-            <label htmlFor="brewery_phone" className="brewery-form-label">업무용 전화번호 *</label>
-            <input
-              type="tel"
-              id="brewery_phone"
-              name="brewery_phone"
-              className={`brewery-form-input ${errors.brewery_phone ? 'error' : ''}`}
-              placeholder="02-1234-5678"
-              value={formData.brewery_phone}
-              onChange={handleInputChange}
-            />
-            {errors.brewery_phone && <span className="brewery-error-message">{errors.brewery_phone}</span>}
           </div>
 
           {/* 양조장 주소 */}
@@ -364,13 +415,6 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
             />
             {errors.introduction && <span className="brewery-error-message">{errors.introduction}</span>}
           </div>
-
-          {/* 지역 타입 (숨김 필드 - 추후 관리자가 설정) */}
-          <input
-            type="hidden"
-            name="region_type_id"
-            value={formData.region_type_id}
-          />
 
           {/* 약관 동의 컴포넌트 */}
           <TermsAgreement

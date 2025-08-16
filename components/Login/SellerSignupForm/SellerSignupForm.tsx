@@ -10,12 +10,15 @@ interface SellerSignupFormProps {
 
 const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
   const [formData, setFormData] = useState({
-    // 판매자 정보만 (ERD seller 테이블 기준)
-    seller_email: '',
+
+    email: '',
     password: '',
     passwordConfirm: '',
+    phone: '',
+    nickname: '',
+    gender: '',
+    birth: '',
     seller_name: '',
-    seller_phone: '',
     seller_address: '',
     seller_address_detail: '',
     business_registration_number: '',
@@ -39,7 +42,7 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
     }));
 
     // 이메일이 변경되면 중복확인을 다시 해야 함
-    if (name === 'seller_email') {
+    if (name === 'email') {
       setEmailChecked(false);
     }
 
@@ -53,14 +56,14 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
   };
 
   const handleEmailCheck = async () => {
-    if (!formData.seller_email) {
-      setErrors(prev => ({ ...prev, seller_email: '업무용 이메일을 입력해주세요.' }));
+    if (!formData.email) {
+      setErrors(prev => ({ ...prev, email: '업무용 이메일을 입력해주세요.' }));
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.seller_email)) {
-      setErrors(prev => ({ ...prev, seller_email: '올바른 이메일 형식을 입력해주세요.' }));
+    if (!emailRegex.test(formData.email)) {
+      setErrors(prev => ({ ...prev, email: '올바른 이메일 형식을 입력해주세요.' }));
       return;
     }
 
@@ -70,7 +73,7 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
     setTimeout(() => {
       setEmailChecked(true);
       setIsCheckingEmail(false);
-      setErrors(prev => ({ ...prev, seller_email: '' }));
+      setErrors(prev => ({ ...prev, email: '' }));
     }, 1000);
   };
 
@@ -85,14 +88,17 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
     const newErrors: {[key: string]: string} = {};
 
     // 판매자 정보 검증
-    if (!formData.seller_email) newErrors.seller_email = '업무용 이메일을 입력해주세요.';
-    if (!emailChecked) newErrors.seller_email = '이메일 중복확인을 해주세요.';
+    if (!formData.email) newErrors.email = '업무용 이메일을 입력해주세요.';
+    if (!emailChecked) newErrors.email = '이메일 중복확인을 해주세요.';
     if (!formData.password) newErrors.password = '비밀번호를 입력해주세요.';
     if (formData.password.length < 8) newErrors.password = '비밀번호는 8자 이상이어야 합니다.';
     if (!formData.passwordConfirm) newErrors.passwordConfirm = '비밀번호 확인을 입력해주세요.';
     if (formData.password !== formData.passwordConfirm) newErrors.passwordConfirm = '비밀번호가 일치하지 않습니다.';
+    if (!formData.phone) newErrors.phone = '업무용 전화번호를 입력해주세요.';
+    if (!formData.nickname) newErrors.nickname = '닉네임을 입력해주세요.';
+    if (!formData.gender) newErrors.gender = '성별을 선택해주세요.';
+    if (!formData.birth) newErrors.birth = '생년월일을 입력해주세요.';
     if (!formData.seller_name) newErrors.seller_name = '판매자 이름을 입력해주세요.';
-    if (!formData.seller_phone) newErrors.seller_phone = '업무용 전화번호를 입력해주세요.';
     if (!formData.seller_address) newErrors.seller_address = '사업장 위치를 입력해주세요.';
     if (!formData.seller_address_detail) newErrors.seller_address_detail = '사업장 상세 주소를 입력해주세요.';
     if (!formData.business_registration_number) newErrors.business_registration_number = '사업자 등록번호를 입력해주세요.';
@@ -133,17 +139,17 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
         <h1 className="seller-signup-title">술 판매자 회원가입</h1>
         
         <form className="seller-signup-form" onSubmit={handleSubmit}>
-          {/* 업무용 이메일 */}
+          {/* 업무용 이메일  */}
           <div className="seller-form-group">
-            <label htmlFor="seller_email" className="seller-form-label">업무용 이메일 (아이디) *</label>
+            <label htmlFor="email" className="seller-form-label">업무용 이메일 (아이디) *</label>
             <div className="seller-email-input-group">
               <input
                 type="email"
-                id="seller_email"
-                name="seller_email"
-                className={`seller-form-input ${errors.seller_email ? 'error' : ''} ${emailChecked ? 'success' : ''}`}
+                id="email"
+                name="email"
+                className={`seller-form-input ${errors.email ? 'error' : ''} ${emailChecked ? 'success' : ''}`}
                 placeholder="business@company.com"
-                value={formData.seller_email}
+                value={formData.email}
                 onChange={handleInputChange}
               />
               <button
@@ -155,8 +161,8 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
                 {isCheckingEmail ? '확인중...' : emailChecked ? '확인완료' : '중복확인'}
               </button>
             </div>
-            {errors.seller_email && <span className="seller-error-message">{errors.seller_email}</span>}
-            {emailChecked && !errors.seller_email && <span className="seller-success-message">사용 가능한 이메일입니다.</span>}
+            {errors.email && <span className="seller-error-message">{errors.email}</span>}
+            {emailChecked && !errors.email && <span className="seller-success-message">사용 가능한 이메일입니다.</span>}
           </div>
 
           {/* 비밀번호 */}
@@ -189,6 +195,67 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
             {errors.passwordConfirm && <span className="seller-error-message">{errors.passwordConfirm}</span>}
           </div>
 
+          {/* 업무용 전화번호 */}
+          <div className="seller-form-group">
+            <label htmlFor="phone" className="seller-form-label">업무용 전화번호 *</label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              className={`seller-form-input ${errors.phone ? 'error' : ''}`}
+              placeholder="02-1234-5678"
+              value={formData.phone}
+              onChange={handleInputChange}
+            />
+            {errors.phone && <span className="seller-error-message">{errors.phone}</span>}
+          </div>
+
+          {/* 닉네임 */}
+          <div className="seller-form-group">
+            <label htmlFor="nickname" className="seller-form-label">닉네임 *</label>
+            <input
+              type="text"
+              id="nickname"
+              name="nickname"
+              className={`seller-form-input ${errors.nickname ? 'error' : ''}`}
+              placeholder="닉네임을 입력하세요"
+              value={formData.nickname}
+              onChange={handleInputChange}
+            />
+            {errors.nickname && <span className="seller-error-message">{errors.nickname}</span>}
+          </div>
+
+          {/* 성별  */}
+          <div className="seller-form-group">
+            <label htmlFor="gender" className="seller-form-label">성별 *</label>
+            <select
+              id="gender"
+              name="gender"
+              className={`seller-form-input ${errors.gender ? 'error' : ''}`}
+              value={formData.gender}
+              onChange={handleInputChange}
+            >
+              <option value="">성별을 선택하세요</option>
+              <option value="male">남성</option>
+              <option value="female">여성</option>
+            </select>
+            {errors.gender && <span className="seller-error-message">{errors.gender}</span>}
+          </div>
+
+          {/* 생년월일 */}
+          <div className="seller-form-group">
+            <label htmlFor="birth" className="seller-form-label">생년월일 *</label>
+            <input
+              type="date"
+              id="birth"
+              name="birth"
+              className={`seller-form-input ${errors.birth ? 'error' : ''}`}
+              value={formData.birth}
+              onChange={handleInputChange}
+            />
+            {errors.birth && <span className="seller-error-message">{errors.birth}</span>}
+          </div>
+
           {/* 판매자 이름 */}
           <div className="seller-form-group">
             <label htmlFor="seller_name" className="seller-form-label">판매자 이름 *</label>
@@ -202,21 +269,6 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
               onChange={handleInputChange}
             />
             {errors.seller_name && <span className="seller-error-message">{errors.seller_name}</span>}
-          </div>
-
-          {/* 업무용 전화번호 */}
-          <div className="seller-form-group">
-            <label htmlFor="seller_phone" className="seller-form-label">업무용 전화번호 *</label>
-            <input
-              type="tel"
-              id="seller_phone"
-              name="seller_phone"
-              className={`seller-form-input ${errors.seller_phone ? 'error' : ''}`}
-              placeholder="02-1234-5678"
-              value={formData.seller_phone}
-              onChange={handleInputChange}
-            />
-            {errors.seller_phone && <span className="seller-error-message">{errors.seller_phone}</span>}
           </div>
 
           {/* 사업장 위치 주소 */}
