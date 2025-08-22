@@ -15,8 +15,7 @@
 .product-image-container {
   position: relative;
   overflow: hidden;
-  /* 데스크톱에서는 기존 크기 유지: 높이 200px */
-  height: 200px;
+  height: 193px;
 }
 
 .product-image {
@@ -28,7 +27,7 @@
 
 .product-image-placeholder {
   width: 100%;
-  height: 100%;
+  height: 193px; 
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   display: flex;
   flex-direction: column;
@@ -207,7 +206,7 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 12px;
-  min-height: 24px; /* 고정 높이로 카드 크기 일관성 유지 */
+  min-height: 24px; 
   gap: 8px;
 }
 
@@ -223,7 +222,7 @@
 /* 정가 스타일 - 더 작게 표시 */
 .original-price {
   font-size: 12px;
-  color: #999 !important; /* 회색으로 고정 */
+  color: #999 !important; 
   text-decoration: line-through;
   white-space: nowrap;
   order: 1; /* 할인가 앞에 표시 */
@@ -233,14 +232,14 @@
 .current-price {
   font-size: 16px;
   font-weight: 700;
-  color: #333 !important; /* 기본 검은색 */
+  color: #333 !important; 
   white-space: nowrap;
   order: 2; /* 정가 뒤에 표시 */
 }
 
 /* 할인가일 때도 검은색으로 유지 */
 .current-price.discount-price {
-  color: #333 !important; /* 할인가도 검은색으로 통일 */
+  color: #333 !important; 
 }
 
 /* 할인율 배지 - 가격 왼쪽에 작게 표시 */
@@ -252,7 +251,7 @@
   font-size: 10px;
   font-weight: 600;
   white-space: nowrap;
-  order: 0; /* 맨 앞에 표시 */
+  order: 0; 
 }
 
 .add-to-cart-button {
@@ -276,20 +275,28 @@
   transform: translateY(1px);
 }
 
-/* 반응형 디자인 - 태블릿부터 aspect-ratio 사용 */
+/* 반응형 디자인 - 태블릿부터 2:1 비율 유지 */
 @media (max-width: 1024px) {
-  /* 태블릿에서 aspect-ratio로 전환하여 동일한 비율 유지 */
+  /* 태블릿에서도 2:1 비율 유지 */
   .product-image-container {
     height: auto;
-    aspect-ratio: 1.93;
+    aspect-ratio: 2; /* 2:1 비율 */
+  }
+  
+  .product-image-placeholder {
+    height: 100%; /* aspect-ratio로 자동 조정 */
   }
 }
 
 @media (max-width: 768px) {
-  /* 모바일에서도 동일한 비율 유지 */
+  /* 모바일에서도 2:1 비율 유지 */
   .product-image-container {
     height: auto;
-    aspect-ratio: 1.93;
+    aspect-ratio: 2; /* 2:1 비율 */
+  }
+  
+  .product-image-placeholder {
+    height: 100%; /* aspect-ratio로 자동 조정 */
   }
   
   .product-info {
@@ -325,10 +332,14 @@
 
 /* 작은 모바일에서는 가격 정보를 더 컴팩트하게 */
 @media (max-width: 480px) {
-  /* 작은 모바일에서도 동일한 비율 유지 */
+  /* 작은 모바일에서도 2:1 비율 유지 */
   .product-image-container {
     height: auto;
-    aspect-ratio: 1.93;
+    aspect-ratio: 2; /* 2:1 비율 */
+  }
+  
+  .product-image-placeholder {
+    height: 100%; /* aspect-ratio로 자동 조정 */
   }
   
   .product-price-container {
