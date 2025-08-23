@@ -14,12 +14,12 @@ import {
 } from '../../types/community';
 import './Community.css';
 
-// Mock 데이터 (이미지 포함)
-const mockPosts: Post[] = [
+// Mock 데이터 (이미지 포함) - 전역 상태로 관리
+let globalMockPosts: Post[] = [
   {
     post_id: 1,
-    title: '제주 전통주 투어 코스 추천합니다',
-    content: '제주도에서 전통주 양조장 투어를 다녀왔는데 정말 좋았어요. 한라산 양조장에서 직접 만든 소주도 시음해보고, 전통 누룩 만들기 체험도 할 수 있었습니다. 특히 제주의 깨끗한 물로 만든 술의 맛이 일품이었어요!',
+    title: '전주 양조장 투어 추천',
+    content: '전주에서 전통주 양조장 투어를 다녀왔는데 정말 좋았어요. 전통 누룩 만들기 체험도 할 수 있었습니다. 특히 전주의 깨끗한 물로 만든 술의 맛이 일품이었어요!',
     author: '양조장탐험가',
     author_id: 1,
     category: 'brewery_review',
@@ -28,14 +28,14 @@ const mockPosts: Post[] = [
     like_count: 15,
     comment_count: 8,
     rating: 5,
-    brewery_name: '제주 한라산 양조장',
-    tags: ['제주도', '양조장투어', '한라산', '전통주'],
+    brewery_name: '전주 양조장',
+    tags: ['전주', '양조장투어', '전통주'],
     images: [
       {
         image_id: 1,
         image_url: 'https://images.unsplash.com/photo-1571613316887-6f8d5cbf7ef7?w=400&h=300&fit=crop',
         image_order: 1,
-        alt_text: '제주 한라산 양조장 외부 전경'
+        alt_text: '전주 양조장 외부 전경'
       },
       {
         image_id: 2,
@@ -158,6 +158,46 @@ const mockPosts: Post[] = [
         alt_text: '완성된 복분자 막걸리'
       }
     ]
+  },
+  // 추가 상품 리뷰들
+  {
+    post_id: 8,
+    title: '복분자 막걸리와 안주 페어링 후기',
+    content: '복분자 막걸리 다양한 안주와 함께 마셔봤습니다. 특히 생선회와 정말 잘 어울리더라고요. 청주 특유의 깔끔함이 회의 비린내를 말끔히 잡아주고, 단맛이 회의 감칠맛을 더욱 살려줍니다. 치즈와도 의외로 잘 맞아서 놀랐어요.',
+    author: '페어링마스터',
+    author_id: 7,
+    category: 'drink_review',
+    created_at: '2025-01-09T19:30:00Z',
+    view_count: 156,
+    like_count: 9,
+    comment_count: 4,
+    rating: 5,
+    product_name: '복분자 막걸리',
+    tags: ['복분자', '페어링', '안주', '생선회'],
+    images: [
+      {
+        image_id: 9,
+        image_url: 'https://images.unsplash.com/photo-1551218808-94e220e084d2?w=400&h=300&fit=crop',
+        image_order: 1,
+        alt_text: '복분자 막걸리 생선회 페어링'
+      }
+    ]
+  },
+  {
+    post_id: 10,
+    title: '청주 초보자에게 추천하는 극찬 청명',
+    content: '청주를 처음 마시는 친구들에게 극찬 청명을 권해봤는데 반응이 정말 좋았어요. 알코올 도수가 적당하고 단맛이 있어서 거부감 없이 마실 수 있다고 하더라고요. 가격도 부담스럽지 않아서 청주 입문용으로 딱입니다.',
+    author: '청주전도사',
+    author_id: 8,
+    category: 'drink_review',
+    created_at: '2025-01-07T16:45:00Z',
+    view_count: 203,
+    like_count: 15,
+    comment_count: 8,
+    rating: 4,
+    product_name: '극찬 청명',
+    tags: ['극찬', '초보자', '추천', '입문용'],
+    images: []
   }
 ];
 
@@ -225,6 +265,56 @@ const mockStats: CommunityStats = {
   postsWithImages: 234
 };
 
+// 전역 함수: 상품 리뷰 가져오기
+export const getCommunityReviews = (): Post[] => {
+  return globalMockPosts.filter(post => post.category === 'drink_review');
+};
+
+// 전역 함수: 특정 상품의 리뷰 가져오기
+export const getProductReviews = (productName: string): Post[] => {
+  return globalMockPosts.filter(
+    post => post.category === 'drink_review' && post.product_name === productName
+  );
+};
+
+// 전역 함수: 새 리뷰 추가
+export const addCommunityReview = (reviewData: WritePostData): Post => {
+  const newPost: Post = {
+    post_id: Date.now(),
+    title: reviewData.title,
+    content: reviewData.content,
+    author: '현재사용자', // 실제로는 로그인한 사용자 정보
+    author_id: 999,
+    category: reviewData.category,
+    created_at: new Date().toISOString(),
+    view_count: 0,
+    like_count: 0,
+    comment_count: 0,
+    rating: reviewData.rating,
+    brewery_name: reviewData.brewery_name,
+    product_name: reviewData.product_name,
+    tags: reviewData.tags,
+    images: reviewData.images.map((file, index) => ({
+      image_id: Date.now() + index,
+      image_url: URL.createObjectURL(file), // 실제로는 서버 업로드 후 URL
+      image_order: index + 1,
+      alt_text: reviewData.imageDescriptions[index] || `${reviewData.title} 이미지 ${index + 1}`
+    }))
+  };
+
+  // 전역 배열에 추가
+  globalMockPosts.unshift(newPost);
+  return newPost;
+};
+
+// 전역 함수: 리뷰 업데이트
+export const updateCommunityReview = (postId: number, updates: Partial<Post>): void => {
+  const index = globalMockPosts.findIndex(post => post.post_id === postId);
+  if (index !== -1) {
+    globalMockPosts[index] = { ...globalMockPosts[index], ...updates };
+  }
+};
+
 interface CommunityProps {
   className?: string;
 }
@@ -233,8 +323,8 @@ const Community: React.FC<CommunityProps> = ({ className }) => {
   const [currentView, setCurrentView] = useState<'list' | 'write'>('list');
   const [currentCategory, setCurrentCategory] = useState<PostCategory | 'all'>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [allPosts] = useState<Post[]>(mockPosts);
-  const [filteredPosts, setFilteredPosts] = useState<Post[]>(mockPosts);
+  const [allPosts, setAllPosts] = useState<Post[]>(globalMockPosts);
+  const [filteredPosts, setFilteredPosts] = useState<Post[]>(globalMockPosts);
   const [filter, setFilter] = useState<PostFilter>({
     category: 'all',
     subcategory: '',
@@ -244,6 +334,11 @@ const Community: React.FC<CommunityProps> = ({ className }) => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [stats] = useState<CommunityStats>(mockStats);
+
+  // 전역 상태 변경 감지
+  useEffect(() => {
+    setAllPosts([...globalMockPosts]);
+  }, []);
 
   // 필터 적용 함수
   const applyFilters = useCallback(() => {
@@ -336,35 +431,20 @@ const Community: React.FC<CommunityProps> = ({ className }) => {
 
   const handleWriteSubmit = async (data: WritePostData) => {
     console.log('새 게시글 작성:', data);
-    // TODO: API 호출하여 게시글 저장
     
-    // 임시로 로컬 상태에 추가 (실제로는 서버에서 응답받은 데이터 사용)
-    const newPost: Post = {
-      post_id: Date.now(),
-      title: data.title,
-      content: data.content,
-      author: '현재사용자', // 실제로는 로그인한 사용자 정보
-      author_id: 999,
-      category: data.category,
-      created_at: new Date().toISOString(),
-      view_count: 0,
-      like_count: 0,
-      comment_count: 0,
-      rating: data.rating,
-      brewery_name: data.brewery_name,
-      product_name: data.product_name,
-      tags: data.tags,
-      images: data.images.map((file, index) => ({
-        image_id: Date.now() + index,
-        image_url: URL.createObjectURL(file), // 실제로는 서버 업로드 후 URL
-        image_order: index + 1,
-        alt_text: data.imageDescriptions[index] || `${data.title} 이미지 ${index + 1}`
-      }))
-    };
-
-    // 실제 구현에서는 전역 상태나 API 재호출로 목록 갱신
-    setCurrentView('list');
-    alert('게시글이 작성되었습니다!');
+    try {
+      // 전역 상태에 새 게시글 추가
+      const newPost = addCommunityReview(data);
+      
+      // 로컬 상태 업데이트
+      setAllPosts(prev => [newPost, ...prev]);
+      
+      setCurrentView('list');
+      alert('게시글이 작성되었습니다!');
+    } catch (error) {
+      console.error('게시글 작성 실패:', error);
+      alert('게시글 작성에 실패했습니다. 다시 시도해주세요.');
+    }
   };
 
   const handleWriteCancel = () => {
