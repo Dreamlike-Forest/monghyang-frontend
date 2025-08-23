@@ -41,9 +41,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   const handleProductClick = () => {
     if (onProductClick) {
+      console.log('상품 카드 클릭:', product.name);
       onProductClick(product.product_id);
     } else {
       console.log('상품 상세 페이지로 이동:', product.name);
+      // 기본 동작: 현재는 콘솔 로그만
     }
   };
 
@@ -65,6 +67,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
     !product.image_key.includes('/api/placeholder') && 
     product.image_key !== '' &&
     !product.image_key.includes('placeholder');
+
+  // 가격 표시 함수
+  const formatPrice = (price: number): string => {
+    return price.toLocaleString();
+  };
+
+  // 가격 범위 표시 여부 확인
+  const hasPriceRange = product.minPrice !== product.maxPrice;
 
   return (
     <div className="product-card" onClick={handleProductClick}>
@@ -138,18 +148,29 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </span>
         </div>
         
+        {/* 수정된 가격 컨테이너 - 가로 배치 */}
         <div className="product-price-container">
-          {product.originalPrice && product.originalPrice > product.minPrice && (
-            <span className="original-price">
-              {product.originalPrice.toLocaleString()}원
+          <div className="price-info-wrapper">
+            {/* 할인율 배지 */}
+            {discountRate > 0 && (
+              <span className="discount-rate-badge">{discountRate}%</span>
+            )}
+            
+            {/* 정가 (할인이 있을 때만 표시) */}
+            {product.originalPrice && product.originalPrice > product.minPrice && (
+              <span className="original-price">
+                {formatPrice(product.originalPrice)}원
+              </span>
+            )}
+            
+            {/* 현재 가격 */}
+            <span className={`current-price ${discountRate > 0 ? 'discount-price' : ''}`}>
+              {hasPriceRange 
+                ? `${formatPrice(product.minPrice)}원~`
+                : `${formatPrice(product.minPrice)}원`
+              }
             </span>
-          )}
-          <span className={`current-price ${discountRate > 0 ? 'discount-price' : ''}`}>
-            {product.minPrice === product.maxPrice 
-              ? `${product.minPrice.toLocaleString()}원`
-              : `${product.minPrice.toLocaleString()}원 ~ ${product.maxPrice.toLocaleString()}원`
-            }
-          </span>
+          </div>
         </div>
         
         <button 
