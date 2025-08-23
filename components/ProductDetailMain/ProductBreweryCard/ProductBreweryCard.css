@@ -1,0 +1,429 @@
+/* 양조장 카드 메인 컨테이너 - 양조장 정보를 보여주는 전체 카드 */
+.productdetail-product-brewery-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  min-height: 400px;
+}
+
+.productdetail-product-brewery-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  border-color: #8b5a3c;
+}
+
+/* 이미지 섹션 - 양조장 사진이 들어가는 상단 영역 */
+.productdetail-brewery-card-image-section {
+  position: relative;
+  width: 100%;
+  height: 240px;
+  overflow: hidden;
+  background-color: #f8f9fa;
+}
+
+/* 양조장 이미지 */
+.productdetail-brewery-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.productdetail-product-brewery-card:hover .productdetail-brewery-card-image {
+  transform: scale(1.05);
+}
+
+/* 이미지 플레이스홀더 - 이미지 로딩 실패 시 표시되는 영역 */
+.productdetail-brewery-card-image-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  border: 2px dashed #dee2e6;
+  position: relative;
+}
+
+.productdetail-brewery-card-placeholder-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.6;
+  color: #8b5a3c;
+}
+
+.productdetail-brewery-card-placeholder-text {
+  font-size: 16px;
+  font-weight: 500;
+  text-align: center;
+  opacity: 0.7;
+}
+
+/* 이미지 로딩 상태 */
+.productdetail-brewery-image-loading {
+  opacity: 0.7;
+  filter: blur(1px);
+}
+
+/* 배지 컨테이너 - 양조장 인증마크나 특별 표시가 들어가는 영역 */
+.productdetail-brewery-card-badge-container {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* 이미지 배지 */
+.productdetail-brewery-card-badge-image {
+  max-width: 80px;
+  max-height: 40px;
+  border-radius: 8px;
+  object-fit: contain;
+  background-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease;
+}
+
+.productdetail-brewery-card-badge-image:hover {
+  transform: scale(1.05);
+}
+
+/* 텍스트 배지 */
+.productdetail-brewery-card-badge-text {
+  background-color: #8b5a3c;
+  color: white;
+  padding: 8px 14px;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  white-space: nowrap;
+  min-width: 70px;
+}
+
+/* 호버 시 상세보기 오버레이 - 마우스 올렸을 때 나타나는 "상세보기" 텍스트 */
+.productdetail-brewery-card-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(139, 90, 60, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 2;
+}
+
+.productdetail-product-brewery-card:hover .productdetail-brewery-card-overlay {
+  opacity: 1;
+}
+
+.productdetail-brewery-view-detail-text {
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  pointer-events: none;
+}
+
+/* 정보 섹션 - 양조장 이름, 설명, 연락처 등이 들어가는 하단 영역 */
+.productdetail-brewery-card-info-section {
+  padding: 24px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background-color: #ffffff;
+}
+
+/* 헤더 (이름 + 지역) - 양조장 이름과 위치 정보 */
+.productdetail-brewery-card-header {
+  margin-bottom: 4px;
+}
+
+/* 양조장 이름 */
+.productdetail-brewery-card-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 8px 0;
+  line-height: 1.3;
+}
+
+/* 양조장 위치 정보 */
+.productdetail-brewery-card-location {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #ef4444;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.productdetail-brewery-location-icon {
+  color: #ef4444;
+  font-size: 14px;
+}
+
+/* 설명 텍스트 - 양조장 소개 글 */
+.productdetail-brewery-card-description {
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0;
+  flex: 1;
+}
+
+/* 연락처 정보 - 전화번호, 이메일, 주소 등 */
+.productdetail-brewery-contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #f8f9fa;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.productdetail-contact-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.productdetail-contact-label {
+  color: #6b7280;
+  font-weight: 500;
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.productdetail-contact-value {
+  color: #374151;
+  font-weight: 500;
+  text-align: right;
+  flex: 1;
+  word-break: break-all;
+}
+
+/* 주종 태그 영역 - 양조장에서 만드는 술의 종류들 */
+.productdetail-brewery-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.productdetail-brewery-card-tag {
+  background: #f3f4f6;
+  color: #6b7280;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid #e5e7eb;
+}
+
+/* 푸터 (체험 정보 + 버튼) - 체험 프로그램 정보와 상세보기 버튼 */
+.productdetail-brewery-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+  margin-top: auto;
+}
+
+/* 체험 프로그램 정보 */
+.productdetail-brewery-experience-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.productdetail-brewery-experience-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.productdetail-brewery-experience-price {
+  font-size: 14px;
+  color: #8b5a3c;
+  font-weight: 600;
+}
+
+/* 상세보기 버튼 */
+.productdetail-brewery-detail-button {
+  background: #8b5a3c;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.productdetail-brewery-detail-button:hover {
+  background: #7c4d34;
+  transform: translateX(2px);
+}
+
+/* 빈 상태 - 양조장 정보가 없을 때 표시 */
+.productdetail-brewery-card-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6b7280;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.productdetail-brewery-empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+
+.productdetail-brewery-empty-text {
+  font-size: 16px;
+  margin: 0;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .productdetail-brewery-card-image-section {
+    height: 200px;
+  }
+  
+  .productdetail-brewery-card-info-section {
+    padding: 20px;
+    gap: 14px;
+  }
+  
+  .productdetail-brewery-card-name {
+    font-size: 18px;
+  }
+  
+  .productdetail-brewery-card-description {
+    font-size: 13px;
+  }
+  
+  .productdetail-brewery-card-footer {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  
+  .productdetail-brewery-detail-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .productdetail-contact-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .productdetail-contact-value {
+    text-align: left;
+  }
+}
+
+@media (max-width: 480px) {
+  .productdetail-brewery-card-image-section {
+    height: 180px;
+  }
+  
+  .productdetail-brewery-card-info-section {
+    padding: 16px;
+    gap: 12px;
+  }
+  
+  .productdetail-brewery-card-name {
+    font-size: 16px;
+  }
+  
+  .productdetail-brewery-card-description {
+    font-size: 12px;
+  }
+  
+  .productdetail-brewery-card-badge-text {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+
+  .productdetail-brewery-contact-info {
+    padding: 10px;
+  }
+
+  .productdetail-contact-item {
+    font-size: 12px;
+  }
+}
+
+/* 접근성 */
+@media (prefers-reduced-motion: reduce) {
+  .productdetail-product-brewery-card,
+  .productdetail-brewery-card-image,
+  .productdetail-brewery-card-badge-image,
+  .productdetail-brewery-card-overlay,
+  .productdetail-brewery-detail-button {
+    transition: none;
+  }
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+  .productdetail-product-brewery-card {
+    border: 2px solid;
+  }
+  
+  .productdetail-brewery-card-badge-image {
+    border: 1px solid;
+  }
+
+  .productdetail-brewery-card-overlay {
+    background: rgba(0, 0, 0, 0.8);
+  }
+}
+
+/* 포커스 스타일 */
+.productdetail-product-brewery-card:focus {
+  outline: 2px solid #8b5a3c;
+  outline-offset: 2px;
+}
+
+/* 터치 디바이스 최적화 */
+@media (hover: none) and (pointer: coarse) {
+  .productdetail-brewery-card-overlay {
+    display: none;
+  }
+  
+  .productdetail-product-brewery-card:active {
+    transform: scale(0.98);
+  }
+}
