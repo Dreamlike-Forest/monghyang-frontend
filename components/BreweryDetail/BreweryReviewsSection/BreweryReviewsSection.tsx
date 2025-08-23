@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PostDetail from '../../community/PostDetail/PostDetail';
 import BreweryReviewModal from '../BreweryReviewModal/BreweryReviewModal';
 import { WritePostData, Post, PostImage } from '../../../types/community'; 
 
-// 커뮤니티 CSS 파일들 import - 경로 확인 필요
+// 커뮤니티 CSS 파일들 import
 import '../../community/PostCard/PostCard.css';
 import './BreweryReviewsSection.css';
 
@@ -16,100 +16,126 @@ interface BreweryReviewsSectionProps {
   hideTitle?: boolean; 
 }
 
+// Community.tsx의 globalMockPosts에 직접 접근하는 방식으로 변경
+const getBreweryReviews = (breweryName: string): Post[] => {
+  try {
+    // Community.tsx의 mock 데이터를 직접 참조
+    // 실제 구현에서는 API를 통해 데이터를 가져옵니다
+    const mockPosts: Post[] = [
+      {
+        post_id: 1,
+        title: '전주 양조장 투어 추천',
+        content: '전주에서 전통주 양조장 투어를 다녀왔는데 정말 좋았어요. 전통 누룩 만들기 체험도 할 수 있었습니다. 특히 전주의 깨끗한 물로 만든 술의 맛이 일품이었어요!',
+        author: '양조장탐험가',
+        author_id: 1,
+        category: 'brewery_review',
+        created_at: '2025-01-15T10:30:00Z',
+        view_count: 234,
+        like_count: 15,
+        comment_count: 8,
+        rating: 5,
+        brewery_name: '전주 양조장',
+        tags: ['전주', '양조장투어', '전통주'],
+        images: [
+          {
+            image_id: 1,
+            image_url: 'https://images.unsplash.com/photo-1571613316887-6f8d5cbf7ef7?w=400&h=300&fit=crop',
+            image_order: 1,
+            alt_text: '전주 양조장 외부 전경'
+          },
+          {
+            image_id: 2,
+            image_url: 'https://images.unsplash.com/photo-1582106245687-a2a4c81d5a65?w=400&h=300&fit=crop',
+            image_order: 2,
+            alt_text: '전통주 시음 모습'
+          },
+          {
+            image_id: 3,
+            image_url: 'https://images.unsplash.com/photo-1534354871393-df4a6e8a2ec3?w=400&h=300&fit=crop',
+            image_order: 3,
+            alt_text: '누룩 만들기 체험'
+          }
+        ]
+      },
+      {
+        post_id: 5,
+        title: '안성 양조장 체험 프로그램 후기',
+        content: '지난 주말에 안성 양조장 체험 프로그램에 참여했는데 정말 유익한 시간이었어요. 전통 누룩 만들기부터 시작해서 발효 과정까지 직접 체험해볼 수 있었습니다. 직원분들도 친절하고 전문적이었어요. 아이들도 흥미롭게 참여할 수 있어서 가족 나들이로 추천합니다.',
+        author: '체험러',
+        author_id: 4,
+        category: 'brewery_review',
+        created_at: '2025-01-11T14:15:00Z',
+        view_count: 145,
+        like_count: 7,
+        comment_count: 4,
+        rating: 4,
+        brewery_name: '안성 양조장',
+        tags: ['안성', '체험프로그램', '양조장', '가족여행'],
+        images: [
+          {
+            image_id: 6,
+            image_url: 'https://images.unsplash.com/photo-1544024994-f6e9e3f1b536?w=400&h=300&fit=crop',
+            image_order: 1,
+            alt_text: '안성 양조장 체험 프로그램'
+          }
+        ]
+      }
+    ];
+
+    console.log('양조장 리뷰 필터링:', breweryName);
+    console.log('전체 mock 데이터:', mockPosts);
+
+    const filteredReviews = mockPosts.filter((review) => {
+      const isBreweryReview = review.category === 'brewery_review';
+      const nameMatches = review.brewery_name === breweryName;
+      
+      console.log(`리뷰 "${review.title}": category=${review.category}, brewery_name="${review.brewery_name}", 매칭=${isBreweryReview && nameMatches}`);
+      
+      return isBreweryReview && nameMatches;
+    });
+    
+    console.log('필터링된 양조장 리뷰 개수:', filteredReviews.length);
+    return filteredReviews;
+  } catch (error) {
+    console.error('양조장 리뷰 가져오기 실패:', error);
+    return [];
+  }
+};
+
 const BreweryReviewsSection: React.FC<BreweryReviewsSectionProps> = ({ 
   breweryName, 
   breweryId, 
   reviews: propReviews,
   hideTitle = false
 }) => {
-  // Mock 데이터 - community.ts의 Post 타입 사용
-  const mockBreweryReviews: Post[] = [
-    {
-      post_id: 1,
-      title: '안성 양조장 체험 프로그램 정말 좋았어요!',
-      content: '전통 증류 방식을 직접 체험하고 시음할 수 있는 프로그램이었습니다. 직원분들이 친절하게 설명해주시고, 체험 시간도 충분했어요. 특히 직접 만든 증류주의 맛이 일품이었습니다. 가족들과 함께 와서 더욱 의미있는 시간이었어요. 다음에 또 방문하고 싶습니다.',
-      author: '양조장탐험가',
-      author_id: 1,
-      category: 'brewery_review',
-      created_at: '2025-01-15T10:30:00Z',
-      view_count: 234,
-      like_count: 15,
-      comment_count: 8,
-      rating: 5,
-      brewery_name: '안성 양조장',
-      tags: ['안성', '양조장투어', '체험프로그램', '전통주'],
-      images: [
-        {
-          image_id: 1,
-          image_url: 'https://images.unsplash.com/photo-1571613316887-6f8d5cbf7ef7?w=400&h=300&fit=crop',
-          image_order: 1,
-          alt_text: '안성 양조장 외부 전경'
-        },
-        {
-          image_id: 2,
-          image_url: 'https://images.unsplash.com/photo-1582106245687-a2a4c81d5a65?w=400&h=300&fit=crop',
-          image_order: 2,
-          alt_text: '전통주 시음 모습'
-        },
-        {
-          image_id: 3,
-          image_url: 'https://images.unsplash.com/photo-1534354871393-df4a6e8a2ec3?w=400&h=300&fit=crop',
-          image_order: 3,
-          alt_text: '누룩 만들기 체험'
-        }
-      ]
-    },
-    {
-      post_id: 5,
-      title: '안성 양조장 체험 프로그램 후기',
-      content: '지난 주말에 안성 양조장 체험 프로그램에 참여했는데 정말 유익한 시간이었어요. 전통 누룩 만들기부터 시작해서 발효 과정까지 직접 체험해볼 수 있었습니다. 직원분들도 친절하고 전문적이었어요. 아이들도 흥미롭게 참여할 수 있어서 가족 나들이로 추천합니다.',
-      author: '체험러',
-      author_id: 4,
-      category: 'brewery_review',
-      created_at: '2025-01-11T14:15:00Z',
-      view_count: 145,
-      like_count: 7,
-      comment_count: 4,
-      rating: 4,
-      brewery_name: '안성 양조장',
-      tags: ['안성', '체험프로그램', '양조장', '가족여행'],
-      images: [
-        {
-          image_id: 6,
-          image_url: 'https://images.unsplash.com/photo-1544024994-f6e9e3f1b536?w=400&h=300&fit=crop',
-          image_order: 1,
-          alt_text: '안성 양조장 체험 프로그램'
-        }
-      ]
-    },
-    {
-      post_id: 7,
-      title: '정말 만족스러운 양조장 투어였어요',
-      content: '친구들과 함께 안성 양조장 투어에 참여했습니다. 전통주 제조 과정을 자세히 설명해주시고, 다양한 종류의 술을 시음해볼 수 있어서 좋았어요. 특히 막걸리가 정말 맛있었습니다.',
-      author: '전통주러버',
-      author_id: 6,
-      category: 'brewery_review',
-      created_at: '2025-01-08T16:45:00Z',
-      view_count: 89,
-      like_count: 5,
-      comment_count: 3,
-      rating: 4,
-      brewery_name: '안성 양조장',
-      tags: ['안성', '투어', '막걸리', '친구'],
-      images: []
-    }
-  ];
-
-  // Props로 받은 리뷰가 있으면 사용, 없으면 Mock 데이터에서 필터링
-  const reviews = propReviews || mockBreweryReviews.filter(
-    review => review.brewery_name === breweryName && review.category === 'brewery_review'
-  );
-  
   const [selectedReview, setSelectedReview] = useState<Post | null>(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const reviewsPerPage = 3; // 페이지당 리뷰 개수
+  const [localReviews, setLocalReviews] = useState<Post[]>([]); 
+  const reviewsPerPage = 3;
+
+  // 리뷰 데이터 로드
+  useEffect(() => {
+    console.log('BreweryReviewsSection 마운트됨:', breweryName);
+    const loadReviews = () => {
+      if (propReviews) {
+        console.log('Props로 받은 리뷰 사용:', propReviews.length);
+        setLocalReviews(propReviews);
+      } else {
+        console.log('커뮤니티에서 리뷰 로드 시작');
+        const breweryReviews = getBreweryReviews(breweryName);
+        console.log('로드된 리뷰 개수:', breweryReviews.length);
+        setLocalReviews(breweryReviews);
+      }
+    };
+
+    loadReviews();
+    
+    // 주기적 업데이트 (개발 중에만 사용)
+    const interval = setInterval(loadReviews, 10000); // 10초로 늘림
+    return () => clearInterval(interval);
+  }, [breweryName, propReviews]);
 
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
@@ -155,26 +181,68 @@ const BreweryReviewsSection: React.FC<BreweryReviewsSectionProps> = ({
 
   const handleLike = (postId: number) => {
     console.log('좋아요:', postId);
-    // TODO: 좋아요 API 호출
+    
+    // 로컬 상태 업데이트
+    setLocalReviews(prev => 
+      prev.map(review => 
+        review.post_id === postId 
+          ? { ...review, like_count: review.like_count + 1 }
+          : review
+      )
+    );
   };
 
   const handleComment = (postId: number, comment: string) => {
     console.log('댓글 작성:', postId, comment);
-    // TODO: 댓글 작성 API 호출
+    
+    // 로컬 상태 업데이트
+    setLocalReviews(prev => 
+      prev.map(review => 
+        review.post_id === postId 
+          ? { ...review, comment_count: review.comment_count + 1 }
+          : review
+      )
+    );
   };
 
   const handleWriteReview = () => {
-    console.log('리뷰 작성 버튼 클릭됨:', { breweryName, breweryId }); // 디버깅용
+    console.log('리뷰 작성 버튼 클릭됨:', { breweryName, breweryId });
     setIsReviewModalOpen(true);
   };
 
   const handleReviewSubmit = async (reviewData: WritePostData) => {
     try {
       console.log('양조장 리뷰 제출:', reviewData);
-      // TODO: 실제 API 호출
+      
+      // 새 리뷰 생성 (실제로는 API 호출)
+      const newReview: Post = {
+        post_id: Date.now(),
+        title: reviewData.title,
+        content: reviewData.content,
+        author: '현재사용자',
+        author_id: 999,
+        category: reviewData.category,
+        created_at: new Date().toISOString(),
+        view_count: 0,
+        like_count: 0,
+        comment_count: 0,
+        rating: reviewData.rating,
+        brewery_name: reviewData.brewery_name,
+        tags: reviewData.tags,
+        images: reviewData.images.map((file, index) => ({
+          image_id: Date.now() + index,
+          image_url: URL.createObjectURL(file),
+          image_order: index + 1,
+          alt_text: reviewData.imageDescriptions[index] || `${reviewData.title} 이미지 ${index + 1}`
+        }))
+      };
+      
+      // 로컬 상태에 새 리뷰 추가
+      setLocalReviews(prev => [newReview, ...prev]);
+      
       alert('리뷰가 성공적으로 작성되었습니다!');
       setIsReviewModalOpen(false);
-      // TODO: 리뷰 목록 새로고침
+      
     } catch (error) {
       console.error('리뷰 작성 실패:', error);
       alert('리뷰 작성에 실패했습니다. 다시 시도해주세요.');
@@ -182,7 +250,7 @@ const BreweryReviewsSection: React.FC<BreweryReviewsSectionProps> = ({
   };
 
   const handleCloseReviewModal = () => {
-    console.log('모달 닫기'); // 디버깅용
+    console.log('모달 닫기');
     setIsReviewModalOpen(false);
   };
 
@@ -195,7 +263,7 @@ const BreweryReviewsSection: React.FC<BreweryReviewsSectionProps> = ({
     );
   }
 
-  if (reviews.length === 0) {
+  if (localReviews.length === 0) {
     return (
       <div className="brewery-reviews-section">
         {/* 섹션 헤더 - hideTitle이 false일 때만 제목 표시 (버튼 없음) */}
@@ -207,7 +275,7 @@ const BreweryReviewsSection: React.FC<BreweryReviewsSectionProps> = ({
 
         {/* 빈 상태 */}
         <div className="brewery-reviews-empty">
-          <div className="brewery-empty-icon">📝</div>
+          <div className="brewery-empty-icon">🏭</div>
           <h3 className="brewery-empty-title">체험 리뷰가 존재하지 않습니다</h3>
           <p className="brewery-empty-description">
             아직 이 양조장에 대한 체험 리뷰가 없습니다.<br />
@@ -236,13 +304,13 @@ const BreweryReviewsSection: React.FC<BreweryReviewsSectionProps> = ({
     );
   }
 
-  const averageRating = reviews.reduce((sum, review) => sum + (review.rating || 0), 0) / reviews.length;
-  const totalLikes = reviews.reduce((sum, review) => sum + review.like_count, 0);
-  const totalViews = reviews.reduce((sum, review) => sum + review.view_count, 0);
+  const averageRating = localReviews.reduce((sum, review) => sum + (review.rating || 0), 0) / localReviews.length;
+  const totalLikes = localReviews.reduce((sum, review) => sum + review.like_count, 0);
+  const totalViews = localReviews.reduce((sum, review) => sum + review.view_count, 0);
 
   // 페이지네이션 계산
-  const totalPages = Math.ceil(reviews.length / reviewsPerPage);
-  const currentReviews = reviews.slice(
+  const totalPages = Math.ceil(localReviews.length / reviewsPerPage);
+  const currentReviews = localReviews.slice(
     (currentPage - 1) * reviewsPerPage,
     currentPage * reviewsPerPage
   );
@@ -269,7 +337,7 @@ const BreweryReviewsSection: React.FC<BreweryReviewsSectionProps> = ({
       <div className="brewery-reviews-stats">
         <div className="brewery-stats-header">
           <h3 className="brewery-stats-title">체험 리뷰 요약</h3>
-          <span className="brewery-stats-count">총 {reviews.length}개의 리뷰</span>
+          <span className="brewery-stats-count">총 {localReviews.length}개의 리뷰</span>
         </div>
         
         <div className="brewery-stats-content">
@@ -329,7 +397,7 @@ const BreweryReviewsSection: React.FC<BreweryReviewsSectionProps> = ({
                 </div>
               ) : (
                 <div className="post-thumbnail-placeholder">
-                  <div className="thumbnail-icon">🍶</div>
+                  <div className="thumbnail-icon">🏭</div>
                   <div className="thumbnail-text">리뷰</div>
                 </div>
               )}
