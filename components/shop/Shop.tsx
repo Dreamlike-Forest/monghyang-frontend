@@ -3,8 +3,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import ProductFilter from './ProductFilter/ProductFilter';
 import ProductList from './ProductList/ProductList';
-import { ProductWithDetails, ProductActiveFilters } from '../../types/mockData';
-import { getProductsWithBrewery, mockFilterOptions } from '../../data/mockData';
+import ProductDetail from './ProductDetail/ProductDetail';
+import ProductDetailMain from '../ProductDetailMain/ProductDetailMain'; 
+import { ProductWithDetails, ProductActiveFilters, Brewery } from '../../types/mockData';
+import { getProductsWithBrewery, mockFilterOptions, getBreweriesWithExperience } from '../../data/mockData';
 import './Shop.css';
 
 interface ShopProps {
@@ -14,6 +16,7 @@ interface ShopProps {
 const Shop: React.FC<ShopProps> = ({ className }) => {
   // 중앙화된 mock 데이터 사용
   const [allProducts] = useState<ProductWithDetails[]>(getProductsWithBrewery());
+  const [allBreweries] = useState<Brewery[]>(getBreweriesWithExperience());
   const [filteredProducts, setFilteredProducts] = useState<ProductWithDetails[]>(getProductsWithBrewery());
   const [activeFilters, setActiveFilters] = useState<ProductActiveFilters>({
     types: [],
@@ -28,8 +31,29 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [activeCategory, setActiveCategory] = useState('all');
   const itemsPerPage = 9;
+
+  // 상품 상세페이지 상태
+  const [selectedProduct, setSelectedProduct] = useState<ProductWithDetails | null>(null);
+  const [selectedProductBrewery, setSelectedProductBrewery] = useState<Brewery | null>(null);
+  const [isProductDetailOpen, setIsProductDetailOpen] = useState(false);
+
+  // URL 파라미터에서 상품 ID 확인 - useEffect 의존성 문제 해결
+  useEffect(() => {
+    const checkURLParams = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const productId = urlParams.get('product');
+      
+      if (productId && allProducts.length > 0) {
+        const product = allProducts.find(p => p.product_id === parseInt(productId));
+        if (product) {
+          handleProductClick(product.product_id);
+        }
+      }
+    };
+
+    checkURLParams();
+  }, [allProducts]); // allProducts가 로드된 후 실행
 
   // 필터 적용 함수
   const applyFilters = useCallback(() => {
@@ -49,8 +73,6 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
 
       // 주종 필터
       if (activeFilters.types.length > 0) {
-        // 실제로는 product.tags에서 주종 정보를 확인해야 함
-        // 여기서는 mock 데이터이므로 간단히 구현
         filtered = filtered.filter(product => {
           if (activeFilters.types.includes('takju') && product.name.includes('막걸리')) return true;
           if (activeFilters.types.includes('cheongju') && product.name.includes('청')) return true;
@@ -114,7 +136,7 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
       setTotalPages(Math.ceil(filtered.length / itemsPerPage));
       setCurrentPage(1);
       setIsLoading(false);
-    }, 500); // API 호출 시뮬레이션
+    }, 500);
   }, [allProducts, activeFilters, itemsPerPage]);
 
   // 필터 변경 시 적용
@@ -132,17 +154,95 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    // 실제 구현에서는 여기서 해당 페이지 데이터를 API로 요청
   };
 
-  const handleCategoryChange = (category: string) => {
-    setActiveCategory(category);
-    // 카테고리 변경 시 해당하는 주종 필터 적용
-    if (category === 'all') {
-      handleFilterChange({ types: [] });
-    } else {
-      handleFilterChange({ types: [category] });
+  // 상품 클릭 핸들러 - 상품 상세페이지 열기
+  const handleProductClick = (productId: number) => {
+    console.log('상품 클릭:', productId);
+    
+    // 선택된 상품 찾기
+    const product = allProducts.find(p => p.product_id === productId);
+    if (!product) {
+      console.error('상품을 찾을 수 없습니다:', productId);
+      return;
     }
+
+    // 해당 상품의 양조장 정보 찾기
+    const brewery = allBreweries.find(b => b.brewery_id === product.brewery_id);
+    
+    console.log('선택된 상품:', product.name);
+    console.log('양조장 정보:', brewery?.brewery_name);
+
+    // 상태 설정
+    setSelectedProduct(product);
+    setSelectedProductBrewery(brewery || null);
+    setIsProductDetailOpen(true);
+
+    // URL 업데이트 (브라우저 히스토리에 추가)
+    updateURLForProductDetail(productId);
+  };
+
+  // URL 업데이트 함수 - 히스토리 문제 방지
+  const updateURLForProductDetail = (productId: number) => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('product', productId.toString());
+    
+    // pushState 대신 replaceState 사용하여 뒤로가기 문제 방지
+    window.history.pushState({ productDetail: true }, '', url.toString());
+  };
+
+  // 상품 상세페이지 닫기 - URL 정리 개선
+  const handleCloseProductDetail = () => {
+    console.log('상품 상세페이지 닫기');
+    
+    setIsProductDetailOpen(false);
+    setSelectedProduct(null);
+    setSelectedProductBrewery(null);
+
+    // URL에서 product 파라미터 제거
+    const url = new URL(window.location.href);
+    url.searchParams.delete('product');
+    
+    // view 파라미터가 없으면 shop으로 설정
+    if (!url.searchParams.has('view')) {
+      url.searchParams.set('view', 'shop');
+    }
+    
+    // replaceState로 히스토리 문제 방지
+    window.history.replaceState({}, '', url.toString());
+  };
+
+  // 브라우저 뒤로가기 감지
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      const url = new URL(window.location.href);
+      const productId = url.searchParams.get('product');
+      
+      if (!productId && isProductDetailOpen) {
+        // 상품 상세페이지가 열려있는데 URL에 product가 없으면 닫기
+        setIsProductDetailOpen(false);
+        setSelectedProduct(null);
+        setSelectedProductBrewery(null);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [isProductDetailOpen]);
+
+  // 장바구니 추가 핸들러
+  const handleAddToCart = (productId: number) => {
+    console.log('장바구니에 추가:', productId);
+    // TODO: 장바구니 API 호출
+  };
+
+  // 위시리스트 토글 핸들러
+  const handleToggleWishlist = (productId: number) => {
+    console.log('위시리스트 토글:', productId);
+    // TODO: 위시리스트 API 호출
   };
 
   // 현재 페이지에 해당하는 상품들
@@ -150,6 +250,19 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+
+  // 상품 상세페이지가 열려있으면 새로운 ProductDetailMain 사용 (페이지 모드)
+  if (isProductDetailOpen && selectedProduct) {
+    return (
+      <ProductDetailMain
+        product={selectedProduct}
+        brewery={selectedProductBrewery}
+        onClose={handleCloseProductDetail}
+        isOpen={isProductDetailOpen}
+        isPageMode={true}
+      />
+    );
+  }
 
   return (
     <div className={`shop-container ${className || ''}`}>
@@ -172,8 +285,9 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
             totalPages={totalPages}
             onPageChange={handlePageChange}
             totalCount={filteredProducts.length}
-            activeCategory={activeCategory}
-            onCategoryChange={handleCategoryChange}
+            onProductClick={handleProductClick}
+            onAddToCart={handleAddToCart}
+            onToggleWishlist={handleToggleWishlist}
           />
         </div>
       </div>
