@@ -16,6 +16,9 @@ interface ProductListProps {
   totalCount: number;
   activeCategory?: string;
   onCategoryChange?: (category: string) => void;
+  onProductClick: (productId: number) => void; // 상품 클릭 핸들러 추가
+  onAddToCart: (productId: number) => void;
+  onToggleWishlist: (productId: number) => void;
 }
 
 const ProductList: React.FC<ProductListProps> = ({
@@ -27,8 +30,9 @@ const ProductList: React.FC<ProductListProps> = ({
   totalPages,
   onPageChange,
   totalCount,
-  activeCategory = 'all',
-  onCategoryChange
+  onProductClick,
+  onAddToCart,
+  onToggleWishlist
 }) => {
   const sortOptions = [
     { value: 'latest', label: '추천순' },
@@ -39,30 +43,6 @@ const ProductList: React.FC<ProductListProps> = ({
     { value: 'rating', label: '평점높은순' },
     { value: 'review', label: '리뷰많은순' }
   ];
-
-  const categories = [
-    { id: 'all', name: '전체' },
-    { id: 'takju', name: '탁주/막걸리' },
-    { id: 'cheongju', name: '청주' },
-    { id: 'yakju', name: '약주' },
-    { id: 'soju', name: '소주/증류주' },
-    { id: 'fruit', name: '과실주/와인' }
-  ];
-
-  const handleAddToCart = (productId: number) => {
-    console.log('장바구니에 추가:', productId);
-    // TODO: 장바구니 API 호출
-  };
-
-  const handleToggleWishlist = (productId: number) => {
-    console.log('위시리스트 토글:', productId);
-    // TODO: 위시리스트 API 호출
-  };
-
-  const handleProductClick = (productId: number) => {
-    console.log('상품 상세 페이지로 이동:', productId);
-    // TODO: 상품 상세 페이지 라우팅
-  };
 
   if (isLoading) {
     return (
@@ -77,20 +57,8 @@ const ProductList: React.FC<ProductListProps> = ({
 
   return (
     <div className="product-list-container">
-      {/* 상단 카테고리 탭과 정렬 */}
+      {/* 정렬 컨트롤만 유지 */}
       <div className="product-list-header">
-        <div className="category-tabs">
-          {categories.map(category => (
-            <button
-              key={category.id}
-              className={`category-tab ${activeCategory === category.id ? 'active' : ''}`}
-              onClick={() => onCategoryChange?.(category.id)}
-            >
-              {category.name}
-            </button>
-          ))}
-        </div>
-        
         <div className="sort-controls">
           <span className="sort-label">정렬:</span>
           <select
@@ -131,9 +99,9 @@ const ProductList: React.FC<ProductListProps> = ({
               <ProductCard
                 key={product.product_id}
                 product={product}
-                onAddToCart={handleAddToCart}
-                onToggleWishlist={handleToggleWishlist}
-                onProductClick={handleProductClick}
+                onAddToCart={onAddToCart}
+                onToggleWishlist={onToggleWishlist}
+                onProductClick={onProductClick} // 상품 클릭 핸들러 전달
               />
             ))}
           </div>
