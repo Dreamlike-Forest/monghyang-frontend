@@ -51,12 +51,26 @@ const BreweryCard: React.FC<BreweryCardProps> = ({ brewery, onClick }) => {
     setImageStatus('error');
   };
 
+  // image_key를 실제 이미지 URL로 변환하는 함수
+  const getImageUrl = (imageKey: string | undefined): string => {
+    if (!imageKey) return '';
+    
+    // 이미지 키가 이미 전체 URL인 경우
+    if (imageKey.startsWith('http://') || imageKey.startsWith('https://') || imageKey.startsWith('/')) {
+      return imageKey;
+    }
+    
+    // 이미지 키를 기반으로 실제 URL 생성 (실제 구현 시 서버 설정에 따라 수정)
+    return `/images/breweries/${imageKey}`;
+  };
+
   // 이미지가 유효한지 확인 (placeholder 이미지 제외)
-  const hasValidImage = brewery.image_url && 
-    !brewery.image_url.includes('/api/placeholder') && 
-    brewery.image_url !== '' &&
-    brewery.image_url !== '/images/brewery-placeholder.jpg' &&
-    brewery.image_url !== '/images/brewery-default.jpg';
+  const imageUrl = getImageUrl(brewery.image_key);
+  const hasValidImage = imageUrl && 
+    !imageUrl.includes('/api/placeholder') && 
+    imageUrl !== '' &&
+    imageUrl !== '/images/brewery-placeholder.jpg' &&
+    imageUrl !== '/images/brewery-default.jpg';
 
   const PlaceholderImage = () => (
     <div className="brewery-image-placeholder">
@@ -95,7 +109,7 @@ const BreweryCard: React.FC<BreweryCardProps> = ({ brewery, onClick }) => {
           <>
             {imageStatus === 'loading' && <PlaceholderImage />}
             <img 
-              src={brewery.image_url} 
+              src={imageUrl} 
               alt={brewery.brewery_name}
               className={`brewery-image ${imageStatus === 'loading' ? 'brewery-image-loading' : ''}`}
               onLoad={handleImageLoad}

@@ -1,4 +1,4 @@
-// types/mockData.ts - brewery_images 필드가 추가된 타입 정의
+// types/mockData.ts - image_key로 변수명 통일
 
 export interface ProductOption {
   product_option_id: number;
@@ -45,7 +45,7 @@ export interface Product {
   product_id: number;
   user_id: number;
   brewery_id: number; 
-  image_key: string;
+  image_key: string; // image_key로 통일
   name: string;
   alcohol: number;
   is_sell: boolean;
@@ -102,8 +102,8 @@ export interface Brewery {
   region_name: string;
   alcohol_types: string[];
   price_range: 'low' | 'medium' | 'high';
-  image_url: string; 
-  brewery_images?: string[]; 
+  image_key?: string; // 메인 이미지 키 (회원가입 시 업로드)
+  brewery_images?: string[]; // 추가 이미지 키들 배열 (갤러리용, 최대 5개)
   experience_programs?: Joy[];
   badges?: {
     type: 'text' | 'image';

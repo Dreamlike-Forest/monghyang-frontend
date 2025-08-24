@@ -1,8 +1,8 @@
-// data/mockData.ts - brewery_images 필드가 추가된 완전한 양조장 데이터
+// data/mockData.ts - image_key로 변수명 통일
 
 import { Brewery, Product, Joy, ProductWithDetails, ProductFilterOptions } from '../types/mockData';
 
-// 6개 양조장 데이터 - brewery_images 배열 추가
+// 6개 양조장 데이터 - image_key로 변수명 통일
 export const mockBreweries: Brewery[] = [
   {
     brewery_id: 1,
@@ -22,9 +22,12 @@ export const mockBreweries: Brewery[] = [
     region_name: "서울/경기",
     alcohol_types: ["증류주", "전통주"],
     price_range: "high",
-    image_url: "/images/brewery-anseong.jpg", // 카드용 메인 이미지
-    brewery_images: [ // 갤러리용 이미지 배열 (4장)
-      
+    image_key: "brewery_anseong_main_20240115.jpg", // 카드용 메인 이미지 키
+    brewery_images: [ // 갤러리용 이미지 키 배열 (4장)
+      "brewery_anseong_main_20240115.jpg",
+      "brewery_anseong_interior_20240115.jpg", 
+      "brewery_anseong_distillery_20240115.jpg",
+      "brewery_anseong_storage_20240115.jpg"
     ],
     badges: [
       { type: 'text', content: '프리미엄', color: '#8b5a3c' },
@@ -49,11 +52,11 @@ export const mockBreweries: Brewery[] = [
     region_name: "전라도",
     alcohol_types: ["막걸리", "과실주"],
     price_range: "low",
-    image_url: "/images/brewery-jeonju.jpg",
-    brewery_images: [ // 갤러리용 이미지 배열 (3장)
-      "/images/brewery-jeonju.jpg",
-      "/images/brewery-jeonju-hanok.jpg",
-      "/images/brewery-jeonju-making.jpg"
+    image_key: "brewery_jeonju_main_20210610.jpg",
+    brewery_images: [ // 갤러리용 이미지 키 배열 (3장)
+      "brewery_jeonju_main_20210610.jpg",
+      "brewery_jeonju_hanok_20210610.jpg",
+      "brewery_jeonju_making_20210610.jpg"
     ],
     badges: [
       { type: 'text', content: '신상품', color: '#059669' },
@@ -78,13 +81,13 @@ export const mockBreweries: Brewery[] = [
     region_name: "충청도",
     alcohol_types: ["청주", "약주"],
     price_range: "medium",
-    image_url: "/images/brewery-cheongju.jpg",
-    brewery_images: [ // 갤러리용 이미지 배열 (5장 - 최대)
-      "/images/brewery-cheongju.jpg",
-      "/images/brewery-cheongju-tank.jpg",
-      "/images/brewery-cheongju-bottle.jpg",
-      "/images/brewery-cheongju-traditional.jpg",
-      "/images/brewery-cheongju-aging.jpg"
+    image_key: "brewery_cheongju_main_20190308.jpg",
+    brewery_images: [ // 갤러리용 이미지 키 배열 (5장 - 최대)
+      "brewery_cheongju_main_20190308.jpg",
+      "brewery_cheongju_tank_20190308.jpg",
+      "brewery_cheongju_bottle_20190308.jpg",
+      "brewery_cheongju_traditional_20190308.jpg",
+      "brewery_cheongju_aging_20190308.jpg"
     ],
     badges: [
       { type: 'text', content: '할인', color: '#ef4444' }
@@ -108,10 +111,10 @@ export const mockBreweries: Brewery[] = [
     region_name: "경상도",
     alcohol_types: ["소주", "증류주"],
     price_range: "high",
-    image_url: "/images/brewery-jinju.jpg",
-    brewery_images: [ // 갤러리용 이미지 배열 (2장)
-      "/images/brewery-jinju.jpg",
-      "/images/brewery-jinju-distillery.jpg"
+    image_key: "brewery_jinju_main_20220105.jpg",
+    brewery_images: [ // 갤러리용 이미지 키 배열 (2장)
+      "brewery_jinju_main_20220105.jpg",
+      "brewery_jinju_distillery_20220105.jpg"
     ],
     badges: [
       { type: 'text', content: '장인', color: '#8b5a3c' }
@@ -135,12 +138,12 @@ export const mockBreweries: Brewery[] = [
     region_name: "충청도",
     alcohol_types: ["와인", "과실주"],
     price_range: "medium",
-    image_url: "/images/brewery-yeongdong.jpg",
-    brewery_images: [ // 갤러리용 이미지 배열 (4장)
-      "/images/brewery-yeongdong.jpg",
-      "/images/brewery-yeongdong-vineyard.jpg",
-      "/images/brewery-yeongdong-cellar.jpg",
-      "/images/brewery-yeongdong-barrel.jpg"
+    image_key: "brewery_yeongdong_main_20210103.jpg",
+    brewery_images: [ // 갤러리용 이미지 키 배열 (4장)
+      "brewery_yeongdong_main_20210103.jpg",
+      "brewery_yeongdong_vineyard_20210103.jpg",
+      "brewery_yeongdong_cellar_20210103.jpg",
+      "brewery_yeongdong_barrel_20210103.jpg"
     ],
     badges: [
       { type: 'text', content: '과실주', color: '#16a34a' }
@@ -164,9 +167,9 @@ export const mockBreweries: Brewery[] = [
     region_name: "충청도",
     alcohol_types: ["막걸리", "생막걸리"],
     price_range: "low",
-    image_url: "/images/brewery-chungju.jpg",
-    brewery_images: [ // 갤러리용 이미지 배열 (1장만)
-      "/images/brewery-chungju.jpg"
+    image_key: "brewery_chungju_main_20200101.jpg",
+    brewery_images: [ // 갤러리용 이미지 키 배열 (1장만)
+      "brewery_chungju_main_20200101.jpg"
     ],
     badges: [
       { type: 'text', content: '친환경', color: '#059669' }
@@ -184,7 +187,7 @@ export const mockJoyPrograms: Joy[] = [
     detail: "전통 증류 방식을 직접 체험하고 시음할 수 있는 프로그램입니다.",
     price: 45000,
     images: [
-      { joy_image_id: 1, joy_id: 1, key: "/images/experience-anseong-1.jpg", seq: 1 }
+      { joy_image_id: 1, joy_id: 1, key: "experience_anseong_distilling_20240115.jpg", seq: 1 }
     ]
   },
   {
@@ -195,7 +198,7 @@ export const mockJoyPrograms: Joy[] = [
     detail: "복분자와 전통 누룩을 이용해 직접 막걸리를 만들어보는 체험입니다.",
     price: 12000,
     images: [
-      { joy_image_id: 2, joy_id: 2, key: "/images/experience-jeonju-1.jpg", seq: 1 }
+      { joy_image_id: 2, joy_id: 2, key: "experience_jeonju_makgeolli_20210610.jpg", seq: 1 }
     ]
   },
   {
@@ -206,7 +209,7 @@ export const mockJoyPrograms: Joy[] = [
     detail: "전통 청주 제조법을 배우고 직접 빚어보는 체험 프로그램입니다.",
     price: 29750,
     images: [
-      { joy_image_id: 3, joy_id: 3, key: "/images/experience-cheongju-1.jpg", seq: 1 }
+      { joy_image_id: 3, joy_id: 3, key: "experience_cheongju_brewing_20190308.jpg", seq: 1 }
     ]
   },
   {
@@ -217,7 +220,7 @@ export const mockJoyPrograms: Joy[] = [
     detail: "전통 증류기를 이용한 소주 제조 과정을 직접 체험해보세요.",
     price: 48000,
     images: [
-      { joy_image_id: 4, joy_id: 4, key: "/images/experience-jinju-1.jpg", seq: 1 }
+      { joy_image_id: 4, joy_id: 4, key: "experience_jinju_distilling_20220105.jpg", seq: 1 }
     ]
   },
   {
@@ -228,7 +231,7 @@ export const mockJoyPrograms: Joy[] = [
     detail: "영동의 신선한 포도를 직접 따서 와인을 만들어보는 체험입니다.",
     price: 32000,
     images: [
-      { joy_image_id: 5, joy_id: 5, key: "/images/experience-yeongdong-1.jpg", seq: 1 }
+      { joy_image_id: 5, joy_id: 5, key: "experience_yeongdong_winemaking_20210103.jpg", seq: 1 }
     ]
   },
   {
@@ -239,18 +242,18 @@ export const mockJoyPrograms: Joy[] = [
     detail: "전통 누룩과 우리 쌀로 생막걸리를 직접 빚어보는 체험입니다.",
     price: 8000,
     images: [
-      { joy_image_id: 6, joy_id: 6, key: "/images/experience-chungju-1.jpg", seq: 1 }
+      { joy_image_id: 6, joy_id: 6, key: "experience_chungju_makgeolli_20200101.jpg", seq: 1 }
     ]
   }
 ];
 
-// 9개 상품 데이터 (기존과 동일)
+// 9개 상품 데이터 - image_key로 변수명 통일
 export const mockProducts: Product[] = [
   {
     product_id: 1,
     user_id: 1,
     brewery_id: 1,
-    image_key: '/images/product-anseong.jpg',
+    image_key: 'product_anseong_premium_20240115.jpg',
     name: '토박이 안성',
     alcohol: 40,
     is_sell: true,
@@ -277,7 +280,7 @@ export const mockProducts: Product[] = [
     product_id: 2,
     user_id: 2,
     brewery_id: 2,
-    image_key: '/images/product-jeonju.jpg',
+    image_key: 'product_jeonju_bokbunja_20240110.jpg',
     name: '복분자 막걸리',
     alcohol: 7,
     is_sell: true,
@@ -303,7 +306,7 @@ export const mockProducts: Product[] = [
     product_id: 3,
     user_id: 3,
     brewery_id: 3,
-    image_key: '/images/product-cheongju.jpg',
+    image_key: 'product_cheongju_premium_20240108.jpg',
     name: '극찬 청명',
     alcohol: 13,
     is_sell: true,
@@ -330,7 +333,7 @@ export const mockProducts: Product[] = [
     product_id: 4,
     user_id: 4,
     brewery_id: 4,
-    image_key: '/images/product-jinju.jpg',
+    image_key: 'product_jinju_soju_20240105.jpg',
     name: '깨나 소주',
     alcohol: 25,
     is_sell: true,
@@ -353,7 +356,7 @@ export const mockProducts: Product[] = [
     product_id: 5,
     user_id: 5,
     brewery_id: 5,
-    image_key: '/images/product-yeongdong.jpg',
+    image_key: 'product_yeongdong_wine_20240103.jpg',
     name: '화이트 미스커 와인',
     alcohol: 12,
     is_sell: true,
@@ -376,7 +379,7 @@ export const mockProducts: Product[] = [
     product_id: 6,
     user_id: 6,
     brewery_id: 6,
-    image_key: '/images/product-chungju.jpg',
+    image_key: 'product_chungju_makgeolli_20240101.jpg',
     name: '전통 생 막걸리',
     alcohol: 6,
     is_sell: true,
@@ -399,7 +402,7 @@ export const mockProducts: Product[] = [
     product_id: 7,
     user_id: 1,
     brewery_id: 1,
-    image_key: '/images/product-anseong-premium.jpg',
+    image_key: 'product_anseong_premium_aged_20231220.jpg',
     name: '토박이 안성 프리미엄',
     alcohol: 42,
     is_sell: true,
@@ -424,7 +427,7 @@ export const mockProducts: Product[] = [
     product_id: 8,
     user_id: 2,
     brewery_id: 2,
-    image_key: '/images/product-jeonju-classic.jpg',
+    image_key: 'product_jeonju_traditional_20231215.jpg',
     name: '전주 전통 막걸리',
     alcohol: 6,
     is_sell: true,
@@ -449,7 +452,7 @@ export const mockProducts: Product[] = [
     product_id: 9,
     user_id: 3,
     brewery_id: 3,
-    image_key: '/images/product-cheongju-dry.jpg',
+    image_key: 'product_cheongju_dry_20231210.jpg',
     name: '청명 드라이',
     alcohol: 15,
     is_sell: true,
