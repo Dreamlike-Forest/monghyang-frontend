@@ -13,6 +13,19 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [imageLoadErrors, setImageLoadErrors] = useState<Set<number>>(new Set());
 
+  // image_key를 실제 이미지 URL로 변환하는 함수
+  const getImageUrl = (imageKey: string | undefined): string => {
+    if (!imageKey) return '';
+    
+    // 이미지 키가 이미 전체 URL인 경우
+    if (imageKey.startsWith('http://') || imageKey.startsWith('https://') || imageKey.startsWith('/')) {
+      return imageKey;
+    }
+    
+    // 이미지 키를 기반으로 실제 URL 생성 (실제 구현 시 서버 설정에 따라 수정)
+    return `/images/breweries/${imageKey}`;
+  };
+
   // 이미지 URL 유효성 검사 함수
   const isValidImageUrl = (url: string): boolean => {
     if (!url || url.trim() === '') return false;
@@ -33,14 +46,18 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
   const getBreweryImages = (): string[] => {
     const allImages: string[] = [];
     
-    // 1. 메인 이미지 (image_url) 추가
-    if (brewery.image_url && isValidImageUrl(brewery.image_url)) {
-      allImages.push(brewery.image_url);
+    // 1. 메인 이미지 (image_key) 추가
+    if (brewery.image_key) {
+      const mainImageUrl = getImageUrl(brewery.image_key);
+      if (isValidImageUrl(mainImageUrl)) {
+        allImages.push(mainImageUrl);
+      }
     }
     
     // 2. 추가 이미지들 (brewery_images) 추가
     if (brewery.brewery_images && brewery.brewery_images.length > 0) {
-      brewery.brewery_images.forEach(imageUrl => {
+      brewery.brewery_images.forEach(imageKey => {
+        const imageUrl = getImageUrl(imageKey);
         if (isValidImageUrl(imageUrl) && !allImages.includes(imageUrl)) {
           allImages.push(imageUrl);
         }
@@ -176,7 +193,7 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
   const validImageCount = breweryImages.length - imageLoadErrors.size;
 
   return (
-    <div ref={forwardRef} className="section-container" id="images">
+    <div ref={forwardRef} className="brewery-section-container" id="images">
       <div className="brewery-main-image-container">
         {hasImages && !allImagesFailed ? (
           <>
@@ -276,7 +293,7 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
               {allImagesFailed ? (
                 <>
                   이미지를 불러올 수 없습니다<br />
-                  <small>이미지 URL을 확인해주세요</small>
+                  <small>이미지 키를 확인해주세요</small>
                 </>
               ) : (
                 <>
