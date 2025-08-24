@@ -18,10 +18,10 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
     nickname: '',
     gender: '',
     birth: '',
-    seller_name: '',
+    name: '',
     seller_address: '',
     seller_address_detail: '',
-    seller_zonecode: '', // 우편번호 추가
+    seller_zonecode: '',
     business_registration_number: '',
     seller_account_number: '',
     seller_depositor: '',
@@ -113,10 +113,10 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
     if (!formData.passwordConfirm) newErrors.passwordConfirm = '비밀번호 확인을 입력해주세요.';
     if (formData.password !== formData.passwordConfirm) newErrors.passwordConfirm = '비밀번호가 일치하지 않습니다.';
     if (!formData.phone) newErrors.phone = '업무용 전화번호를 입력해주세요.';
-    if (!formData.nickname) newErrors.nickname = '닉네임을 입력해주세요.';
+    if (!formData.nickname) newErrors.nickname = '상호명을 입력해주세요.';
     if (!formData.gender) newErrors.gender = '성별을 선택해주세요.';
     if (!formData.birth) newErrors.birth = '생년월일을 입력해주세요.';
-    if (!formData.seller_name) newErrors.seller_name = '판매자 이름을 입력해주세요.';
+    if (!formData.name) newErrors.name = '대표자 명을 입력해주세요.';
     if (!formData.seller_address) newErrors.seller_address = '사업장 위치를 입력해주세요.';
     if (!formData.seller_address_detail) newErrors.seller_address_detail = '사업장 상세 주소를 입력해주세요.';
     if (!formData.business_registration_number) newErrors.business_registration_number = '사업자 등록번호를 입력해주세요.';
@@ -276,17 +276,17 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
 
           {/* 대표자 명 */}
           <div className="seller-form-group">
-            <label htmlFor="seller_name" className="seller-form-label">대표자 명 *</label>
+            <label htmlFor="name" className="seller-form-label">대표자 명 *</label>
             <input
               type="text"
-              id="seller_name"
-              name="seller_name"
-              className={`seller-form-input ${errors.seller_name ? 'error' : ''}`}
+              id="name"
+              name="name"
+              className={`seller-form-input ${errors.name ? 'error' : ''}`}
               placeholder="대표자 명을 입력하세요"
-              value={formData.seller_name}
+              value={formData.name}
               onChange={handleInputChange}
             />
-            {errors.seller_name && <span className="seller-error-message">{errors.seller_name}</span>}
+            {errors.name && <span className="seller-error-message">{errors.name}</span>}
           </div>
 
           {/* 사업장 위치 주소 - 주소 검색 기능 추가 */}

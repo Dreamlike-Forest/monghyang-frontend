@@ -20,17 +20,17 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
     nickname: '',
     gender: '',
     birth: '',
-    brewery_name: '',
+    name: '',
     brewery_address: '',
     brewery_address_detail: '',
-    brewery_zonecode: '', // 우편번호 추가
+    brewery_zonecode: '', 
     business_registration_number: '',
     brewery_depositor: '',
     brewery_account_number: '',
     brewery_bank_name: '',
     brewery_website: '',
     introduction: '',
-    image_key: '' // 양조장 이미지 키 추가
+    image_key: ''
   });
 
   const [emailChecked, setEmailChecked] = useState(false);
@@ -134,10 +134,10 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
     if (!formData.passwordConfirm) newErrors.passwordConfirm = '비밀번호 확인을 입력해주세요.';
     if (formData.password !== formData.passwordConfirm) newErrors.passwordConfirm = '비밀번호가 일치하지 않습니다.';
     if (!formData.phone) newErrors.phone = '업무용 전화번호를 입력해주세요.';
-    if (!formData.nickname) newErrors.nickname = '닉네임을 입력해주세요.';
+    if (!formData.nickname) newErrors.nickname = '상호명을 입력해주세요.';
     if (!formData.gender) newErrors.gender = '성별을 선택해주세요.';
     if (!formData.birth) newErrors.birth = '생년월일을 입력해주세요.';
-    if (!formData.brewery_name) newErrors.brewery_name = '양조장 상호명을 입력해주세요.';
+    if (!formData.name) newErrors.name = '대표자 명을 입력해주세요.';
     if (!formData.brewery_address) newErrors.brewery_address = '양조장 주소를 입력해주세요.';
     if (!formData.brewery_address_detail) newErrors.brewery_address_detail = '양조장 상세 주소를 입력해주세요.';
     if (!formData.business_registration_number) newErrors.business_registration_number = '사업자 등록번호를 입력해주세요.';
@@ -290,21 +290,21 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
             {errors.phone && <span className="brewery-error-message">{errors.phone}</span>}
           </div>
 
-          {/* 닉네임 */}
+          {/* 대표자 명 */}
           <div className="brewery-form-group">
-            <label htmlFor="nickname" className="brewery-form-label">닉네임 *</label>
+            <label htmlFor="name" className="brewery-form-label">대표자 명 *</label>
             <input
               type="text"
-              id="nickname"
-              name="nickname"
-              className={`brewery-form-input ${errors.nickname ? 'error' : ''}`}
-              placeholder="닉네임을 입력하세요"
-              value={formData.nickname}
+              id="name"
+              name="name"
+              className={`brewery-form-input ${errors.name ? 'error' : ''}`}
+              placeholder="대표자 명을 입력하세요"
+              value={formData.name}
               onChange={handleInputChange}
             />
-            {errors.nickname && <span className="brewery-error-message">{errors.nickname}</span>}
+            {errors.name && <span className="brewery-error-message">{errors.name}</span>}
           </div>
-
+          
           {/* 성별 */}
           <div className="brewery-form-group">
             <label htmlFor="gender" className="brewery-form-label">성별 *</label>
@@ -338,18 +338,19 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
 
           {/* 양조장 상호명 */}
           <div className="brewery-form-group">
-            <label htmlFor="brewery_name" className="brewery-form-label">양조장 상호명 *</label>
+            <label htmlFor="nickname" className="brewery-form-label">양조장 상호명 *</label>
             <input
               type="text"
-              id="brewery_name"
-              name="brewery_name"
-              className={`brewery-form-input ${errors.brewery_name ? 'error' : ''}`}
+              id="nickname"
+              name="nickname"
+              className={`brewery-form-input ${errors.nickname ? 'error' : ''}`}
               placeholder="양조장 상호명을 입력하세요"
-              value={formData.brewery_name}
+              value={formData.nickname}
               onChange={handleInputChange}
             />
-            {errors.brewery_name && <span className="brewery-error-message">{errors.brewery_name}</span>}
+            {errors.nickname && <span className="brewery-error-message">{errors.nickname}</span>}
           </div>
+
 
           {/* 양조장 대표 이미지 업로드 */}
           <div className="brewery-form-group">
