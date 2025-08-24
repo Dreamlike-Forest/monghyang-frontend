@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import TermsAgreement from '../TermsAgreement/TermsAgreement'; 
+import TermsAgreement from '../TermsAgreement/TermsAgreement';
+import AddressSearch from '../AddressSearch/AddressSearch';
 import './SellerSignupForm.css';
 
 interface SellerSignupFormProps {
@@ -10,7 +11,6 @@ interface SellerSignupFormProps {
 
 const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
   const [formData, setFormData] = useState({
-
     email: '',
     password: '',
     passwordConfirm: '',
@@ -21,6 +21,7 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
     seller_name: '',
     seller_address: '',
     seller_address_detail: '',
+    seller_zonecode: '', // 우편번호 추가
     business_registration_number: '',
     seller_account_number: '',
     seller_depositor: '',
@@ -51,6 +52,23 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
       setErrors(prev => ({
         ...prev,
         [name]: ''
+      }));
+    }
+  };
+
+  // 주소 검색 결과 처리
+  const handleAddressSelect = (address: string, zonecode: string) => {
+    setFormData(prev => ({
+      ...prev,
+      seller_address: address,
+      seller_zonecode: zonecode
+    }));
+
+    // 주소 관련 에러 초기화
+    if (errors.seller_address) {
+      setErrors(prev => ({
+        ...prev,
+        seller_address: ''
       }));
     }
   };
@@ -210,15 +228,15 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
             {errors.phone && <span className="seller-error-message">{errors.phone}</span>}
           </div>
 
-          {/* 닉네임 */}
+          {/* 판매자 상호명 */}
           <div className="seller-form-group">
-            <label htmlFor="nickname" className="seller-form-label">닉네임 *</label>
+            <label htmlFor="nickname" className="seller-form-label">판매자 상호명 *</label>
             <input
               type="text"
               id="nickname"
               name="nickname"
               className={`seller-form-input ${errors.nickname ? 'error' : ''}`}
-              placeholder="닉네임을 입력하세요"
+              placeholder="판매자 상호명을 입력하세요"
               value={formData.nickname}
               onChange={handleInputChange}
             />
@@ -256,33 +274,39 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
             {errors.birth && <span className="seller-error-message">{errors.birth}</span>}
           </div>
 
-          {/* 판매자 이름 */}
+          {/* 대표자 명 */}
           <div className="seller-form-group">
-            <label htmlFor="seller_name" className="seller-form-label">판매자 이름 *</label>
+            <label htmlFor="seller_name" className="seller-form-label">대표자 명 *</label>
             <input
               type="text"
               id="seller_name"
               name="seller_name"
               className={`seller-form-input ${errors.seller_name ? 'error' : ''}`}
-              placeholder="판매자 이름을 입력하세요"
+              placeholder="대표자 명을 입력하세요"
               value={formData.seller_name}
               onChange={handleInputChange}
             />
             {errors.seller_name && <span className="seller-error-message">{errors.seller_name}</span>}
           </div>
 
-          {/* 사업장 위치 주소 */}
+          {/* 사업장 위치 주소 - 주소 검색 기능 추가 */}
           <div className="seller-form-group">
             <label htmlFor="seller_address" className="seller-form-label">사업장 위치 주소 *</label>
-            <input
-              type="text"
-              id="seller_address"
-              name="seller_address"
-              className={`seller-form-input ${errors.seller_address ? 'error' : ''}`}
-              placeholder="사업장 주소를 입력하세요"
-              value={formData.seller_address}
-              onChange={handleInputChange}
-            />
+            <div className="seller-address-input-group">
+              <input
+                type="text"
+                id="seller_address"
+                name="seller_address"
+                className={`seller-form-input ${errors.seller_address ? 'error' : ''}`}
+                placeholder="주소검색 버튼을 클릭하세요"
+                value={formData.seller_address}
+                readOnly
+              />
+              <AddressSearch
+                onAddressSelect={handleAddressSelect}
+                className="seller-address-search"
+              />
+            </div>
             {errors.seller_address && <span className="seller-error-message">{errors.seller_address}</span>}
           </div>
 

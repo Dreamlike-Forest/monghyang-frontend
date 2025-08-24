@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import TermsAgreement from '../TermsAgreement/TermsAgreement';
+import AddressSearch from '../AddressSearch/AddressSearch';
 import './UserSignupForm.css';
 
 interface UserSignupFormProps {
@@ -21,6 +22,7 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
     gender: '',
     address: '',
     address_detail: '',
+    zonecode: '', // 우편번호 추가
     is_agreed: false
   });
 
@@ -48,6 +50,23 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
       setErrors(prev => ({
         ...prev,
         [name]: ''
+      }));
+    }
+  };
+
+  // 주소 검색 결과 처리
+  const handleAddressSelect = (address: string, zonecode: string) => {
+    setFormData(prev => ({
+      ...prev,
+      address: address,
+      zonecode: zonecode
+    }));
+
+    // 주소 관련 에러 초기화
+    if (errors.address) {
+      setErrors(prev => ({
+        ...prev,
+        address: ''
       }));
     }
   };
@@ -271,18 +290,24 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
             {errors.gender && <span className="user-error-message">{errors.gender}</span>}
           </div>
 
-          {/* 주소 */}
+          {/* 주소 - 주소 검색 기능 추가 */}
           <div className="user-form-group">
             <label htmlFor="address" className="user-form-label">주소 *</label>
-            <input
-              type="text"
-              id="address"
-              name="address"
-              className={`user-form-input ${errors.address ? 'error' : ''}`}
-              placeholder="주소를 입력하세요"
-              value={formData.address}
-              onChange={handleInputChange}
-            />
+            <div className="user-address-input-group">
+              <input
+                type="text"
+                id="address"
+                name="address"
+                className={`user-form-input ${errors.address ? 'error' : ''}`}
+                placeholder="주소검색 버튼을 클릭하세요"
+                value={formData.address}
+                readOnly
+              />
+              <AddressSearch
+                onAddressSelect={handleAddressSelect}
+                className="user-address-search"
+              />
+            </div>
             {errors.address && <span className="user-error-message">{errors.address}</span>}
           </div>
 

@@ -114,6 +114,17 @@
   transform: none;
 }
 
+/* 주소 검색 영역 */
+.user-address-input-group {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.user-address-input-group .user-form-input {
+  flex: 1;
+}
+
 /* 체크박스 스타일 */
 .user-checkbox-group {
   display: flex;
@@ -235,7 +246,8 @@
     padding: 32px 24px;
   }
   
-  .user-email-input-group {
+  .user-email-input-group,
+  .user-address-input-group {
     flex-direction: column;
     gap: 8px;
   }
