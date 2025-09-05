@@ -53,11 +53,11 @@ const ProductBreweryCard: React.FC<ProductBreweryCardProps> = ({
   };
 
   // 이미지가 유효한지 확인 (placeholder 이미지 제외)
-  const hasValidImage = brewery?.image_url && 
-    !brewery.image_url.includes('/api/placeholder') && 
-    brewery.image_url !== '' &&
-    brewery.image_url !== '/images/brewery-placeholder.jpg' &&
-    brewery.image_url !== '/images/brewery-default.jpg';
+  const hasValidImage = brewery?.image_key && 
+    !brewery.image_key.includes('/api/placeholder') && 
+    brewery.image_key !== '' &&
+    brewery.image_key !== '/images/brewery-placeholder.jpg' &&
+    brewery.image_key !== '/images/brewery-default.jpg';
 
   const PlaceholderImage = () => (
     <div className="productdetail-brewery-card-image-placeholder">
@@ -110,7 +110,7 @@ const ProductBreweryCard: React.FC<ProductBreweryCardProps> = ({
             <>
               {imageStatus === 'loading' && <PlaceholderImage />}
               <img 
-                src={brewery.image_url} 
+                src={brewery.image_key} 
                 alt={brewery.brewery_name}
                 className={`productdetail-brewery-card-image ${imageStatus === 'loading' ? 'productdetail-brewery-image-loading' : ''}`}
                 onLoad={handleImageLoad}
