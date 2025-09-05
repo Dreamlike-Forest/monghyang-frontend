@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import TermsAgreement from '../TermsAgreement/TermsAgreement'; 
+import TermsAgreement from '../TermsAgreement/TermsAgreement';
+import AddressSearch from '../AddressSearch/AddressSearch';
+import ImageUpload from '../../community/ImageUpload/ImageUpload';
 import './BrewerySignupForm.css';
 
 interface BrewerySignupFormProps {
@@ -18,21 +20,26 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
     nickname: '',
     gender: '',
     birth: '',
-    brewery_name: '',
+    name: '',
     brewery_address: '',
     brewery_address_detail: '',
+    brewery_zonecode: '', 
     business_registration_number: '',
     brewery_depositor: '',
     brewery_account_number: '',
     brewery_bank_name: '',
     brewery_website: '',
-    introduction: ''
+    introduction: '',
+    image_key: ''
   });
 
   const [emailChecked, setEmailChecked] = useState(false);
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [is_agreed, setIsAgreed] = useState(false);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imageDescriptions, setImageDescriptions] = useState<string[]>([]);
+  const [isImageUploading, setIsImageUploading] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -52,6 +59,37 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
       setErrors(prev => ({
         ...prev,
         [name]: ''
+      }));
+    }
+  };
+
+  // 이미지 업로드 시뮬레이션 (실제 구현 시 서버 API 호출)
+  const uploadImage = async (file: File): Promise<string> => {
+    setIsImageUploading(true);
+    
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // 실제 구현 시에는 서버에 파일을 업로드하고 이미지 키를 받아옴
+        const mockImageKey = `brewery_${Date.now()}_${file.name.replace(/\s+/g, '_').toLowerCase()}`;
+        setIsImageUploading(false);
+        resolve(mockImageKey);
+      }, 1500);
+    });
+  };
+
+  // 주소 검색 결과 처리
+  const handleAddressSelect = (address: string, zonecode: string) => {
+    setFormData(prev => ({
+      ...prev,
+      brewery_address: address,
+      brewery_zonecode: zonecode
+    }));
+
+    // 주소 관련 에러 초기화
+    if (errors.brewery_address) {
+      setErrors(prev => ({
+        ...prev,
+        brewery_address: ''
       }));
     }
   };
@@ -88,7 +126,7 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {};
 
-   // 양조장 정보 검증
+    // 양조장 정보 검증
     if (!formData.email) newErrors.email = '업무용 이메일을 입력해주세요.';
     if (!emailChecked) newErrors.email = '이메일 중복확인을 해주세요.';
     if (!formData.password) newErrors.password = '비밀번호를 입력해주세요.';
@@ -96,16 +134,21 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
     if (!formData.passwordConfirm) newErrors.passwordConfirm = '비밀번호 확인을 입력해주세요.';
     if (formData.password !== formData.passwordConfirm) newErrors.passwordConfirm = '비밀번호가 일치하지 않습니다.';
     if (!formData.phone) newErrors.phone = '업무용 전화번호를 입력해주세요.';
-    if (!formData.nickname) newErrors.nickname = '닉네임을 입력해주세요.';
+    if (!formData.nickname) newErrors.nickname = '상호명을 입력해주세요.';
     if (!formData.gender) newErrors.gender = '성별을 선택해주세요.';
     if (!formData.birth) newErrors.birth = '생년월일을 입력해주세요.';
-    if (!formData.brewery_name) newErrors.brewery_name = '양조장 상호명을 입력해주세요.';
+    if (!formData.name) newErrors.name = '대표자 명을 입력해주세요.';
     if (!formData.brewery_address) newErrors.brewery_address = '양조장 주소를 입력해주세요.';
     if (!formData.brewery_address_detail) newErrors.brewery_address_detail = '양조장 상세 주소를 입력해주세요.';
     if (!formData.business_registration_number) newErrors.business_registration_number = '사업자 등록번호를 입력해주세요.';
     if (!formData.brewery_account_number) newErrors.brewery_account_number = '계좌번호를 입력해주세요.';
     if (!formData.brewery_depositor) newErrors.brewery_depositor = '예금주를 입력해주세요.';
     if (!formData.brewery_bank_name) newErrors.brewery_bank_name = '은행명을 입력해주세요.';
+    
+    // 양조장 이미지 필수 검증
+    if (imageFiles.length === 0) {
+      newErrors.image_key = '양조장 대표 이미지를 업로드해주세요.';
+    }
     
     // 웹사이트 URL 검증 (선택사항이므로 값이 있을 때만)
     if (formData.brewery_website && !isValidUrl(formData.brewery_website)) {
@@ -128,15 +171,37 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) {
       return;
     }
 
-    console.log('양조장 관리자 회원가입:', { ...formData, is_agreed });
-    // 실제 회원가입 API 호출
+    try {
+      let finalImageKey = formData.image_key;
+
+      // 이미지 파일이 있으면 업로드
+      if (imageFiles.length > 0) {
+        finalImageKey = await uploadImage(imageFiles[0]);
+      }
+
+      const submitData = {
+        ...formData,
+        image_key: finalImageKey,
+        is_agreed
+      };
+
+      console.log('양조장 관리자 회원가입:', submitData);
+      // 실제 회원가입 API 호출
+      
+    } catch (error) {
+      console.error('회원가입 처리 중 오류:', error);
+      setErrors(prev => ({ 
+        ...prev, 
+        submit: '회원가입 처리 중 오류가 발생했습니다. 다시 시도해주세요.' 
+      }));
+    }
   };
 
   return (
@@ -225,21 +290,21 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
             {errors.phone && <span className="brewery-error-message">{errors.phone}</span>}
           </div>
 
-          {/* 닉네임 */}
+          {/* 대표자 명 */}
           <div className="brewery-form-group">
-            <label htmlFor="nickname" className="brewery-form-label">닉네임 *</label>
+            <label htmlFor="name" className="brewery-form-label">대표자 명 *</label>
             <input
               type="text"
-              id="nickname"
-              name="nickname"
-              className={`brewery-form-input ${errors.nickname ? 'error' : ''}`}
-              placeholder="닉네임을 입력하세요"
-              value={formData.nickname}
+              id="name"
+              name="name"
+              className={`brewery-form-input ${errors.name ? 'error' : ''}`}
+              placeholder="대표자 명을 입력하세요"
+              value={formData.name}
               onChange={handleInputChange}
             />
-            {errors.nickname && <span className="brewery-error-message">{errors.nickname}</span>}
+            {errors.name && <span className="brewery-error-message">{errors.name}</span>}
           </div>
-
+          
           {/* 성별 */}
           <div className="brewery-form-group">
             <label htmlFor="gender" className="brewery-form-label">성별 *</label>
@@ -273,31 +338,54 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
 
           {/* 양조장 상호명 */}
           <div className="brewery-form-group">
-            <label htmlFor="brewery_name" className="brewery-form-label">양조장 상호명 *</label>
+            <label htmlFor="nickname" className="brewery-form-label">양조장 상호명 *</label>
             <input
               type="text"
-              id="brewery_name"
-              name="brewery_name"
-              className={`brewery-form-input ${errors.brewery_name ? 'error' : ''}`}
+              id="nickname"
+              name="nickname"
+              className={`brewery-form-input ${errors.nickname ? 'error' : ''}`}
               placeholder="양조장 상호명을 입력하세요"
-              value={formData.brewery_name}
+              value={formData.nickname}
               onChange={handleInputChange}
             />
-            {errors.brewery_name && <span className="brewery-error-message">{errors.brewery_name}</span>}
+            {errors.nickname && <span className="brewery-error-message">{errors.nickname}</span>}
           </div>
 
-          {/* 양조장 주소 */}
+
+          {/* 양조장 대표 이미지 업로드 */}
+          <div className="brewery-form-group">
+            <label className="brewery-form-label">양조장 대표 이미지 *</label>
+            <ImageUpload
+              images={imageFiles}
+              maxImages={1}
+              onImagesChange={(files) => setImageFiles(files)}
+              onDescriptionsChange={(descriptions) => setImageDescriptions(descriptions)}
+              descriptions={imageDescriptions}
+              disabled={isImageUploading}
+              accept="image/jpeg,image/jpg,image/png,image/webp"
+              maxFileSize={5}
+            />
+            {errors.image_key && <span className="brewery-error-message">{errors.image_key}</span>}
+          </div>
+
+          {/* 양조장 주소 - 주소 검색 기능 추가 */}
           <div className="brewery-form-group">
             <label htmlFor="brewery_address" className="brewery-form-label">양조장 주소 *</label>
-            <input
-              type="text"
-              id="brewery_address"
-              name="brewery_address"
-              className={`brewery-form-input ${errors.brewery_address ? 'error' : ''}`}
-              placeholder="양조장 주소를 입력하세요"
-              value={formData.brewery_address}
-              onChange={handleInputChange}
-            />
+            <div className="brewery-address-input-group">
+              <input
+                type="text"
+                id="brewery_address"
+                name="brewery_address"
+                className={`brewery-form-input ${errors.brewery_address ? 'error' : ''}`}
+                placeholder="주소검색 버튼을 클릭하세요"
+                value={formData.brewery_address}
+                readOnly
+              />
+              <AddressSearch
+                onAddressSelect={handleAddressSelect}
+                className="brewery-address-search"
+              />
+            </div>
             {errors.brewery_address && <span className="brewery-error-message">{errors.brewery_address}</span>}
           </div>
 
@@ -392,7 +480,7 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
               type="url"
               id="brewery_website"
               name="brewery_website"
-              className={`brewery-form-input ${errors.brewery_website ? 'error' : ''}`}
+              className={`brewery-form-input brewery-optional-field ${errors.brewery_website ? 'error' : ''}`}
               placeholder="https://www.example.com"
               value={formData.brewery_website}
               onChange={handleInputChange}
@@ -406,7 +494,7 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
             <textarea
               id="introduction"
               name="introduction"
-              className={`brewery-form-input ${errors.introduction ? 'error' : ''}`}
+              className={`brewery-form-input brewery-optional-field ${errors.introduction ? 'error' : ''}`}
               placeholder="양조장에 대한 소개를 입력하세요"
               value={formData.introduction}
               onChange={handleInputChange}
@@ -424,8 +512,19 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
             error={errors.terms}
           />
 
-          <button type="submit" className="brewery-submit-button">
-            회원가입 완료
+          {/* 제출 에러 메시지 */}
+          {errors.submit && (
+            <div className="brewery-error-message" style={{ marginBottom: '16px', textAlign: 'center' }}>
+              {errors.submit}
+            </div>
+          )}
+
+          <button 
+            type="submit" 
+            className="brewery-submit-button"
+            disabled={isImageUploading}
+          >
+            {isImageUploading ? '이미지 업로드 중...' : '회원가입 완료'}
           </button>
         </form>
       </div>

@@ -1,3 +1,5 @@
+/* BrewerySignupForm.css - 술 양조장 회원가입 폼 전용 스타일 */
+
 .brewery-signup-container {
   min-height: 100vh;
   display: flex;
@@ -109,6 +111,130 @@
   transform: none;
 }
 
+/* 이미지 업로드 영역 */
+.brewery-image-upload-container {
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  background-color: #fafbfc;
+  transition: all 0.2s ease;
+}
+
+.brewery-image-upload-container:hover {
+  border-color: #8b5a3c;
+  background-color: #f8f9fa;
+}
+
+.brewery-image-input {
+  display: none;
+}
+
+.brewery-image-upload-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #8b5a3c, #7c4d34);
+  color: white;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  box-shadow: 0 2px 4px rgba(139, 90, 60, 0.3);
+}
+
+.brewery-image-upload-button:hover {
+  background: linear-gradient(135deg, #7c4d34, #6d3f2a);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(139, 90, 60, 0.4);
+}
+
+.brewery-upload-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brewery-loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: brewery-spin 1s linear infinite;
+}
+
+@keyframes brewery-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.brewery-image-preview-container {
+  margin-top: 16px;
+}
+
+.brewery-image-preview {
+  position: relative;
+  display: inline-block;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid #e5e7eb;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.brewery-image-preview img {
+  width: 200px;
+  height: 140px;
+  object-fit: cover;
+  display: block;
+}
+
+.brewery-image-remove-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  background: rgba(239, 68, 68, 0.9);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.brewery-image-remove-btn:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+}
+
+.brewery-image-help-text {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+/* 주소 검색 영역 - 양조장용 */
+.brewery-address-input-group {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.brewery-address-input-group .brewery-form-input {
+  flex: 1;
+}
+
 /* 에러 및 성공 메시지 */
 .brewery-error-message {
   display: block;
@@ -142,7 +268,7 @@
   box-shadow: 0 4px 8px rgba(139, 90, 60, 0.3);
 }
 
-.brewery-submit-button:hover {
+.brewery-submit-button:hover:not(:disabled) {
   background: linear-gradient(135deg, #7c4d34, #6d3f2a);
   transform: translateY(-2px);
   box-shadow: 0 6px 12px rgba(139, 90, 60, 0.4);
@@ -150,6 +276,13 @@
 
 .brewery-submit-button:active {
   transform: translateY(0);
+}
+
+.brewery-submit-button:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 /* 뒤로가기 버튼 */
@@ -209,7 +342,8 @@
     padding: 32px 24px;
   }
   
-  .brewery-email-input-group {
+  .brewery-email-input-group,
+  .brewery-address-input-group {
     flex-direction: column;
     gap: 8px;
   }
@@ -252,6 +386,7 @@
   .brewery-submit-button,
   .brewery-back-button {
     transition: none;
+    animation: none;
   }
 }
 
@@ -261,4 +396,10 @@
 .brewery-submit-button:focus {
   outline: 2px solid #8b5a3c;
   outline-offset: 2px;
+}
+
+/* 업로드 상태 표시 */
+.brewery-form-group.uploading {
+  pointer-events: none;
+  opacity: 0.7;
 }

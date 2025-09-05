@@ -8,31 +8,80 @@ const Nav: React.FC = () => {
 
   // URL 파라미터를 감지하여 현재 페이지 상태 업데이트
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const url = new URL(window.location.href);
-      const view = url.searchParams.get('view');
-      const brewery = url.searchParams.get('brewery');
-      
-      if (brewery) {
-        setCurrentPage('brewery');
-      } else if (view) {
-        setCurrentPage(view);
-      } else {
-        setCurrentPage('home');
+    const updateCurrentPage = () => {
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href);
+        const view = url.searchParams.get('view');
+        const brewery = url.searchParams.get('brewery');
+        const product = url.searchParams.get('product');
+        
+        // 상품 상세페이지일 때는 shop으로 표시
+        if (product) {
+          setCurrentPage('shop');
+        } else if (brewery) {
+          setCurrentPage('brewery');
+        } else if (view) {
+          setCurrentPage(view);
+        } else {
+          setCurrentPage('home');
+        }
       }
-    }
+    };
+
+    // 초기 로드 시 페이지 설정
+    updateCurrentPage();
+
+    // URL 변경 감지를 위한 이벤트 리스너
+    const handlePopState = () => {
+      updateCurrentPage();
+    };
+
+    // pushState/replaceState 감지를 위한 커스텀 이벤트
+    const handleLocationChange = () => {
+      updateCurrentPage();
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('locationchange', handleLocationChange);
+
+    // pushState와 replaceState를 래핑하여 커스텀 이벤트 발생
+    const originalPushState = history.pushState;
+    const originalReplaceState = history.replaceState;
+
+    history.pushState = function(...args) {
+      originalPushState.apply(history, args);
+      window.dispatchEvent(new Event('locationchange'));
+    };
+
+    history.replaceState = function(...args) {
+      originalReplaceState.apply(history, args);
+      window.dispatchEvent(new Event('locationchange'));
+    };
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('locationchange', handleLocationChange);
+      // 원래 함수들 복원
+      history.pushState = originalPushState;
+      history.replaceState = originalReplaceState;
+    };
   }, []);
 
   const handleNavigation = (page: string) => {
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href);
+      
+      // 모든 관련 파라미터 정리
       url.searchParams.delete('view');
       url.searchParams.delete('brewery');
+      url.searchParams.delete('product');
       
+      // home이 아닌 경우에만 view 파라미터 설정
       if (page !== 'home') {
         url.searchParams.set('view', page);
       }
       
+      // 페이지 새로고침으로 이동 (기존 방식 유지)
       window.location.href = url.toString();
     }
   };

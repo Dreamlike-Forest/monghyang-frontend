@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import ImageUpload from '../ImageUpload/ImageUpload';
 import { WritePostData, PostCategory, CategoryConfig } from '../../../types/community';
 import './WritePost.css';
@@ -10,29 +10,42 @@ interface WritePostProps {
   onCancel: () => void;
   initialCategory?: PostCategory;
   categories: CategoryConfig[];
+  initialData?: Partial<WritePostData>; // 초기 데이터 추가
 }
 
 const WritePost: React.FC<WritePostProps> = ({
   onSubmit,
   onCancel,
   initialCategory,
-  categories
+  categories,
+  initialData
 }) => {
   const [formData, setFormData] = useState<WritePostData>({
-    title: '',
-    content: '',
-    category: initialCategory || 'free',
-    subcategory: '',
-    rating: 0,
-    brewery_name: '',
-    product_name: '',
-    tags: [],
-    images: [],
-    imageDescriptions: []
+    title: initialData?.title || '',
+    content: initialData?.content || '',
+    category: initialData?.category || initialCategory || 'free',
+    subcategory: initialData?.subcategory || '',
+    rating: initialData?.rating || 0,
+    brewery_name: initialData?.brewery_name || '',
+    product_name: initialData?.product_name || '',
+    tags: initialData?.tags || [],
+    images: initialData?.images || [],
+    imageDescriptions: initialData?.imageDescriptions || []
   });
 
   const [tagInput, setTagInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // 초기 데이터가 변경되면 폼 데이터 업데이트
+  useEffect(() => {
+    if (initialData) {
+      setFormData(prev => ({
+        ...prev,
+        ...initialData,
+        category: initialData.category || initialCategory || prev.category
+      }));
+    }
+  }, [initialData, initialCategory]);
 
   const getCurrentCategoryConfig = () => {
     return categories.find(cat => cat.id === formData.category);
@@ -129,7 +142,9 @@ const WritePost: React.FC<WritePostProps> = ({
   return (
     <div className="write-post-container">
       <div className="write-post-header">
-        <h1 className="write-post-title">새 게시글 작성</h1>
+        <h1 className="write-post-title">
+          {initialData?.product_name ? `${initialData.product_name} 리뷰 작성` : '새 게시글 작성'}
+        </h1>
         <p className="write-post-description">
           커뮤니티 규칙을 준수하여 유익하고 건전한 게시글을 작성해주세요.
         </p>
@@ -214,6 +229,8 @@ const WritePost: React.FC<WritePostProps> = ({
                     e.target.value
                   )
                 }
+                // 상품 리뷰인 경우 읽기 전용으로 설정 (이미 선택된 상품)
+                readOnly={formData.category === 'drink_review' && !!initialData?.product_name}
               />
             </div>
 

@@ -16,21 +16,12 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
   activeFilters,
   onFilterChange
 }) => {
-  const [priceMin, setPriceMin] = useState(activeFilters.priceMin);
-  const [priceMax, setPriceMax] = useState(activeFilters.priceMax);
-  const [selectedQuickPrice, setSelectedQuickPrice] = useState('all');
-
-  const quickPriceRanges = [
-    { id: 'all', label: '전체', min: 0, max: 999999 },
-    { id: 'under15', label: '1.5만원 이하', min: 0, max: 15000 },
-    { id: '15to30', label: '1.5~3만원', min: 15000, max: 30000 },
-    { id: '30to50', label: '3~5만원', min: 30000, max: 50000 },
-    { id: 'over50', label: '5만원 이상', min: 50000, max: 999999 }
-  ];
+  const [priceMin, setPriceMin] = useState<number | ''>(activeFilters.priceMin === 0 ? '' : activeFilters.priceMin);
+  const [priceMax, setPriceMax] = useState<number | ''>(activeFilters.priceMax === 999999 ? '' : activeFilters.priceMax);
 
   useEffect(() => {
-    setPriceMin(activeFilters.priceMin);
-    setPriceMax(activeFilters.priceMax);
+    setPriceMin(activeFilters.priceMin === 0 ? '' : activeFilters.priceMin);
+    setPriceMax(activeFilters.priceMax === 999999 ? '' : activeFilters.priceMax);
   }, [activeFilters.priceMin, activeFilters.priceMax]);
 
   const handleCheckboxChange = (category: keyof ProductActiveFilters, value: string) => {
@@ -46,11 +37,19 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
     onFilterChange({ [category]: newArray });
   };
 
-  const handleRadioChange = (category: keyof ProductActiveFilters, value: string) => {
-    // 이미 선택된 값이면 해제, 아니면 선택
-    const currentValue = activeFilters[category] as string;
-    const newValue = currentValue === value ? '' : value;
-    onFilterChange({ [category]: newValue });
+  // 도수 필터를 체크박스로 변경 (라디오 버튼 제거)
+  const handleAlcoholCheckboxChange = (value: string) => {
+    // alcoholRange를 배열로 처리하도록 변경
+    const currentArray = (activeFilters.alcoholRange ? [activeFilters.alcoholRange] : []) as string[];
+    let newArray: string[];
+    
+    if (currentArray.includes(value)) {
+      newArray = [];
+    } else {
+      newArray = [value];
+    }
+    
+    onFilterChange({ alcoholRange: newArray.length > 0 ? newArray[0] : '' });
   };
 
   const handleSearchChange = (keyword: string) => {
@@ -64,35 +63,23 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
     // 최대 8자리까지만 허용 (99,999,999원)
     if (numericValue.length > 8) return;
     
+    const finalValue: number | '' = numericValue === '' ? '' : parseInt(numericValue, 10);
+    
     if (type === 'min') {
-      setPriceMin(numericValue === '' ? 0 : parseInt(numericValue));
+      setPriceMin(finalValue);
     } else {
-      setPriceMax(numericValue === '' ? 999999 : parseInt(numericValue));
+      setPriceMax(finalValue);
     }
   };
 
   const handlePriceApply = () => {
-    // 최소값이 최대값보다 큰 경우 자동으로 교정
-    const finalMin = Math.min(priceMin, priceMax === 999999 ? priceMin : priceMax);
-    const finalMax = Math.max(priceMin, priceMax === 999999 ? 999999 : priceMax);
+    const finalMin = priceMin === '' ? 0 : priceMin;
+    const finalMax = priceMax === '' ? 999999 : priceMax;
     
     onFilterChange({ 
       priceMin: finalMin,
       priceMax: finalMax
     });
-  };
-
-  const handleQuickPriceSelect = (rangeId: string) => {
-    const range = quickPriceRanges.find(r => r.id === rangeId);
-    if (range) {
-      setPriceMin(range.min);
-      setPriceMax(range.max);
-      setSelectedQuickPrice(rangeId);
-      onFilterChange({ 
-        priceMin: range.min,
-        priceMax: range.max
-      });
-    }
   };
 
   const removeFilter = (category: keyof ProductActiveFilters, value: string) => {
@@ -115,9 +102,8 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
       priceMin: 0,
       priceMax: 999999
     });
-    setPriceMin(0);
-    setPriceMax(999999);
-    setSelectedQuickPrice('all');
+    setPriceMin('');
+    setPriceMax('');
   };
 
   // 활성화된 필터 태그들 생성
@@ -148,6 +134,16 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
       tags.push({ category: 'searchKeyword', label: `"${activeFilters.searchKeyword}"`, value: activeFilters.searchKeyword });
     }
 
+    // 가격 범위 태그 추가
+    const finalMin = priceMin === '' ? 0 : priceMin;
+    const finalMax = priceMax === '' ? 999999 : priceMax;
+    
+    if (finalMin !== 0 || finalMax !== 999999) {
+      const minText = finalMin !== 0 ? finalMin.toLocaleString() : '0';
+      const maxText = finalMax !== 999999 ? finalMax.toLocaleString() : '∞';
+      tags.push({ category: 'priceMin', label: `${minText}원 ~ ${maxText}원`, value: 'price' });
+    }
+
     return tags;
   };
 
@@ -172,7 +168,15 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
                 {tag.label}
                 <button
                   className="remove-filter"
-                  onClick={() => removeFilter(tag.category, tag.value)}
+                  onClick={() => {
+                    if (tag.value === 'price') {
+                      setPriceMin('');
+                      setPriceMax('');
+                      onFilterChange({ priceMin: 0, priceMax: 999999 });
+                    } else {
+                      removeFilter(tag.category, tag.value);
+                    }
+                  }}
                   title="필터 제거"
                 >
                   ×
@@ -213,7 +217,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
         </div>
       </div>
 
-      {/* 도수 필터 */}
+      {/* 도수 필터 - 체크박스로 변경 */}
       <div className="filter-section">
         <div className="filter-title">
           도수
@@ -228,11 +232,10 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
           {filterOptions.alcoholRanges.map(option => (
             <label key={option.id} className="filter-option">
               <input
-                type="radio"
-                name="alcoholRange"
+                type="checkbox"
                 className="filter-checkbox"
                 checked={activeFilters.alcoholRange === option.id}
-                onChange={() => handleRadioChange('alcoholRange', option.id)}
+                onChange={() => handleAlcoholCheckboxChange(option.id)}
               />
               <span className="filter-option-label">{option.name}</span>
               <span className="filter-option-count">({option.count})</span>
@@ -268,16 +271,15 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
         </div>
       </div>
 
-      {/* 가격 범위 */}
+      {/* 가격 범위 - BreweryFilter 스타일에 맞춤 */}
       <div className="filter-section">
         <div className="filter-title">
           가격
           <button 
             className="filter-reset"
             onClick={() => {
-              setPriceMin(0);
-              setPriceMax(999999);
-              setSelectedQuickPrice('all');
+              setPriceMin('');
+              setPriceMax('');
               onFilterChange({ priceMin: 0, priceMax: 999999 });
             }}
           >
@@ -286,37 +288,39 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
         </div>
         
         <div className="price-range-inputs">
-          <input
-            type="number"
-            className="price-input"
-            placeholder="최소"
-            value={priceMin === 0 ? '' : priceMin}
-            onChange={(e) => handlePriceInputChange('min', e.target.value)}
-          />
+          <div className="price-input-wrapper">
+            <input
+              type="number"
+              placeholder="최소 가격"
+              value={priceMin || ''}
+              onChange={(e) => handlePriceInputChange('min', e.target.value)}
+              className="price-input"
+              min="0"
+              max="99999999"
+            />
+          </div>
+          
           <span className="price-separator">~</span>
-          <input
-            type="number"
-            className="price-input"
-            placeholder="최대"
-            value={priceMax === 999999 ? '' : priceMax}
-            onChange={(e) => handlePriceInputChange('max', e.target.value)}
-          />
+          
+          <div className="price-input-wrapper">
+            <input
+              type="number"
+              placeholder="최대 가격"
+              value={priceMax || ''}
+              onChange={(e) => handlePriceInputChange('max', e.target.value)}
+              className="price-input"
+              min="0"
+              max="99999999"
+            />
+          </div>
         </div>
         
-        <div className="price-quick-buttons">
-          {quickPriceRanges.map(range => (
-            <button
-              key={range.id}
-              className={`price-quick-button ${selectedQuickPrice === range.id ? 'active' : ''}`}
-              onClick={() => handleQuickPriceSelect(range.id)}
-            >
-              {range.label}
-            </button>
-          ))}
-        </div>
-        
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '12px' }}>
-          <button className="apply-button" onClick={handlePriceApply}>
+        <div className="price-apply-container">
+          <button 
+            className="apply-button" 
+            onClick={handlePriceApply}
+            disabled={priceMin === '' && priceMax === ''}
+          >
             적용
           </button>
         </div>

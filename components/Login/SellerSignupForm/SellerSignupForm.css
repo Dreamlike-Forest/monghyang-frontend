@@ -111,6 +111,17 @@
   transform: none;
 }
 
+/* 주소 검색 영역 - 판매자용 */
+.seller-address-input-group {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.seller-address-input-group .seller-form-input {
+  flex: 1;
+}
+
 /* 에러 및 성공 메시지 */
 .seller-error-message {
   display: block;
@@ -200,7 +211,8 @@
     padding: 32px 24px;
   }
   
-  .seller-email-input-group {
+  .seller-email-input-group,
+  .seller-address-input-group {
     flex-direction: column;
     gap: 8px;
   }

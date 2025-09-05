@@ -1,5 +1,3 @@
-// types/mockData.ts - brewery_images 필드가 추가된 타입 정의
-
 export interface ProductOption {
   product_option_id: number;
   product_id: number;
@@ -44,8 +42,8 @@ export interface ProductReview {
 export interface Product {
   product_id: number;
   user_id: number;
-  brewery_id: number; // 양조장과 연결
-  image_key: string;
+  brewery_id: number; 
+  image_key: string; // image_key로 통일
   name: string;
   alcohol: number;
   is_sell: boolean;
@@ -57,7 +55,6 @@ export interface Product {
   images: ProductImage[];
   reviews: ProductReview[];
   tags: ProductTag[];
-  // 계산된 필드들
   averageRating: number;
   reviewCount: number;
   minPrice: number;
@@ -100,12 +97,11 @@ export interface Brewery {
   bank_name: string;
   introduction?: string;
   brewery_website?: string;
-  // 계산된/추가 필드들
   region_name: string;
   alcohol_types: string[];
   price_range: 'low' | 'medium' | 'high';
-  image_url: string; // 대표 이미지 (첫 번째 이미지)
-  brewery_images?: string[]; // 양조장 이미지 배열 추가
+  image_key?: string; // 메인 이미지 키 (회원가입 시 업로드)
+  brewery_images?: string[]; // 추가 이미지 키들 배열 (갤러리용, 최대 5개)
   experience_programs?: Joy[];
   badges?: {
     type: 'text' | 'image';
@@ -117,7 +113,7 @@ export interface Brewery {
 
 // Shop 컴포넌트에서 사용하는 확장된 Product 타입
 export interface ProductWithDetails extends Product {
-  brewery: string; // brewery_name에서 가져옴
+  brewery: string; 
 }
 
 // 필터 옵션 타입들
