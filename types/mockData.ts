@@ -1,5 +1,3 @@
-// types/mockData.ts - image_key로 변수명 통일
-
 export interface ProductOption {
   product_option_id: number;
   product_id: number;
