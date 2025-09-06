@@ -30,16 +30,59 @@ const Header: React.FC = () => {
   const languageDropdownRef = useRef<HTMLDivElement>(null);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
 
-  // 로그인 상태 확인 (실제로는 localStorage나 쿠키에서 확인)
+  // URLSearchParams 초기화 헬퍼 함수
+  const clearAllSearchParams = (url: URL) => {
+    // clear() 대신 개별 삭제 방식 사용
+    const keysToDelete: string[] = [];
+    url.searchParams.forEach((value, key) => {
+      keysToDelete.push(key);
+    });
+    keysToDelete.forEach(key => {
+      url.searchParams.delete(key);
+    });
+  };
+
+  // 로그인 상태 확인
   useEffect(() => {
-    // 임시로 테스트용 로그인 상태 설정
-    const isAuthenticated = localStorage.getItem('isLoggedIn') === 'true';
-    const userData = localStorage.getItem('userData');
-    
-    if (isAuthenticated && userData) {
-      setIsLoggedIn(true);
-      setUser(JSON.parse(userData));
+    const checkAuthStatus = () => {
+      if (typeof window !== 'undefined') {
+        try {
+          const isAuthenticated = localStorage.getItem('isLoggedIn') === 'true';
+          const userData = localStorage.getItem('userData');
+          
+          if (isAuthenticated && userData) {
+            const parsedUserData = JSON.parse(userData);
+            setIsLoggedIn(true);
+            setUser(parsedUserData);
+          }
+        } catch (error) {
+          console.error('사용자 데이터 파싱 오류:', error);
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userData');
+          }
+        }
+      }
+    };
+
+    checkAuthStatus();
+
+    // storage 이벤트 리스너 (다른 탭에서 로그인/로그아웃 시 감지)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'isLoggedIn' || e.key === 'userData') {
+        checkAuthStatus();
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', handleStorageChange);
     }
+    
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('storage', handleStorageChange);
+      }
+    };
   }, []);
 
   // 드롭다운 외부 클릭 시 닫기
@@ -53,9 +96,14 @@ const Header: React.FC = () => {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    if (typeof window !== 'undefined') {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      if (typeof window !== 'undefined') {
+        document.removeEventListener('mousedown', handleClickOutside);
+      }
     };
   }, []);
 
@@ -65,46 +113,135 @@ const Header: React.FC = () => {
     console.log('언어 변경:', language);
   };
 
+  // 로그인 핸들러 - clear() 사용하지 않고 개별 삭제
   const handleLogin = () => {
-    if (typeof window !== 'undefined') {
-      const url = new URL(window.location.href);
-      url.searchParams.delete('view');
-      url.searchParams.delete('brewery');
+    if (typeof window === 'undefined') {
+      console.warn('브라우저 환경이 아닙니다.');
+      return;
+    }
+    
+    try {
+      // 현재 상품 페이지에 있다면 상품 ID 저장
+      const currentHref = window.location.href;
+      if (!currentHref) {
+        throw new Error('현재 URL을 가져올 수 없습니다.');
+      }
+
+      const currentUrl = new URL(currentHref);
+      const productId = currentUrl.searchParams.get('product');
+      
+      if (productId) {
+        sessionStorage.setItem('returnToProduct', productId);
+        console.log('상품 ID 저장됨:', productId);
+      }
+      
+      // 로그인 페이지로 이동 - clear() 대신 개별 삭제
+      const url = new URL(currentHref);
+      
+      // 모든 파라미터 개별 삭제
+      clearAllSearchParams(url);
+      
+      // 로그인 view 설정
       url.searchParams.set('view', 'login');
-      window.location.href = url.toString();
+      
+      const newUrl = url.toString();
+      window.location.href = newUrl;
+      
+    } catch (error) {
+      console.error('로그인 페이지 이동 중 오류:', error);
+      // 오류 발생 시 기본 로그인 페이지로 이동
+      try {
+        window.location.href = '/?view=login';
+      } catch (fallbackError) {
+        console.error('기본 페이지 이동도 실패:', fallbackError);
+        window.location.reload();
+      }
     }
   };
 
   const handleCart = () => {
-    if (typeof window !== 'undefined') {
-      const url = new URL(window.location.href);
+    if (typeof window === 'undefined') {
+      console.warn('브라우저 환경이 아닙니다.');
+      return;
+    }
+    
+    try {
+      const currentHref = window.location.href;
+      if (!currentHref) {
+        throw new Error('현재 URL을 가져올 수 없습니다.');
+      }
+
+      const url = new URL(currentHref);
+      
+      // 특정 파라미터들만 삭제
       url.searchParams.delete('view');
       url.searchParams.delete('brewery');
+      url.searchParams.delete('product');
+      
+      // shop view 설정
       url.searchParams.set('view', 'shop');
-      window.location.href = url.toString();
+      
+      const newUrl = url.toString();
+      window.location.href = newUrl;
+      
+    } catch (error) {
+      console.error('장바구니 페이지 이동 중 오류:', error);
+      try {
+        window.location.href = '/?view=shop';
+      } catch (fallbackError) {
+        console.error('기본 쇼핑 페이지 이동도 실패:', fallbackError);
+        window.location.reload();
+      }
     }
   };
 
   const handleProfile = () => {
     console.log('내 정보 페이지로 이동');
-    // 실제로는 프로필 페이지로 이동
     setIsProfileDropdownOpen(!isProfileDropdownOpen);
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('userData');
-    setIsLoggedIn(false);
-    setUser(null);
-    setIsProfileDropdownOpen(false);
-    console.log('로그아웃 완료');
+    if (typeof window === 'undefined') {
+      console.warn('브라우저 환경이 아닙니다.');
+      return;
+    }
     
-    // 홈으로 이동
-    if (typeof window !== 'undefined') {
-      const url = new URL(window.location.href);
-      url.searchParams.delete('view');
-      url.searchParams.delete('brewery');
-      window.location.href = url.toString();
+    try {
+      // 로컬 스토리지 정리
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('userData');
+      sessionStorage.removeItem('returnToProduct'); // 저장된 상품 정보도 삭제
+      
+      // 상태 초기화
+      setIsLoggedIn(false);
+      setUser(null);
+      setIsProfileDropdownOpen(false);
+      
+      console.log('로그아웃 완료');
+      
+      // 홈으로 이동 - 특정 파라미터들만 삭제
+      const currentHref = window.location.href;
+      if (currentHref) {
+        const url = new URL(currentHref);
+        url.searchParams.delete('view');
+        url.searchParams.delete('brewery');
+        url.searchParams.delete('product');
+        
+        const newUrl = url.toString();
+        window.location.href = newUrl;
+      } else {
+        window.location.href = '/';
+      }
+      
+    } catch (error) {
+      console.error('로그아웃 중 오류:', error);
+      // 오류 발생 시 강제로 홈으로 이동
+      try {
+        window.location.href = '/';
+      } catch (fallbackError) {
+        console.error('홈 페이지 이동도 실패:', fallbackError);
+        window.location.reload();
+      }
     }
   };
 

@@ -36,7 +36,7 @@ export default function MainApp() {
 
         console.log('URL 파라미터:', { view, breweryId, productId });
 
-        // 상품 상세페이지 처리
+        // 상품 상세페이지 처리 - shop 뷰로 처리
         if (productId) {
           console.log('상품 상세페이지 요청:', productId);
           // Shop 컴포넌트에서 처리하도록 shop view로 설정
@@ -88,6 +88,20 @@ export default function MainApp() {
 
     handleURLParams();
   }, [searchParams]);
+
+  // Header가 URL 변경을 감지할 수 있도록 커스텀 이벤트 리스너 추가
+  useEffect(() => {
+    const handleLocationChange = () => {
+      // URL이 변경되었을 때 필요한 처리
+      console.log('URL 변경 감지됨');
+    };
+
+    window.addEventListener('locationchange', handleLocationChange);
+    
+    return () => {
+      window.removeEventListener('locationchange', handleLocationChange);
+    };
+  }, []);
 
   // 뷰 전환 함수 개선 - Nav 컴포넌트와 호환
   const navigateToView = (view: View, params?: Record<string, string>) => {

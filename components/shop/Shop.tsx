@@ -41,19 +41,59 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
   // URL 파라미터에서 상품 ID 확인 - useEffect 의존성 문제 해결
   useEffect(() => {
     const checkURLParams = () => {
+      if (typeof window === 'undefined') return;
+      
       const urlParams = new URLSearchParams(window.location.search);
       const productId = urlParams.get('product');
       
       if (productId && allProducts.length > 0) {
         const product = allProducts.find(p => p.product_id === parseInt(productId));
         if (product) {
+          console.log('URL에서 상품 로드:', product.name);
           handleProductClick(product.product_id);
+        } else {
+          console.warn('해당 상품을 찾을 수 없음:', productId);
+          // 상품이 없으면 URL에서 product 파라미터 제거
+          const url = new URL(window.location.href);
+          url.searchParams.delete('product');
+          window.history.replaceState({}, '', url.toString());
         }
       }
     };
 
     checkURLParams();
   }, [allProducts]); // allProducts가 로드된 후 실행
+
+  // 브라우저 뒤로가기/앞으로가기 감지
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      if (typeof window === 'undefined') return;
+      
+      const url = new URL(window.location.href);
+      const productId = url.searchParams.get('product');
+      
+      if (!productId && isProductDetailOpen) {
+        // 상품 상세페이지가 열려있는데 URL에 product가 없으면 닫기
+        console.log('뒤로가기 감지: 상품 상세페이지 닫기');
+        setIsProductDetailOpen(false);
+        setSelectedProduct(null);
+        setSelectedProductBrewery(null);
+      } else if (productId && !isProductDetailOpen) {
+        // URL에 product가 있는데 상세페이지가 닫혀있으면 열기
+        const product = allProducts.find(p => p.product_id === parseInt(productId));
+        if (product) {
+          console.log('앞으로가기 감지: 상품 상세페이지 열기');
+          handleProductClick(product.product_id);
+        }
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [isProductDetailOpen, allProducts]);
 
   // 필터 적용 함수
   const applyFilters = useCallback(() => {
@@ -184,10 +224,13 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
 
   // URL 업데이트 함수 - 히스토리 문제 방지
   const updateURLForProductDetail = (productId: number) => {
+    if (typeof window === 'undefined') return;
+    
     const url = new URL(window.location.href);
+    url.searchParams.set('view', 'shop');
     url.searchParams.set('product', productId.toString());
     
-    // pushState 대신 replaceState 사용하여 뒤로가기 문제 방지
+    // pushState 사용하여 히스토리에 추가
     window.history.pushState({ productDetail: true }, '', url.toString());
   };
 
@@ -199,6 +242,8 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
     setSelectedProduct(null);
     setSelectedProductBrewery(null);
 
+    if (typeof window === 'undefined') return;
+    
     // URL에서 product 파라미터 제거
     const url = new URL(window.location.href);
     url.searchParams.delete('product');
@@ -211,27 +256,6 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
     // replaceState로 히스토리 문제 방지
     window.history.replaceState({}, '', url.toString());
   };
-
-  // 브라우저 뒤로가기 감지
-  useEffect(() => {
-    const handlePopState = (event: PopStateEvent) => {
-      const url = new URL(window.location.href);
-      const productId = url.searchParams.get('product');
-      
-      if (!productId && isProductDetailOpen) {
-        // 상품 상세페이지가 열려있는데 URL에 product가 없으면 닫기
-        setIsProductDetailOpen(false);
-        setSelectedProduct(null);
-        setSelectedProductBrewery(null);
-      }
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, [isProductDetailOpen]);
 
   // 장바구니 추가 핸들러
   const handleAddToCart = (productId: number) => {
