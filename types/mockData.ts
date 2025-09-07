@@ -1,3 +1,5 @@
+// types/mockData.ts - Joy 인터페이스에 image_key 추가
+
 export interface ProductOption {
   product_option_id: number;
   product_id: number;
@@ -65,13 +67,6 @@ export interface Product {
   isNew?: boolean;
 }
 
-export interface JoyImage {
-  joy_image_id: number;
-  joy_id: number;
-  key: string;
-  seq: number;
-}
-
 export interface Joy {
   joy_id: number;
   brewery_id: number;
@@ -79,7 +74,7 @@ export interface Joy {
   place: string;
   detail: string;
   price: number;
-  images?: JoyImage[];
+  image_key?: string; // 체험 프로그램 이미지 키 (선택적)
 }
 
 export interface Brewery {
