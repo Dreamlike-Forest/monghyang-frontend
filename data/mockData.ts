@@ -174,7 +174,6 @@ export const mockBreweries: Brewery[] = [
   }
 ];
 
-// 체험 프로그램 데이터 (image_key만 사용)
 export const mockJoyPrograms: Joy[] = [
   {
     joy_id: 1,
