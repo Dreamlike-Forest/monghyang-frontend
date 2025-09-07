@@ -1,4 +1,4 @@
-/* 상품 개요 섹션 레이아웃 */
+/* 상품 개요 레이아웃 */
 .productdetail-product-overview-layout {
   display: grid;
   grid-template-columns: 1.2fr 0.8fr;
@@ -13,7 +13,7 @@
   gap: 24px;
 }
 
-/* 메인 이미지 컨테이너 - 가로 크기 유지하고 세로를 2:1 비율로 조정 */
+/* 메인 이미지 컨테이너 */
 .productdetail-product-main-image-container {
   position: relative;
   width: 100%;
@@ -25,7 +25,7 @@
   user-select: none;
 }
 
-/* 메인 이미지 - 실제 상품 이미지 */
+/* 메인 이미지 */
 .productdetail-product-main-image {
   width: 100%;
   height: 100%;
@@ -39,7 +39,7 @@
   transform: scale(1.03);
 }
 
-/* 이미지 네비게이션 버튼 - 이전/다음 이미지로 이동하는 화살표 버튼 */
+/* 이미지 네비게이션 버튼 */
 .productdetail-product-image-nav-btn {
   position: absolute;
   top: 50%;
@@ -87,7 +87,7 @@
   right: 20px;
 }
 
-/* 이미지 카운터 - 현재 이미지 번호 표시 (예: 1/3) */
+/* 이미지 카운터 */
 .productdetail-product-image-counter {
   position: absolute;
   top: 20px;
@@ -102,7 +102,7 @@
   backdrop-filter: blur(4px);
 }
 
-/* 이미지 플레이스홀더 - 이미지 로딩 실패 시 표시되는 영역 */
+/* 이미지 플레이스홀더 */
 .productdetail-product-image-placeholder {
   width: 100%;
   height: 100%;
@@ -129,7 +129,7 @@
   line-height: 1.5;
 }
 
-/* 썸네일 이미지들 - 메인 이미지 하단의 작은 이미지들 */
+/* 썸네일 이미지들 */
 .productdetail-product-thumbnails {
   display: flex;
   gap: 12px;
@@ -137,7 +137,6 @@
   padding: 8px 0;
 }
 
-/* 개별 썸네일 이미지 */
 .productdetail-product-thumbnail {
   flex-shrink: 0;
   width: 100px;
@@ -182,7 +181,7 @@
   color: #ef4444;
 }
 
-/* 오른쪽: 상품 정보 섹션 - 상품명, 가격, 설명 등이 들어가는 영역 */
+/* 오른쪽: 상품 정보 섹션 */
 .productdetail-product-info-section {
   display: flex;
   flex-direction: column;
@@ -190,13 +189,12 @@
   padding: 12px 0;
 }
 
-/* 상품 제목 섹션 - 상품명, 양조장명, 배지가 들어가는 상단 영역 */
+/* 상품 제목 섹션 */
 .productdetail-product-title-section {
   border-bottom: 1px solid #e5e7eb;
   padding-bottom: 20px;
 }
 
-/* 상품명 */
 .productdetail-product-name {
   font-size: 32px;
   font-weight: 800;
@@ -205,7 +203,6 @@
   line-height: 1.2;
 }
 
-/* 양조장명 */
 .productdetail-product-brewery {
   font-size: 18px;
   color: #8b5a3c;
@@ -213,7 +210,7 @@
   font-weight: 500;
 }
 
-/* 상품 배지 컨테이너 - "베스트", "신상품" 등의 배지들 */
+/* 상품 배지 */
 .productdetail-product-badges {
   display: flex;
   gap: 10px;
@@ -235,7 +232,7 @@
   background-color: #ef4444;
 }
 
-/* 상품 상세 정보 그리드 - 도수, 용량, 등록일 등의 기본 정보 */
+/* 상품 상세 정보 그리드 */
 .productdetail-product-details-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -265,7 +262,7 @@
   font-weight: 600;
 }
 
-/* 공통 섹션 스타일 - 설명, 태그, 배송정보, 가격 섹션의 공통 스타일 */
+/* 공통 섹션 스타일 */
 .productdetail-product-description,
 .productdetail-product-tags,
 .productdetail-shipping-info,
@@ -274,7 +271,6 @@
   border-bottom: 1px solid #e5e7eb;
 }
 
-/* 섹션 제목 공통 스타일 */
 .productdetail-description-title,
 .productdetail-tags-title,
 .productdetail-shipping-title {
@@ -284,7 +280,6 @@
   margin: 0 0 16px 0;
 }
 
-/* 상품 설명 텍스트 */
 .productdetail-description-text {
   font-size: 15px;
   line-height: 1.6;
@@ -292,7 +287,7 @@
   margin: 0;
 }
 
-/* 태그 섹션 - 상품 관련 해시태그들 */
+/* 태그 섹션 */
 .productdetail-tags-list {
   display: flex;
   flex-wrap: wrap;
@@ -315,7 +310,7 @@
   color: #374151;
 }
 
-/* 배송 정보 - 배송비, 배송기간 등의 정보 */
+/* 배송 정보 */
 .productdetail-shipping-details {
   display: flex;
   flex-direction: column;
@@ -339,12 +334,11 @@
   font-weight: 500;
 }
 
-/* 가격 섹션 - 정가, 할인가, 옵션별 가격 정보 */
+/* 가격 섹션 */
 .productdetail-product-price-section {
   margin-top: 12px;
 }
 
-/* 정가(할인 전 가격) 영역 */
 .productdetail-original-price-container {
   display: flex;
   justify-content: space-between;
@@ -367,7 +361,6 @@
   font-weight: 500;
 }
 
-/* 현재 가격(할인가) 영역 */
 .productdetail-current-price-container {
   display: flex;
   align-items: center;
@@ -392,7 +385,6 @@
   color: #8b5a3c;
 }
 
-/* 할인 배지 */
 .productdetail-discount-badge {
   background-color: #ef4444;
   color: white;
@@ -452,7 +444,6 @@
   width: 100%;
 }
 
-/* 장바구니/구매 버튼 공통 스타일 */
 .productdetail-add-to-cart-button,
 .productdetail-buy-now-button {
   flex: 1;
@@ -469,7 +460,6 @@
   gap: 8px;
 }
 
-/* 장바구니 버튼 */
 .productdetail-add-to-cart-button {
   background: linear-gradient(135deg, #8b5a3c 0%, #7c4d34 100%);
   color: white;
@@ -482,7 +472,6 @@
   box-shadow: 0 6px 20px rgba(139, 90, 60, 0.35);
 }
 
-/* 구매하기 버튼 */
 .productdetail-buy-now-button {
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: white;
@@ -495,7 +484,6 @@
   box-shadow: 0 6px 20px rgba(239, 68, 68, 0.35);
 }
 
-/* 버튼 아이콘 */
 .productdetail-cart-icon,
 .productdetail-buy-icon {
   font-size: 18px;
@@ -517,8 +505,8 @@
   
   .productdetail-product-main-image-container {
     border-radius: 16px;
-    height: auto; /* aspect-ratio로 자동 조정 */
-    aspect-ratio: 2; /* 2:1 비율 */
+    height: auto;
+    aspect-ratio: 2;
   }
   
   .productdetail-product-thumbnail {
@@ -535,8 +523,8 @@
   }
   
   .productdetail-product-main-image-container {
-    height: auto; /* aspect-ratio로 자동 조정 */
-    aspect-ratio: 2; /* 2:1 비율 */
+    height: auto;
+    aspect-ratio: 2;
   }
   
   .productdetail-product-image-nav-btn {
@@ -643,12 +631,12 @@
   }
   
   .productdetail-product-main-image-container {
-    height: auto; /* aspect-ratio로 자동 조정 */
-    aspect-ratio: 2; /* 2:1 비율 */
+    height: auto;
+    aspect-ratio: 2;
   }
 }
 
-/* 접근성 및 최적화 */
+/* 접근성 */
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none;
@@ -681,6 +669,7 @@
   }
 }
 
+/* 포커스 스타일 */
 .productdetail-product-image-nav-btn:focus,
 .productdetail-product-thumbnail:focus,
 .productdetail-add-to-cart-button:focus,
@@ -689,6 +678,7 @@
   outline-offset: 3px;
 }
 
+/* 터치 디바이스 최적화 */
 @media (hover: none) and (pointer: coarse) {
   .productdetail-product-image-nav-btn {
     width: 52px;
