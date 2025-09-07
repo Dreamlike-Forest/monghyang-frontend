@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Brewery } from '../../../types/mockData';
 import ExperienceReservation from '../../ExperienceReservation/ExperienceReservation';
 import './BreweryExperiencePrograms.css';
@@ -18,6 +18,61 @@ const BreweryExperiencePrograms: React.FC<BreweryExperienceProgramsProps> = ({
 }) => {
   const [showReservation, setShowReservation] = useState(false);
   const [selectedExperienceId, setSelectedExperienceId] = useState<number | null>(null);
+  const [imageLoadStates, setImageLoadStates] = useState<Record<number, 'loading' | 'loaded' | 'error'>>({});
+
+  // 이미지 URL 생성 함수
+  const getImageUrl = useCallback((imageKey: string | undefined): string => {
+    if (!imageKey) return '';
+    
+    // 이미지 키가 이미 전체 URL인 경우
+    if (imageKey.startsWith('http://') || imageKey.startsWith('https://') || imageKey.startsWith('/')) {
+      return imageKey;
+    }
+    
+    // 이미지 키를 기반으로 실제 URL 생성 (실제 구현 시 서버 설정에 따라 수정)
+    return `/images/experiences/${imageKey}`;
+  }, []);
+
+  // 유효한 이미지인지 확인
+  const hasValidImage = useCallback((imageKey: string | undefined): boolean => {
+    if (!imageKey || imageKey.trim() === '') return false;
+    
+    const invalidPatterns = [
+      '/api/placeholder',
+      'placeholder',
+      'undefined',
+      'null'
+    ];
+    
+    return !invalidPatterns.some(pattern => 
+      imageKey.toLowerCase().includes(pattern.toLowerCase())
+    );
+  }, []);
+
+  // 체험 프로그램의 이미지 가져오기 (단순화)
+  const getExperienceImage = useCallback((program: any): string | undefined => {
+    // image_key가 있으면 URL로 변환해서 반환
+    if (program.image_key) {
+      return getImageUrl(program.image_key);
+    }
+    
+    return undefined;
+  }, [getImageUrl]);
+
+  // 이미지 로드 핸들러
+  const handleImageLoad = useCallback((programId: number) => {
+    setImageLoadStates(prev => ({
+      ...prev,
+      [programId]: 'loaded'
+    }));
+  }, []);
+
+  const handleImageError = useCallback((programId: number) => {
+    setImageLoadStates(prev => ({
+      ...prev,
+      [programId]: 'error'
+    }));
+  }, []);
 
   const handleReservation = (experienceId: number) => {
     setSelectedExperienceId(experienceId);
@@ -53,34 +108,74 @@ const BreweryExperiencePrograms: React.FC<BreweryExperienceProgramsProps> = ({
         
         {brewery.experience_programs && brewery.experience_programs.length > 0 ? (
           <div className="brewery-experience-grid">
-            {brewery.experience_programs.map((program) => (
-              <div key={program.joy_id} className="brewery-experience-card">
-                <div className="brewery-experience-header">
-                  <h3 className="brewery-experience-title">{program.name}</h3>
-                  <span className="brewery-experience-price">
-                    {program.price.toLocaleString()}원
-                  </span>
-                </div>
-                
-                <div className="brewery-experience-content">
-                  <div className="brewery-experience-place">
-                    <span className="brewery-place-icon">📍</span>
-                    {program.place}
+            {brewery.experience_programs.map((program) => {
+              const imageUrl = getExperienceImage(program);
+              const imageState = imageLoadStates[program.joy_id] || 'loading';
+              
+              return (
+                <div key={program.joy_id} className="brewery-experience-card">
+                  {/* 체험 프로그램 이미지 섹션 */}
+                  <div className="brewery-experience-image-container">
+                    {hasValidImage(imageUrl) ? (
+                      <>
+                        {imageState === 'loading' && (
+                          <div className="brewery-experience-image-placeholder">
+                            <div className="experience-placeholder-icon">📷</div>
+                            <div className="experience-placeholder-text">이미지 로딩 중...</div>
+                          </div>
+                        )}
+                        <img 
+                          src={imageUrl} 
+                          alt={`${program.name} 체험 프로그램 이미지`}
+                          className={`brewery-experience-image ${imageState === 'loading' ? 'image-loading' : ''}`}
+                          style={{ display: imageState === 'error' ? 'none' : 'block' }}
+                          onLoad={() => handleImageLoad(program.joy_id)}
+                          onError={() => handleImageError(program.joy_id)}
+                          loading="lazy"
+                        />
+                        {imageState === 'error' && (
+                          <div className="brewery-experience-image-placeholder">
+                            <div className="experience-placeholder-icon">🎯</div>
+                            <div className="experience-placeholder-text">이미지를 불러올 수<br/>없습니다.</div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="brewery-experience-image-placeholder">
+                        <div className="experience-placeholder-icon">🎯</div>
+                        <div className="experience-placeholder-text">체험 프로그램<br />이미지 준비 중</div>
+                      </div>
+                    )}
                   </div>
-                  
-                  <p className="brewery-experience-description">
-                    {program.detail}
-                  </p>
+
+                  {/* 체험 프로그램 정보 섹션 */}
+                  <div className="brewery-experience-content">
+                    <div className="brewery-experience-header">
+                      <h3 className="brewery-experience-title">{program.name}</h3>
+                      <span className="brewery-experience-price">
+                        {program.price.toLocaleString()}원
+                      </span>
+                    </div>
+                    
+                    <div className="brewery-experience-place">
+                      <span className="brewery-place-icon">📍</span>
+                      {program.place}
+                    </div>
+                    
+                    <p className="brewery-experience-description">
+                      {program.detail}
+                    </p>
+                    
+                    <button 
+                      className="brewery-experience-reserve-btn"
+                      onClick={() => handleReservation(program.joy_id)}
+                    >
+                      예약하기
+                    </button>
+                  </div>
                 </div>
-                
-                <button 
-                  className="brewery-experience-reserve-btn"
-                  onClick={() => handleReservation(program.joy_id)}
-                >
-                  예약하기
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="brewery-empty-state">
