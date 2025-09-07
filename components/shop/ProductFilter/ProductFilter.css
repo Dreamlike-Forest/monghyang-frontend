@@ -1,3 +1,4 @@
+/* 필터 컨테이너 전체 스타일 */
 .product-filter {
   width: 260px;
   flex-shrink: 0;
@@ -7,6 +8,7 @@
   border: 1px solid #f0f0f0;
 }
 
+/* 각 필터 섹션 스타일 */
 .filter-section {
   margin-bottom: 24px;
 }
@@ -15,6 +17,7 @@
   margin-bottom: 0;
 }
 
+/* 필터 제목 스타일 */
 .filter-title {
   font-size: 16px;
   font-weight: 600;
@@ -25,6 +28,7 @@
   align-items: center;
 }
 
+/* 각 필터 섹션 초기화 버튼 */
 .filter-reset {
   font-size: 12px;
   color: #8b5a3c;
@@ -39,12 +43,14 @@
   color: #7c4d34;
 }
 
+/* 필터 옵션 리스트 컨테이너 */
 .filter-options {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
+/* 각 필터 옵션 아이템 스타일 */
 .filter-option {
   display: flex;
   align-items: center;
@@ -59,6 +65,7 @@
   color: #8b5a3c;
 }
 
+/* 체크박스 스타일 */
 .filter-checkbox {
   width: 16px;
   height: 16px;
@@ -66,18 +73,20 @@
   cursor: pointer;
 }
 
+/* 필터 옵션 레이블 텍스트 */
 .filter-option-label {
   flex: 1;
   color: #555;
   cursor: pointer;
 }
 
+/* 필터 옵션별 개수 표시 */
 .filter-option-count {
   color: #999;
   font-size: 12px;
 }
 
-/* 가격 범위 입력 컨테이너 - BreweryFilter 스타일에 맞춤 */
+/* 가격 범위 입력 컨테이너 */
 .price-range-inputs {
   display: flex;
   align-items: center;
@@ -85,13 +94,13 @@
   margin-bottom: 16px;
 }
 
-/* 가격 입력 필드 래퍼 */
+/* 개별 가격 입력 필드 래퍼 */
 .price-input-wrapper {
   flex: 1;
   min-width: 0;
 }
 
-/* 가격 입력 필드 - BreweryFilter 스타일에 맞춤 */
+/* 가격 입력 필드 스타일 */
 .price-input {
   width: 100%;
   padding: 10px 8px;
@@ -129,7 +138,7 @@
   font-size: 12px;
 }
 
-/* 가격 범위 구분자 (~) - BreweryFilter 스타일에 맞춤 */
+/* 가격 범위 구분자 (~) */
 .price-separator {
   color: #999;
   font-size: 14px;
@@ -137,23 +146,14 @@
   flex-shrink: 0;
 }
 
-/* 빠른 선택 버튼들 제거 (BreweryFilter에는 없음) */
-.price-quick-buttons {
-  display: none;
-}
-
-.price-quick-button {
-  display: none;
-}
-
-/* 가격 적용 버튼 컨테이너 - BreweryFilter 스타일에 맞춤 */
+/* 가격 적용 버튼 컨테이너 */
 .price-apply-container {
   display: flex;
   justify-content: center;
   margin-bottom: 0;
 }
 
-/* 가격 적용 버튼 - BreweryFilter 스타일에 맞춤 */
+/* 가격 적용 버튼 스타일 */
 .apply-button {
   padding: 10px 24px;
   border: none;
@@ -179,11 +179,12 @@
   box-shadow: 0 2px 4px rgba(139, 90, 60, 0.2);
 }
 
-/* 선택된 필터 표시 */
+/* 선택된 필터 표시 영역 */
 .active-filters {
   margin-bottom: 20px;
 }
 
+/* 선택된 필터 제목 */
 .active-filters-title {
   font-size: 14px;
   font-weight: 600;
@@ -191,12 +192,14 @@
   margin-bottom: 8px;
 }
 
+/* 활성 필터 태그 컨테이너 */
 .active-filter-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
 
+/* 개별 필터 태그 스타일 */
 .active-filter-tag {
   display: flex;
   align-items: center;
@@ -209,6 +212,7 @@
   font-weight: 500;
 }
 
+/* 필터 제거 버튼 (X) */
 .remove-filter {
   background: none;
   border: none;
@@ -223,6 +227,7 @@
   color: #b45309;
 }
 
+/* 전체 필터 해제 버튼 */
 .clear-all-filters {
   margin-top: 8px;
   background: none;
@@ -237,7 +242,7 @@
   color: #7c4d34;
 }
 
-/* 반응형 디자인 */
+/* 태블릿 반응형 스타일 */
 @media (max-width: 1024px) {
   .product-filter {
     width: 240px;
@@ -262,6 +267,7 @@
   }
 }
 
+/* 모바일 반응형 스타일 */
 @media (max-width: 768px) {
   .product-filter {
     width: 100%;
@@ -288,6 +294,7 @@
   }
 }
 
+/* 작은 모바일 반응형 스타일 */
 @media (max-width: 480px) {
   .price-range-inputs {
     gap: 8px;

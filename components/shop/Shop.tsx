@@ -86,10 +86,10 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
       if (activeFilters.alcoholRange) {
         filtered = filtered.filter(product => {
           switch (activeFilters.alcoholRange) {
-            case 'low': return product.alcohol <= 6;
-            case 'medium': return product.alcohol >= 7 && product.alcohol <= 15;
-            case 'high1': return product.alcohol >= 16 && product.alcohol <= 25;
-            case 'high2': return product.alcohol > 25;
+             case 'low': return product.alcohol >= 0 && product.alcohol <= 6;
+             case 'medium': return product.alcohol >= 7 && product.alcohol <= 15;
+             case 'high1': return product.alcohol >= 16 && product.alcohol <= 25;
+             case 'high2': return product.alcohol >= 25 && product.alcohol <= 100;
             default: return true;
           }
         });

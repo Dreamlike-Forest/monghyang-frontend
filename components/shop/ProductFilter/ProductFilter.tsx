@@ -16,14 +16,17 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
   activeFilters,
   onFilterChange
 }) => {
+  // 가격 범위 입력 상태 관리
   const [priceMin, setPriceMin] = useState<number | ''>(activeFilters.priceMin === 0 ? '' : activeFilters.priceMin);
   const [priceMax, setPriceMax] = useState<number | ''>(activeFilters.priceMax === 999999 ? '' : activeFilters.priceMax);
 
+  // 외부에서 activeFilters가 변경될 때 로컬 상태 동기화
   useEffect(() => {
     setPriceMin(activeFilters.priceMin === 0 ? '' : activeFilters.priceMin);
     setPriceMax(activeFilters.priceMax === 999999 ? '' : activeFilters.priceMax);
   }, [activeFilters.priceMin, activeFilters.priceMax]);
 
+  // 체크박스 필터 변경 핸들러 (주종, 인증)
   const handleCheckboxChange = (category: keyof ProductActiveFilters, value: string) => {
     const currentArray = activeFilters[category] as string[];
     let newArray: string[];
@@ -37,9 +40,8 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
     onFilterChange({ [category]: newArray });
   };
 
-  // 도수 필터를 체크박스로 변경 (라디오 버튼 제거)
+  // 도수 필터 변경 핸들러 (단일 선택)
   const handleAlcoholCheckboxChange = (value: string) => {
-    // alcoholRange를 배열로 처리하도록 변경
     const currentArray = (activeFilters.alcoholRange ? [activeFilters.alcoholRange] : []) as string[];
     let newArray: string[];
     
@@ -52,15 +54,15 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
     onFilterChange({ alcoholRange: newArray.length > 0 ? newArray[0] : '' });
   };
 
+  // 검색어 변경 핸들러
   const handleSearchChange = (keyword: string) => {
     onFilterChange({ searchKeyword: keyword });
   };
 
+  // 가격 입력 핸들러 (숫자만 허용, 최대 8자리)
   const handlePriceInputChange = (type: 'min' | 'max', value: string) => {
-    // 숫자만 허용
     const numericValue = value.replace(/[^\d]/g, '');
     
-    // 최대 8자리까지만 허용 (99,999,999원)
     if (numericValue.length > 8) return;
     
     const finalValue: number | '' = numericValue === '' ? '' : parseInt(numericValue, 10);
@@ -72,6 +74,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
     }
   };
 
+  // 가격 필터 적용 핸들러
   const handlePriceApply = () => {
     const finalMin = priceMin === '' ? 0 : priceMin;
     const finalMax = priceMax === '' ? 999999 : priceMax;
@@ -82,6 +85,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
     });
   };
 
+  // 개별 필터 제거 핸들러
   const removeFilter = (category: keyof ProductActiveFilters, value: string) => {
     if (Array.isArray(activeFilters[category])) {
       const currentArray = activeFilters[category] as string[];
@@ -92,10 +96,10 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
     }
   };
 
+  // 전체 필터 초기화 핸들러
   const clearAllFilters = () => {
     onFilterChange({
       types: [],
-      regions: [],
       certifications: [],
       alcoholRange: '',
       searchKeyword: '',
@@ -106,35 +110,34 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
     setPriceMax('');
   };
 
-  // 활성화된 필터 태그들 생성
+  // 활성화된 필터 태그 생성 함수
   const getActiveFilterTags = () => {
     const tags: { category: keyof ProductActiveFilters; label: string; value: string }[] = [];
     
+    // 주종 필터 태그
     activeFilters.types.forEach(type => {
       const option = filterOptions.types.find(opt => opt.id === type);
       if (option) tags.push({ category: 'types', label: option.name, value: type });
     });
     
+    // 도수 필터 태그
     if (activeFilters.alcoholRange) {
       const option = filterOptions.alcoholRanges.find(opt => opt.id === activeFilters.alcoholRange);
       if (option) tags.push({ category: 'alcoholRange', label: option.name, value: activeFilters.alcoholRange });
     }
     
-    activeFilters.regions.forEach(region => {
-      const option = filterOptions.regions.find(opt => opt.id === region);
-      if (option) tags.push({ category: 'regions', label: option.name, value: region });
-    });
-    
+    // 인증 필터 태그
     activeFilters.certifications.forEach(cert => {
       const option = filterOptions.certifications.find(opt => opt.id === cert);
       if (option) tags.push({ category: 'certifications', label: option.name, value: cert });
     });
 
+    // 검색어 태그
     if (activeFilters.searchKeyword) {
       tags.push({ category: 'searchKeyword', label: `"${activeFilters.searchKeyword}"`, value: activeFilters.searchKeyword });
     }
 
-    // 가격 범위 태그 추가
+    // 가격 범위 태그
     const finalMin = priceMin === '' ? 0 : priceMin;
     const finalMax = priceMax === '' ? 999999 : priceMax;
     
@@ -217,7 +220,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
         </div>
       </div>
 
-      {/* 도수 필터 - 체크박스로 변경 */}
+      {/* 도수 필터 */}
       <div className="filter-section">
         <div className="filter-title">
           도수
@@ -244,34 +247,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
         </div>
       </div>
 
-      {/* 지역 필터 */}
-      <div className="filter-section">
-        <div className="filter-title">
-          지역
-          <button 
-            className="filter-reset"
-            onClick={() => onFilterChange({ regions: [] })}
-          >
-            초기화
-          </button>
-        </div>
-        <div className="filter-options">
-          {filterOptions.regions.map(option => (
-            <label key={option.id} className="filter-option">
-              <input
-                type="checkbox"
-                className="filter-checkbox"
-                checked={activeFilters.regions.includes(option.id)}
-                onChange={() => handleCheckboxChange('regions', option.id)}
-              />
-              <span className="filter-option-label">{option.name}</span>
-              <span className="filter-option-count">({option.count})</span>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      {/* 가격 범위 - BreweryFilter 스타일에 맞춤 */}
+      {/* 가격 필터 */}
       <div className="filter-section">
         <div className="filter-title">
           가격

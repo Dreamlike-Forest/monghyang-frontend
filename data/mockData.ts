@@ -1,8 +1,5 @@
-// data/mockData.ts - image_key로 변수명 통일
-
 import { Brewery, Product, Joy, ProductWithDetails, ProductFilterOptions } from '../types/mockData';
 
-// 6개 양조장 데이터 - image_key로 변수명 통일
 export const mockBreweries: Brewery[] = [
   {
     brewery_id: 1,
@@ -177,7 +174,6 @@ export const mockBreweries: Brewery[] = [
   }
 ];
 
-// 체험 프로그램 데이터 (기존과 동일)
 export const mockJoyPrograms: Joy[] = [
   {
     joy_id: 1,
@@ -186,9 +182,7 @@ export const mockJoyPrograms: Joy[] = [
     place: "안성 양조장 체험관",
     detail: "전통 증류 방식을 직접 체험하고 시음할 수 있는 프로그램입니다.",
     price: 45000,
-    images: [
-      { joy_image_id: 1, joy_id: 1, key: "experience_anseong_distilling_20240115.jpg", seq: 1 }
-    ]
+    image_key: "experience_anseong_distilling_20240115.jpg"
   },
   {
     joy_id: 2,
@@ -197,9 +191,7 @@ export const mockJoyPrograms: Joy[] = [
     place: "전주 한옥마을 체험관",
     detail: "복분자와 전통 누룩을 이용해 직접 막걸리를 만들어보는 체험입니다.",
     price: 12000,
-    images: [
-      { joy_image_id: 2, joy_id: 2, key: "experience_jeonju_makgeolli_20210610.jpg", seq: 1 }
-    ]
+    image_key: "experience_jeonju_makgeolli_20210610.jpg"
   },
   {
     joy_id: 3,
@@ -208,9 +200,7 @@ export const mockJoyPrograms: Joy[] = [
     place: "청주 양조장 본관",
     detail: "전통 청주 제조법을 배우고 직접 빚어보는 체험 프로그램입니다.",
     price: 29750,
-    images: [
-      { joy_image_id: 3, joy_id: 3, key: "experience_cheongju_brewing_20190308.jpg", seq: 1 }
-    ]
+    image_key: "experience_cheongju_brewing_20190308.jpg"
   },
   {
     joy_id: 4,
@@ -219,9 +209,7 @@ export const mockJoyPrograms: Joy[] = [
     place: "진주 양조장 증류실",
     detail: "전통 증류기를 이용한 소주 제조 과정을 직접 체험해보세요.",
     price: 48000,
-    images: [
-      { joy_image_id: 4, joy_id: 4, key: "experience_jinju_distilling_20220105.jpg", seq: 1 }
-    ]
+    image_key: "experience_jinju_distilling_20220105.jpg"
   },
   {
     joy_id: 5,
@@ -230,9 +218,7 @@ export const mockJoyPrograms: Joy[] = [
     place: "영동 포도밭 체험관",
     detail: "영동의 신선한 포도를 직접 따서 와인을 만들어보는 체험입니다.",
     price: 32000,
-    images: [
-      { joy_image_id: 5, joy_id: 5, key: "experience_yeongdong_winemaking_20210103.jpg", seq: 1 }
-    ]
+    image_key: "experience_yeongdong_winemaking_20210103.jpg"
   },
   {
     joy_id: 6,
@@ -241,9 +227,7 @@ export const mockJoyPrograms: Joy[] = [
     place: "충주 양조장 발효실",
     detail: "전통 누룩과 우리 쌀로 생막걸리를 직접 빚어보는 체험입니다.",
     price: 8000,
-    images: [
-      { joy_image_id: 6, joy_id: 6, key: "experience_chungju_makgeolli_20200101.jpg", seq: 1 }
-    ]
+    image_key: "experience_chungju_makgeolli_20200101.jpg"
   }
 ];
 

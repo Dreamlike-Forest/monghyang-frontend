@@ -1,4 +1,4 @@
-/* 전체 너비 상품 상세페이지 컨테이너 - 페이지 전체 레이아웃 */
+/* 상품 상세페이지 컨테이너 */
 .productdetail-product-detail-container-full {
   max-width: 1200px;
   margin: 0 auto;
@@ -7,24 +7,23 @@
   min-height: calc(100vh - 110px);
 }
 
-/* 메인 콘텐츠 - 상품 정보들을 감싸는 컨테이너 */
+/* 메인 콘텐츠 */
 .productdetail-product-main-content {
   width: 100%;
 }
 
-/* 섹션 공통 컨테이너 - 개요, 양조장, 리뷰 각 섹션을 감싸는 공통 스타일 */
+/* 섹션 공통 컨테이너 */
 .productdetail-product-section-container {
   margin-bottom: 80px;
   scroll-margin-top: 120px;
   padding-bottom: 20px;
 }
 
-/* 마지막 섹션 마진 조정 - 페이지 하단 여백 최적화 */
 .productdetail-product-section-container:last-child {
   margin-bottom: 60px;
 }
 
-/* 섹션 제목 스타일 - "상품 개요", "양조장", "술 리뷰" 등의 대제목 */
+/* 섹션 제목 */
 .productdetail-product-section-title {
   font-size: 32px;
   font-weight: 700;
@@ -35,32 +34,7 @@
   text-align: center;
 }
 
-/* 기본 버튼 스타일 - 공통 버튼 디자인 (현재 사용되지 않음) */
-.productdetail-product-primary-btn {
-  background: #8b5a3c;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 12px 24px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(139, 90, 60, 0.2);
-}
-
-.productdetail-product-primary-btn:hover {
-  background: #7c4d34;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(139, 90, 60, 0.3);
-}
-
-.productdetail-product-primary-btn:focus {
-  outline: 2px solid #8b5a3c;
-  outline-offset: 2px;
-}
-
-/* 페이지 스크롤 스무스 효과 - 섹션 간 이동 시 부드러운 스크롤 */
+/* 페이지 스크롤 스무스 효과 */
 html {
   scroll-behavior: smooth;
 }
@@ -133,19 +107,11 @@ html {
   html {
     scroll-behavior: auto;
   }
-  
-  .productdetail-product-primary-btn {
-    transition: none;
-  }
 }
 
 /* 고대비 모드 지원 */
 @media (prefers-contrast: high) {
   .productdetail-product-section-title {
     border-bottom-width: 4px;
-  }
-  
-  .productdetail-product-primary-btn {
-    border: 2px solid;
   }
 }
