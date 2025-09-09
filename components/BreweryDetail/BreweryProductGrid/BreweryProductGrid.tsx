@@ -31,27 +31,33 @@ const BreweryProductGrid: React.FC<BreweryProductGridProps> = ({
     }
   }, [onAddToCart]);
 
-  // 상품 클릭 핸들러 - Shop 페이지로 이동
+  // 상품 클릭 핸들러 - 상품 상세페이지로 직접 이동
   const handleProductClick = useCallback((productId: number) => {
     if (onProductClick) {
       onProductClick(productId);
     } else {
-      console.log('Shop 페이지로 이동:', productId);
-      // 기본 동작: Shop 페이지로 네비게이션
-      const currentURL = new URL(window.location.href);
-      currentURL.searchParams.delete('brewery');
-      currentURL.searchParams.set('view', 'shop');
-      
-      // 클릭한 상품명으로 검색 설정
-      const product = products.find(p => p.product_id === productId);
-      if (product) {
-        currentURL.searchParams.set('search', product.name);
-      }
-      
-      window.history.pushState({}, '', currentURL.toString());
-      window.location.reload();
+      console.log('상품 상세페이지로 이동:', productId);
+      // 상품 상세페이지로 직접 이동하는 로직
+      navigateToProductDetail(productId);
     }
-  }, [onProductClick, products]);
+  }, [onProductClick]);
+
+  // 상품 상세페이지로 이동하는 함수
+  const navigateToProductDetail = (productId: number) => {
+    const currentURL = new URL(window.location.href);
+    
+    // 기존 파라미터 정리
+    currentURL.searchParams.delete('brewery');
+    currentURL.searchParams.delete('view');
+    
+    // 상품 상세페이지 파라미터 설정
+    currentURL.searchParams.set('view', 'shop');
+    currentURL.searchParams.set('product', productId.toString());
+    
+    // URL 업데이트 및 페이지 이동
+    window.history.pushState({}, '', currentURL.toString());
+    window.location.reload();
+  };
 
   // 이미지 로드 핸들러
   const handleImageLoad = useCallback((productId: number) => {
@@ -85,7 +91,7 @@ const BreweryProductGrid: React.FC<BreweryProductGridProps> = ({
     return `${product.minPrice.toLocaleString()}원 ~ ${product.maxPrice.toLocaleString()}원`;
   };
 
-  // 할인률 계산
+  // 할인율 계산
   const getDiscountRate = (product: ProductWithDetails) => {
     if (product.originalPrice && product.minPrice && product.originalPrice > product.minPrice) {
       return Math.round(((product.originalPrice - product.minPrice) / product.originalPrice) * 100);

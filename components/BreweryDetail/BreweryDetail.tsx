@@ -138,35 +138,23 @@ const BreweryDetail: React.FC<BreweryDetailProps> = ({
     // TODO: 장바구니 추가 로직 구현
   };
 
-  // 상품 클릭 시 Shop 페이지로 이동 - props 의존성 제거
+  // *** 수정된 상품 클릭 핸들러 - 상품 상세페이지로 직접 이동 ***
   const handleProductClick = (productId: number) => {
-    console.log('상품 클릭:', productId, '- Shop 페이지로 이동');
+    console.log('상품 클릭:', productId, '- 상품 상세페이지로 이동');
     
-    // 직접 URL 변경으로 Shop 페이지 이동
-    updateURLToShop(productId);
-  };
-
-  // URL을 통한 Shop 페이지 이동
-  const updateURLToShop = (productId?: number) => {
-    const currentURL = new URL(window.location.href);
+    // 상품 상세페이지로 직접 이동하는 URL 생성
+    const url = new URL(window.location.href);
     
     // 기존 파라미터 정리
-    currentURL.searchParams.delete('brewery');
-    currentURL.searchParams.delete('view');
+    url.searchParams.delete('brewery');
+    url.searchParams.delete('view');
     
-    // Shop 페이지로 이동
-    currentURL.searchParams.set('view', 'shop');
-    
-    // 특정 상품이 있으면 검색 키워드로 설정 (선택사항)
-    if (productId) {
-      const product = products.find(p => p.product_id === productId);
-      if (product) {
-        currentURL.searchParams.set('search', product.name);
-      }
-    }
+    // 상품 상세페이지 파라미터 설정
+    url.searchParams.set('view', 'shop');
+    url.searchParams.set('product', productId.toString());
     
     // URL 업데이트 및 페이지 이동
-    window.history.pushState({}, '', currentURL.toString());
+    window.history.pushState({}, '', url.toString());
     window.location.reload();
   };
 
@@ -209,7 +197,7 @@ const BreweryDetail: React.FC<BreweryDetailProps> = ({
             products={products} 
             forwardRef={productsRef}
             onAddToCart={handleAddToCart}
-            onProductClick={handleProductClick}
+            onProductClick={handleProductClick}  // 수정된 핸들러 전달
           />
 
           {/* 체험 리뷰 섹션 - 제목 중복 제거 */}
