@@ -39,7 +39,7 @@
   counter-reset: about-nav-counter;
 }
 
-/* 각 네비게이션 버튼 스타일 */
+/* 각 네비게이션 버튼 스타일 - transition 제거 */
 .about-nav-item {
   display: flex;
   align-items: center;
@@ -53,7 +53,7 @@
   font-size: 15px;
   font-weight: 500;
   color: #374151;
-  transition: all 0.3s ease;
+  /* transition: all 0.3s ease; 제거 */
   margin-bottom: 8px;
   text-align: left;
   position: relative;
@@ -81,7 +81,7 @@
   filter: brightness(0) invert(1);
 }
 
-/* 네비게이션 아이콘 스타일 */
+/* 네비게이션 아이콘 스타일 - transition 제거 */
 .about-nav-icon {
   font-size: 18px;
   width: 24px;
@@ -92,7 +92,7 @@
   flex-shrink: 0;
   background: rgba(139, 90, 60, 0.1);
   border-radius: 6px;
-  transition: all 0.3s ease;
+  /* transition: all 0.3s ease; 제거 */
 }
 
 .about-nav-item:hover .about-nav-icon {
@@ -111,7 +111,7 @@
   letter-spacing: -0.01em;
 }
 
-/* 번호 표시 스타일 (호버시 나타남) */
+/* 번호 표시 스타일 (호버시 나타남) - transition 제거 */
 .about-nav-item::before {
   content: counter(about-nav-counter);
   counter-increment: about-nav-counter;
@@ -130,7 +130,7 @@
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transition: all 0.3s ease;
+  /* transition: all 0.3s ease; 제거 */
 }
 
 .about-nav-item:hover::before {

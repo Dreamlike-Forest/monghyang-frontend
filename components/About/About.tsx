@@ -24,7 +24,18 @@ const About: React.FC = () => {
     traditionRef
   };
 
-  // 스크롤 이벤트로 활성 섹션 감지
+  // 컴포넌트 마운트 시 스크롤 동작 강제 설정
+  useEffect(() => {
+    // 즉시 스크롤 이동을 위한 스타일 설정
+    document.documentElement.style.scrollBehavior = 'auto';
+    document.body.style.scrollBehavior = 'auto';
+    
+    return () => {
+      // 컴포넌트 언마운트 시 정리 (필요시)
+    };
+  }, []);
+
+  // 스크롤 이벤트로 활성 섹션 감지 - 즉시 반응
   useEffect(() => {
     const handleScroll = () => {
       const sections = [
@@ -36,32 +47,38 @@ const About: React.FC = () => {
 
       const scrollPosition = window.scrollY + 200;
 
+      // 역순으로 체크해서 가장 먼저 조건에 맞는 섹션을 찾기
       for (let i = sections.length - 1; i >= 0; i--) {
         const section = sections[i];
         if (section.ref.current) {
           const offsetTop = section.ref.current.offsetTop;
           if (scrollPosition >= offsetTop) {
-            setActiveSection(section.id);
-            break;
+            if (activeSection !== section.id) {
+              setActiveSection(section.id);
+            }
+            return;
           }
         }
       }
     };
 
+    // 디바운스 없이 즉시 실행
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    handleScroll(); // 초기 로드 시 실행
 
-  // 네비게이션 클릭 핸들러
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [activeSection]);
+
+  // 네비게이션 클릭 핸들러 - 즉시 이동
   const handleSectionClick = (sectionId: string, ref: React.RefObject<HTMLDivElement>) => {
+    // 즉시 활성 섹션 업데이트
+    setActiveSection(sectionId);
+    
     if (ref.current) {
       const offsetTop = ref.current.offsetTop - 120;
-      window.scrollTo({
-        top: offsetTop,
-        behavior: 'smooth'
-      });
+      // 즉시 이동 (smooth behavior 제거)
+      window.scrollTo(0, offsetTop);
     }
-    setActiveSection(sectionId);
   };
 
   return (

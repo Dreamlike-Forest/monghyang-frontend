@@ -107,9 +107,14 @@
   gap: 8px;
 }
 
-/* 스크롤 스무스 효과 */
-html {
-  scroll-behavior: smooth;
+/* 스크롤 즉시 이동 - smooth 효과 제거 (높은 우선순위) */
+html.brewery-detail-page {
+  scroll-behavior: auto !important;
+}
+
+/* 전역 스크롤 동작 강제 설정 */
+* {
+  scroll-behavior: auto !important;
 }
 
 /* 커스텀 스크롤바 */
@@ -214,6 +219,7 @@ html {
 /* 접근성 - 모션 줄이기 */
 @media (prefers-reduced-motion: reduce) {
   html {
+    /* scroll-behavior: auto; 명시적으로 설정 */
     scroll-behavior: auto;
   }
 }

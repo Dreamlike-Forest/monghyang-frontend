@@ -38,7 +38,7 @@ const BreweryDetail: React.FC<BreweryDetailProps> = ({
     reviewsRef
   };
 
-  // 스크롤 위치에 따른 활성 섹션 감지
+  // 스크롤 위치에 따른 활성 섹션 감지 - 개선된 로직
   useEffect(() => {
     const handleScroll = () => {
       const sections = [
@@ -49,37 +49,82 @@ const BreweryDetail: React.FC<BreweryDetailProps> = ({
         { id: 'reviews', ref: reviewsRef }
       ];
 
-      const scrollPosition = window.scrollY + 100;
+      // 현재 스크롤 위치 (네비게이션 높이 고려)
+      const scrollPosition = window.scrollY + 150; // 네비게이션 높이만큼 오프셋 추가
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
 
-      for (let i = sections.length - 1; i >= 0; i--) {
+      // 페이지 하단 근처에 있을 때는 마지막 섹션을 활성화
+      if (scrollPosition + windowHeight >= documentHeight - 100) {
+        setActiveSection('reviews');
+        return;
+      }
+
+      // 각 섹션의 위치를 확인하여 가장 적절한 섹션 찾기
+      let newActiveSection = 'images'; // 기본값
+
+      for (let i = 0; i < sections.length; i++) {
         const section = sections[i];
         if (section.ref.current) {
           const sectionTop = section.ref.current.offsetTop;
-          if (scrollPosition >= sectionTop) {
-            setActiveSection(section.id);
+          const sectionHeight = section.ref.current.offsetHeight;
+          const sectionBottom = sectionTop + sectionHeight;
+
+          // 현재 섹션이 화면에 50% 이상 보이는지 확인
+          const sectionCenter = sectionTop + (sectionHeight / 2);
+          
+          if (scrollPosition >= sectionTop - 100 && scrollPosition < sectionBottom - 50) {
+            newActiveSection = section.id;
             break;
+          }
+          
+          // 섹션의 중앙점이 화면 상단에서 일정 범위 내에 있는 경우
+          if (Math.abs(scrollPosition - sectionCenter) < sectionHeight / 3) {
+            newActiveSection = section.id;
           }
         }
       }
+
+      // 활성 섹션이 변경된 경우에만 상태 업데이트
+      if (newActiveSection !== activeSection) {
+        setActiveSection(newActiveSection);
+      }
     };
 
-    window.addEventListener('scroll', handleScroll);
+    // 스크롤 이벤트 리스너 등록 (디바운스 적용)
+    let timeoutId: NodeJS.Timeout;
+    const debouncedHandleScroll = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(handleScroll, 10); // 10ms 디바운스
+    };
+
+    window.addEventListener('scroll', debouncedHandleScroll, { passive: true });
+    
+    // 초기 로드 시에도 실행
     handleScroll();
 
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('scroll', debouncedHandleScroll);
+      clearTimeout(timeoutId);
     };
-  }, []);
+  }, [activeSection]); // activeSection을 dependency에 추가
 
+  // 네비게이션 클릭 시 스크롤 이동 - 강제 즉시 이동
   const scrollToSection = (sectionId: string, ref: React.RefObject<HTMLDivElement>) => {
+    // 즉시 활성 섹션 업데이트
     setActiveSection(sectionId);
+    
     const element = ref.current;
     if (element) {
-      const offsetTop = element.offsetTop - 120;
-      window.scrollTo({
-        top: offsetTop,
-        behavior: 'smooth'
-      });
+      const headerHeight = 60;
+      const navHeight = 60;
+      const totalOffset = headerHeight + navHeight;
+      
+      const elementTop = element.offsetTop;
+      const targetPosition = elementTop - totalOffset;
+      
+      // 강제로 즉시 이동 (모든 옵션 제거)
+      window.scrollTo(0, Math.max(0, targetPosition));
     }
   };
 
