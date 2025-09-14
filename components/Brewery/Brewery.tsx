@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import BreweryFilter from './BreweryFilter/BreweryFilter';
 import BreweryCard from './BreweryCard/BreweryCard';
 import Pagination from '../shop/Pagination/Pagination';
@@ -15,7 +15,7 @@ interface BreweryProps {
 }
 
 const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className }) => {
-  const router = useRouter();
+  const searchParams = useSearchParams();
   const [breweryData] = useState<Brewery[]>(getBreweriesWithExperience());
   const [filters, setFilters] = useState<BreweryFilterOptions>({
     regions: [],
@@ -28,7 +28,22 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
   const [isLoading, setIsLoading] = useState(false);
   const itemsPerPage = 6; 
 
-  // 검색 함수
+  // URL 파라미터에서 검색어 확인 및 필터 초기화 - 홈에서 전달된 검색 처리
+  useEffect(() => {
+    const search = searchParams.get('search');
+    const searchType = searchParams.get('searchType');
+    
+    // 홈에서 양조장 검색으로 온 경우
+    if (search && searchType === 'brewery') {
+      console.log('홈에서 양조장 검색으로 이동:', search);
+      setFilters(prev => ({
+        ...prev,
+        searchKeyword: search
+      }));
+    }
+  }, [searchParams]);
+
+  // 검색 함수 - 개선된 매칭 로직
   const isMatchingSearch = (brewery: Brewery, keyword: string): boolean => {
     if (!keyword) return true;
     
@@ -53,13 +68,13 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
   // 필터링된 데이터
   const filteredBreweries = useMemo(() => {
     return breweryData.filter(brewery => {
-      // 검색어 필터
+      // 검색어 필터 - 개선된 매칭
       if (!isMatchingSearch(brewery, filters.searchKeyword)) return false;
 
       // 지역 필터
       if (filters.regions.length > 0 && !filters.regions.includes(brewery.region_name)) return false;
 
-      // 가격 필터
+      // 가격 필터 - 체험 프로그램 기준
       if (brewery.experience_programs?.length) {
         const prices = brewery.experience_programs.map(p => p.price);
         const minPrice = Math.min(...prices);
@@ -71,11 +86,27 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
         return false;
       }
 
-      // 주종 필터
+      // 주종 필터 - 향상된 매칭 로직
       if (filters.alcoholTypes.length > 0) {
-        const hasMatchingType = filters.alcoholTypes.some(type => 
-          brewery.alcohol_types.includes(type)
-        );
+        const hasMatchingType = filters.alcoholTypes.some(filterType => {
+          return brewery.alcohol_types.some(breweryType => {
+            // 정확한 매칭
+            if (breweryType === filterType) return true;
+            
+            // 유사 매칭 (막걸리 <-> 탁주, 증류주 <-> 소주 등)
+            const similarTypes: { [key: string]: string[] } = {
+              '막걸리': ['탁주', '생막걸리'],
+              '탁주': ['막걸리', '생막걸리'],
+              '증류주': ['소주', '전통소주'],
+              '소주': ['증류주', '전통소주'],
+              '과실주': ['와인', '포도주'],
+              '와인': ['과실주', '포도주']
+            };
+            
+            const similar = similarTypes[filterType] || [];
+            return similar.includes(breweryType);
+          });
+        });
         if (!hasMatchingType) return false;
       }
 
@@ -186,6 +217,8 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
     // 기존 파라미터 정리
     url.searchParams.delete('view');
     url.searchParams.delete('brewery');
+    url.searchParams.delete('search'); // 검색 파라미터도 제거
+    url.searchParams.delete('searchType');
     
     // 양조장 상세페이지 파라미터 설정
     url.searchParams.set('view', 'brewery-detail');
@@ -217,11 +250,16 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
 
         {/* 메인 콘텐츠 */}
         <div className="brewery-main-section">
-          {/* 헤더 */}
+          {/* 헤더 - 검색 결과 정보 추가 */}
           <div className="brewery-header">
             <h1>전국 양조장 찾기</h1>
             <p className="brewery-header-subtitle">
               전통주 양조장을 탐방하고 특별한 체험을 즐겨보세요
+              {filters.searchKeyword && (
+                <span style={{ color: '#8b5a3c', fontWeight: '600' }}>
+                  <br />"{filters.searchKeyword}" 검색 결과
+                </span>
+              )}
             </p>
             <div className="brewery-stats">
               <div className="brewery-stat">
@@ -277,9 +315,17 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
           ) : (
             <div className="brewery-empty">
               <div className="brewery-empty-icon">🔍</div>
-              <h3 className="brewery-empty-title">검색 결과가 없습니다</h3>
+              <h3 className="brewery-empty-title">
+                {filters.searchKeyword 
+                  ? `"${filters.searchKeyword}"에 대한 검색 결과가 없습니다`
+                  : '검색 결과가 없습니다'
+                }
+              </h3>
               <p className="brewery-empty-description">
-                다른 검색 조건을 시도해보세요
+                {filters.searchKeyword 
+                  ? '다른 검색어를 시도해보시거나 필터 조건을 변경해보세요'
+                  : '다른 검색 조건을 시도해보세요'
+                }
               </p>
             </div>
           )}

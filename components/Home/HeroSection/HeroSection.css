@@ -1,0 +1,391 @@
+/* HeroSection.css */
+.hero-section {
+  background: linear-gradient(135deg, rgba(139, 90, 60, 0.9) 0%, rgba(124, 77, 52, 0.95) 100%),
+              url('/images/hero-bg.jpg') center/cover;
+  color: white;
+  text-align: center;
+  padding: 80px 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(139, 90, 60, 0.8) 0%, rgba(124, 77, 52, 0.9) 100%);
+  z-index: 1;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.hero-title {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.hero-subtitle {
+  font-size: 1.25rem;
+  margin-bottom: 40px;
+  opacity: 0.95;
+  line-height: 1.6;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.hero-search {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 50px;
+  padding: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  gap: 0;
+}
+
+.search-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+}
+
+/* 검색 타입 선택 버튼 */
+.search-type-selector {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.search-type-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px;
+  border: none;
+  border-radius: 50px;
+  background: #f8f9fa;
+  color: #333;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  min-width: fit-content;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.search-type-button:hover {
+  background: #e9ecef;
+}
+
+.search-type-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(139, 90, 60, 0.3);
+}
+
+.search-type-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.search-type-chevron {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.search-type-chevron.open {
+  transform: rotate(180deg);
+}
+
+/* 검색 타입 드롭다운 메뉴 */
+.search-type-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+  margin-top: 8px;
+  overflow: hidden;
+  animation: dropdownFadeIn 0.2s ease-out;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.search-type-option {
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: white;
+  color: #333;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.search-type-option:hover {
+  background: #f8f9fa;
+}
+
+.search-type-option.active {
+  background: #f0f9ff;
+  color: #0369a1;
+}
+
+.search-type-option-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.search-input {
+  flex: 1;
+  padding: 16px 24px;
+  border: none;
+  border-radius: 0;
+  font-size: 16px;
+  outline: none;
+  color: #333;
+  background: transparent;
+}
+
+.search-input::placeholder {
+  color: #999;
+}
+
+.search-button {
+  background: #8b5a3c;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 16px 32px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(139, 90, 60, 0.3);
+  min-width: fit-content;
+  white-space: nowrap;
+}
+
+/* 검색 버튼 호버 효과 수정 - 과도한 움직임 제거 */
+.search-button:hover {
+  background: #7c4d34;
+  box-shadow: 0 4px 12px rgba(139, 90, 60, 0.4);
+  /* transform: scale(1.02)와 translateY(-2px) 제거 */
+}
+
+.search-button:active {
+  transform: scale(0.98);
+}
+
+.search-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+/* 검색 안내 텍스트 */
+.search-guide {
+  font-size: 14px;
+  margin-top: 16px;
+  opacity: 0.8;
+  color: #e2e8f0;
+  text-align: center;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .hero-section {
+    padding: 60px 20px;
+  }
+
+  .hero-title {
+    font-size: 2rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+
+  .search-container {
+    flex-direction: column;
+    border-radius: 16px;
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .search-type-button {
+    border-radius: 25px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .search-input {
+    margin-bottom: 0;
+    border-radius: 12px;
+    text-align: center;
+    padding: 16px 24px;
+  }
+
+  .search-button {
+    width: 100%;
+    border-radius: 12px;
+    height: 48px;
+    justify-content: center;
+  }
+
+  /* 드롭다운 모바일 대응 */
+  .search-type-dropdown {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-radius: 16px 16px 0 0;
+    margin-top: 0;
+    max-height: 50vh;
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section {
+    padding: 40px 16px;
+  }
+
+  .hero-title {
+    font-size: 1.75rem;
+  }
+
+  .search-type-button {
+    padding: 14px 16px;
+    font-size: 13px;
+  }
+
+  .search-input {
+    padding: 14px 20px;
+    font-size: 15px;
+  }
+
+  .search-button {
+    padding: 14px 24px;
+    font-size: 15px;
+  }
+}
+
+/* 접근성 개선 */
+@media (prefers-reduced-motion: reduce) {
+  .search-container,
+  .search-button,
+  .search-type-dropdown {
+    transition: none;
+    animation: none;
+  }
+
+  .search-type-chevron {
+    transition: none;
+  }
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+  .search-container {
+    border: 2px solid #000;
+  }
+
+  .search-type-dropdown {
+    border: 2px solid #000;
+  }
+
+  .search-type-option {
+    border-bottom: 1px solid #ccc;
+  }
+
+  .search-button {
+    border: 2px solid;
+  }
+}
+
+/* 다크 모드 지원 (선택사항) */
+@media (prefers-color-scheme: dark) {
+  .search-container {
+    background: #2d3748;
+    color: #e2e8f0;
+  }
+
+  .search-type-button {
+    background: #4a5568;
+    color: #e2e8f0;
+  }
+
+  .search-type-button:hover {
+    background: #2d3748;
+  }
+
+  .search-type-dropdown {
+    background: #2d3748;
+    border: 1px solid #4a5568;
+  }
+
+  .search-type-option {
+    background: #2d3748;
+    color: #e2e8f0;
+  }
+
+  .search-type-option:hover {
+    background: #4a5568;
+  }
+
+  .search-type-option.active {
+    background: #2b6cb0;
+    color: #e2e8f0;
+  }
+
+  .search-input {
+    background: transparent;
+    color: #e2e8f0;
+  }
+
+  .search-input::placeholder {
+    color: #a0aec0;
+  }
+}

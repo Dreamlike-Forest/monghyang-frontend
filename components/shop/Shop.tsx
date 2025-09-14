@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import ProductFilter from './ProductFilter/ProductFilter';
 import ProductList from './ProductList/ProductList';
 import ProductDetail from './ProductDetail/ProductDetail';
@@ -14,6 +15,8 @@ interface ShopProps {
 }
 
 const Shop: React.FC<ShopProps> = ({ className }) => {
+  const searchParams = useSearchParams();
+  
   // 중앙화된 mock 데이터 사용
   const [allProducts] = useState<ProductWithDetails[]>(getProductsWithBrewery());
   const [allBreweries] = useState<Brewery[]>(getBreweriesWithExperience());
@@ -38,11 +41,23 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
   const [selectedProductBrewery, setSelectedProductBrewery] = useState<Brewery | null>(null);
   const [isProductDetailOpen, setIsProductDetailOpen] = useState(false);
 
-  // URL 파라미터에서 상품 ID 확인 - useEffect 의존성 문제 해결
+  // URL 파라미터에서 검색어 확인 및 필터 초기화 - 홈에서 전달된 검색 처리
   useEffect(() => {
+    const search = searchParams.get('search');
+    const searchType = searchParams.get('searchType');
+    
+    // 홈에서 상품 검색으로 온 경우
+    if (search && searchType === 'product') {
+      console.log('홈에서 상품 검색으로 이동:', search);
+      setActiveFilters(prev => ({
+        ...prev,
+        searchKeyword: search
+      }));
+    }
+    
+    // 기존 상품 상세페이지 URL 파라미터 처리
     const checkURLParams = () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const productId = urlParams.get('product');
+      const productId = searchParams.get('product');
       
       if (productId && allProducts.length > 0) {
         const product = allProducts.find(p => p.product_id === parseInt(productId));
@@ -53,7 +68,7 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
     };
 
     checkURLParams();
-  }, [allProducts]); // allProducts가 로드된 후 실행
+  }, [searchParams, allProducts]);
 
   // 필터 적용 함수
   const applyFilters = useCallback(() => {
@@ -63,22 +78,39 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
     setTimeout(() => {
       let filtered = [...allProducts];
 
-      // 검색 키워드 필터
+      // 검색어 필터
       if (activeFilters.searchKeyword) {
+        const keyword = activeFilters.searchKeyword.toLowerCase();
         filtered = filtered.filter(product =>
-          product.name.toLowerCase().includes(activeFilters.searchKeyword.toLowerCase()) ||
-          product.brewery.toLowerCase().includes(activeFilters.searchKeyword.toLowerCase())
+          product.name.toLowerCase().includes(keyword) ||
+          product.brewery.toLowerCase().includes(keyword) ||
+          product.info?.description?.toLowerCase().includes(keyword) ||
+          product.tags.some(tag => tag.tagType.name.toLowerCase().includes(keyword))
         );
       }
 
       // 주종 필터
       if (activeFilters.types.length > 0) {
         filtered = filtered.filter(product => {
-          if (activeFilters.types.includes('takju') && product.name.includes('막걸리')) return true;
-          if (activeFilters.types.includes('cheongju') && product.name.includes('청')) return true;
-          if (activeFilters.types.includes('soju') && product.name.includes('소주')) return true;
-          if (activeFilters.types.includes('fruit') && product.name.includes('와인')) return true;
-          return activeFilters.types.length === 0;
+          const productName = product.name.toLowerCase();
+          return activeFilters.types.some(type => {
+            switch (type) {
+              case 'takju':
+                return productName.includes('막걸리') || productName.includes('탁주');
+              case 'cheongju':
+                return productName.includes('청주') || productName.includes('청명');
+              case 'yakju':
+                return productName.includes('약주');
+              case 'soju':
+                return productName.includes('소주') || productName.includes('증류') || 
+                       product.alcohol >= 20;
+              case 'fruit':
+                return productName.includes('와인') || productName.includes('과실') ||
+                       productName.includes('복분자');
+              default:
+                return false;
+            }
+          });
         });
       }
 

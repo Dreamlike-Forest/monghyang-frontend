@@ -1,0 +1,328 @@
+/* PopularProgramsSection.css */
+.popular-programs-section {
+  background: #f7fafc;
+  padding: 80px 20px;
+}
+
+.programs-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.programs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+}
+
+.programs-header-content h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 8px;
+}
+
+.programs-header-content p {
+  color: #4a5568;
+  font-size: 1.125rem;
+  margin: 0;
+}
+
+.view-all-button {
+  padding: 12px 24px;
+  background: transparent;
+  color: #8b5a3c;
+  border: 2px solid #8b5a3c;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.view-all-button:hover {
+  background: #8b5a3c;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 90, 60, 0.3);
+}
+
+.view-all-button:active {
+  transform: translateY(0);
+}
+
+.programs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.program-card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid #e2e8f0;
+  position: relative;
+  overflow: hidden;
+}
+
+.program-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(139, 90, 60, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.program-card:hover::before {
+  left: 100%;
+}
+
+.program-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+  border-color: #8b5a3c;
+}
+
+.program-rating {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.rating-stars {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rating-score {
+  font-size: 14px;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.program-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #2d3748;
+  position: relative;
+  z-index: 1;
+}
+
+.program-description {
+  color: #4a5568;
+  line-height: 1.5;
+  margin-bottom: 16px;
+  fontSize: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.program-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+  position: relative;
+  z-index: 1;
+}
+
+.program-price {
+  font-size: 18px;
+  font-weight: 700;
+  color: #8b5a3c;
+}
+
+.program-location {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #8b5a3c;
+  font-size: 14px;
+  fontWeight: 600;
+  padding: 4px 12px;
+  background: #f3f4f6;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.program-card:hover .program-location {
+  background: #8b5a3c;
+  color: white;
+}
+
+.location-icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1024px) {
+  .programs-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .popular-programs-section {
+    padding: 60px 20px;
+  }
+
+  .programs-header {
+    flex-direction: column;
+    gap: 20px;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .programs-header-content h2 {
+    font-size: 1.75rem;
+  }
+
+  .programs-header-content p {
+    font-size: 1rem;
+  }
+
+  .view-all-button {
+    align-self: center;
+  }
+
+  .programs-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+  }
+
+  .program-card {
+    padding: 20px;
+  }
+
+  .program-title {
+    font-size: 1.125rem;
+  }
+
+  .program-description {
+    font-size: 13px;
+  }
+
+  .program-price {
+    font-size: 16px;
+  }
+
+  .program-location {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .popular-programs-section {
+    padding: 40px 16px;
+  }
+
+  .programs-header-content h2 {
+    font-size: 1.5rem;
+  }
+
+  .view-all-button {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+
+  .programs-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .program-card {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .program-rating {
+    margin-bottom: 8px;
+  }
+
+  .program-title {
+    font-size: 1rem;
+    margin-bottom: 6px;
+  }
+
+  .program-description {
+    font-size: 12px;
+    margin-bottom: 12px;
+  }
+
+  .program-footer {
+    padding-top: 12px;
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .program-location {
+    align-self: flex-end;
+  }
+}
+
+/* 접근성 개선 */
+@media (prefers-reduced-motion: reduce) {
+  .program-card,
+  .view-all-button,
+  .program-location {
+    transition: none;
+  }
+
+  .program-card::before {
+    display: none;
+  }
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+  .program-card {
+    border: 2px solid #000;
+  }
+
+  .program-card:hover {
+    border-color: #8b5a3c;
+    border-width: 3px;
+  }
+
+  .view-all-button {
+    border-width: 3px;
+  }
+}
+
+/* 키보드 네비게이션 지원 */
+.program-card:focus,
+.view-all-button:focus {
+  outline: 2px solid #8b5a3c;
+  outline-offset: 2px;
+}
+
+/* 별점 스타일 */
+.star-filled {
+  color: #fbbf24;
+  fill: #fbbf24;
+}
+
+.star-empty {
+  color: #d1d5db;
+  fill: none;
+}
