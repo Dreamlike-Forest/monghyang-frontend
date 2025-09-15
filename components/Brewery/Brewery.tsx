@@ -28,17 +28,37 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
   const [isLoading, setIsLoading] = useState(false);
   const itemsPerPage = 6; 
 
-  // URL 파라미터에서 검색어 확인 및 필터 초기화 - 홈에서 전달된 검색 처리
+  // URL 파라미터 처리 - 완전 수정된 부분
   useEffect(() => {
     const search = searchParams.get('search');
     const searchType = searchParams.get('searchType');
+    const view = searchParams.get('view');
     
-    // 홈에서 양조장 검색으로 온 경우
-    if (search && searchType === 'brewery') {
+    console.log('Brewery URL 파라미터:', { search, searchType, view });
+    
+    // URL에 search 파라미터가 없으면 무조건 검색어 초기화
+    if (!search || !searchType) {
+      console.log('검색 파라미터 없음 - 필터 초기화');
+      setFilters(prev => ({
+        ...prev,
+        searchKeyword: ''
+      }));
+      return;
+    }
+    
+    // brewery 페이지이면서 홈에서 brewery 검색으로 온 경우에만 검색어 설정
+    if (view === 'brewery' && searchType === 'brewery') {
       console.log('홈에서 양조장 검색으로 이동:', search);
       setFilters(prev => ({
         ...prev,
         searchKeyword: search
+      }));
+    } else {
+      // 잘못된 조합이면 검색어 초기화
+      console.log('잘못된 검색 타입 또는 페이지 - 필터 초기화');
+      setFilters(prev => ({
+        ...prev,
+        searchKeyword: ''
       }));
     }
   }, [searchParams]);
@@ -210,22 +230,18 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
     }
   };
 
-  // 양조장 상세페이지로 이동하는 함수
+  // 양조장 상세페이지로 이동하는 함수 - 수정된 부분
   const navigateToBreweryDetail = (breweryId: number) => {
-    const url = new URL(window.location.href);
+    // URL 완전 초기화 - 기존 파라미터 완전 제거
+    const baseUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
+    const newUrl = new URL(baseUrl);
     
-    // 기존 파라미터 정리
-    url.searchParams.delete('view');
-    url.searchParams.delete('brewery');
-    url.searchParams.delete('search'); // 검색 파라미터도 제거
-    url.searchParams.delete('searchType');
-    
-    // 양조장 상세페이지 파라미터 설정
-    url.searchParams.set('view', 'brewery-detail');
-    url.searchParams.set('brewery', breweryId.toString());
+    // 양조장 상세페이지 파라미터만 설정
+    newUrl.searchParams.set('view', 'brewery-detail');
+    newUrl.searchParams.set('brewery', breweryId.toString());
     
     // URL 업데이트 및 페이지 이동
-    window.history.pushState({}, '', url.toString());
+    window.history.pushState({}, '', newUrl.toString());
     window.location.reload();
   };
 

@@ -1,4 +1,3 @@
-/* HeroSection.css */
 .hero-section {
   background: linear-gradient(135deg, rgba(139, 90, 60, 0.9) 0%, rgba(124, 77, 52, 0.95) 100%),
               url('/images/hero-bg.jpg') center/cover;
@@ -49,7 +48,7 @@
   margin: 0 auto;
 }
 
-.search-container {
+.hero-search-container {
   position: relative;
   display: flex;
   align-items: center;
@@ -61,18 +60,18 @@
   gap: 0;
 }
 
-.search-container:hover {
+.hero-search-container:hover {
   transform: translateY(-2px);
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
 }
 
 /* 검색 타입 선택 버튼 */
-.search-type-selector {
+.hero-search-type-selector {
   position: relative;
   flex-shrink: 0;
 }
 
-.search-type-button {
+.hero-search-type-button {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -89,34 +88,34 @@
   transition: all 0.2s ease;
 }
 
-.search-type-button:hover {
+.hero-search-type-button:hover {
   background: #e9ecef;
 }
 
-.search-type-button:focus {
+.hero-search-type-button:focus {
   outline: none;
   box-shadow: 0 0 0 2px rgba(139, 90, 60, 0.3);
 }
 
-.search-type-icon {
+.hero-search-type-icon {
   width: 16px;
   height: 16px;
   flex-shrink: 0;
 }
 
-.search-type-chevron {
+.hero-search-type-chevron {
   width: 16px;
   height: 16px;
   flex-shrink: 0;
   transition: transform 0.2s ease;
 }
 
-.search-type-chevron.open {
+.hero-search-type-chevron.open {
   transform: rotate(180deg);
 }
 
 /* 검색 타입 드롭다운 메뉴 */
-.search-type-dropdown {
+.hero-search-type-dropdown {
   position: absolute;
   top: 100%;
   left: 0;
@@ -127,10 +126,10 @@
   z-index: 10;
   margin-top: 8px;
   overflow: hidden;
-  animation: dropdownFadeIn 0.2s ease-out;
+  animation: heroDropdownFadeIn 0.2s ease-out;
 }
 
-@keyframes dropdownFadeIn {
+@keyframes heroDropdownFadeIn {
   from {
     opacity: 0;
     transform: translateY(-5px);
@@ -141,7 +140,7 @@
   }
 }
 
-.search-type-option {
+.hero-search-type-option {
   width: 100%;
   padding: 12px 16px;
   border: none;
@@ -156,22 +155,22 @@
   text-align: left;
 }
 
-.search-type-option:hover {
+.hero-search-type-option:hover {
   background: #f8f9fa;
 }
 
-.search-type-option.active {
+.hero-search-type-option.active {
   background: #f0f9ff;
   color: #0369a1;
 }
 
-.search-type-option-icon {
+.hero-search-type-option-icon {
   width: 16px;
   height: 16px;
   flex-shrink: 0;
 }
 
-.search-input {
+.hero-search-input {
   flex: 1;
   padding: 16px 24px;
   border: none;
@@ -182,11 +181,11 @@
   background: transparent;
 }
 
-.search-input::placeholder {
+.hero-search-input::placeholder {
   color: #999;
 }
 
-.search-button {
+.hero-search-button {
   background: #8b5a3c;
   color: white;
   border: none;
@@ -199,24 +198,26 @@
   gap: 8px;
   font-size: 16px;
   font-weight: 600;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease; /* transform 제거 */
   box-shadow: 0 2px 8px rgba(139, 90, 60, 0.3);
   min-width: fit-content;
   white-space: nowrap;
 }
 
-/* 검색 버튼 호버 효과 수정 - 과도한 움직임 제거 */
-.search-button:hover {
+.hero-search-button:hover {
   background: #7c4d34;
   box-shadow: 0 4px 12px rgba(139, 90, 60, 0.4);
-  /* transform: scale(1.02)와 translateY(-2px) 제거 */
+  /* transform 제거 - 클릭 시 움직임 방지 */
 }
 
-.search-button:active {
-  transform: scale(0.98);
+/* 클릭 시 움직임 완전 제거 */
+.hero-search-button:active {
+  /* transform 제거 - 클릭 시 움직임 방지 */
+  background: #7c4d34;
+  box-shadow: 0 2px 8px rgba(139, 90, 60, 0.3);
 }
 
-.search-icon {
+.hero-search-icon {
   font-size: 20px;
   width: 20px;
   height: 20px;
@@ -224,7 +225,7 @@
 }
 
 /* 검색 안내 텍스트 */
-.search-guide {
+.hero-search-guide {
   font-size: 14px;
   margin-top: 16px;
   opacity: 0.8;
@@ -246,27 +247,27 @@
     font-size: 1rem;
   }
 
-  .search-container {
+  .hero-search-container {
     flex-direction: column;
     border-radius: 16px;
     padding: 12px;
     gap: 8px;
   }
 
-  .search-type-button {
+  .hero-search-type-button {
     border-radius: 25px;
     width: 100%;
     justify-content: center;
   }
 
-  .search-input {
+  .hero-search-input {
     margin-bottom: 0;
     border-radius: 12px;
     text-align: center;
     padding: 16px 24px;
   }
 
-  .search-button {
+  .hero-search-button {
     width: 100%;
     border-radius: 12px;
     height: 48px;
@@ -274,7 +275,7 @@
   }
 
   /* 드롭다운 모바일 대응 */
-  .search-type-dropdown {
+  .hero-search-type-dropdown {
     position: fixed;
     top: auto;
     bottom: 0;
@@ -296,17 +297,17 @@
     font-size: 1.75rem;
   }
 
-  .search-type-button {
+  .hero-search-type-button {
     padding: 14px 16px;
     font-size: 13px;
   }
 
-  .search-input {
+  .hero-search-input {
     padding: 14px 20px;
     font-size: 15px;
   }
 
-  .search-button {
+  .hero-search-button {
     padding: 14px 24px;
     font-size: 15px;
   }
@@ -314,78 +315,78 @@
 
 /* 접근성 개선 */
 @media (prefers-reduced-motion: reduce) {
-  .search-container,
-  .search-button,
-  .search-type-dropdown {
+  .hero-search-container,
+  .hero-search-button,
+  .hero-search-type-dropdown {
     transition: none;
     animation: none;
   }
 
-  .search-type-chevron {
+  .hero-search-type-chevron {
     transition: none;
   }
 }
 
 /* 고대비 모드 지원 */
 @media (prefers-contrast: high) {
-  .search-container {
+  .hero-search-container {
     border: 2px solid #000;
   }
 
-  .search-type-dropdown {
+  .hero-search-type-dropdown {
     border: 2px solid #000;
   }
 
-  .search-type-option {
+  .hero-search-type-option {
     border-bottom: 1px solid #ccc;
   }
 
-  .search-button {
+  .hero-search-button {
     border: 2px solid;
   }
 }
 
 /* 다크 모드 지원 (선택사항) */
 @media (prefers-color-scheme: dark) {
-  .search-container {
+  .hero-search-container {
     background: #2d3748;
     color: #e2e8f0;
   }
 
-  .search-type-button {
+  .hero-search-type-button {
     background: #4a5568;
     color: #e2e8f0;
   }
 
-  .search-type-button:hover {
+  .hero-search-type-button:hover {
     background: #2d3748;
   }
 
-  .search-type-dropdown {
+  .hero-search-type-dropdown {
     background: #2d3748;
     border: 1px solid #4a5568;
   }
 
-  .search-type-option {
+  .hero-search-type-option {
     background: #2d3748;
     color: #e2e8f0;
   }
 
-  .search-type-option:hover {
+  .hero-search-type-option:hover {
     background: #4a5568;
   }
 
-  .search-type-option.active {
+  .hero-search-type-option.active {
     background: #2b6cb0;
     color: #e2e8f0;
   }
 
-  .search-input {
+  .hero-search-input {
     background: transparent;
     color: #e2e8f0;
   }
 
-  .search-input::placeholder {
+  .hero-search-input::placeholder {
     color: #a0aec0;
   }
 }

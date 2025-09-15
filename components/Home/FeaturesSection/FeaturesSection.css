@@ -35,7 +35,7 @@
   gap: 40px;
 }
 
-.feature-card {
+.features-card {
   background: white;
   border-radius: 20px;
   padding: 40px 30px;
@@ -48,7 +48,7 @@
   overflow: hidden;
 }
 
-.feature-card::before {
+.features-card::before {
   content: '';
   position: absolute;
   top: 0;
@@ -59,17 +59,17 @@
   transition: left 0.5s ease;
 }
 
-.feature-card:hover::before {
+.features-card:hover::before {
   left: 100%;
 }
 
-.feature-card:hover {
+.features-card:hover {
   transform: translateY(-8px);
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
   border-color: #8b5a3c;
 }
 
-.feature-icon-wrapper {
+.features-icon-wrapper {
   width: 80px;
   height: 80px;
   background: linear-gradient(135deg, #8b5a3c 0%, #7c4d34 100%);
@@ -83,12 +83,12 @@
   transition: all 0.3s ease;
 }
 
-.feature-card:hover .feature-icon-wrapper {
+.features-card:hover .features-icon-wrapper {
   transform: scale(1.1);
   box-shadow: 0 8px 25px rgba(139, 90, 60, 0.3);
 }
 
-.feature-title {
+.features-title-card {
   font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 16px;
@@ -97,7 +97,7 @@
   z-index: 1;
 }
 
-.feature-description {
+.features-description {
   color: #4a5568;
   line-height: 1.6;
   margin-bottom: 24px;
@@ -105,7 +105,7 @@
   z-index: 1;
 }
 
-.feature-button {
+.features-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -118,16 +118,16 @@
   z-index: 1;
 }
 
-.feature-card:hover .feature-button {
+.features-card:hover .features-button {
   color: #7c4d34;
   transform: translateX(4px);
 }
 
-.feature-button-icon {
+.features-button-icon {
   transition: transform 0.3s ease;
 }
 
-.feature-card:hover .feature-button-icon {
+.features-card:hover .features-button-icon {
   transform: translateX(4px);
 }
 
@@ -150,20 +150,20 @@
     gap: 30px;
   }
 
-  .feature-card {
+  .features-card {
     padding: 30px 20px;
   }
 
-  .feature-icon-wrapper {
+  .features-icon-wrapper {
     width: 70px;
     height: 70px;
   }
 
-  .feature-title {
+  .features-title-card {
     font-size: 1.25rem;
   }
 
-  .feature-description {
+  .features-description {
     font-size: 14px;
   }
 }
@@ -177,54 +177,54 @@
     font-size: 1.75rem;
   }
 
-  .feature-card {
+  .features-card {
     padding: 24px 16px;
     border-radius: 16px;
   }
 
-  .feature-icon-wrapper {
+  .features-icon-wrapper {
     width: 60px;
     height: 60px;
   }
 
-  .feature-title {
+  .features-title-card {
     font-size: 1.125rem;
   }
 }
 
 /* 접근성 개선 */
 @media (prefers-reduced-motion: reduce) {
-  .feature-card,
-  .feature-icon-wrapper,
-  .feature-button,
-  .feature-button-icon {
+  .features-card,
+  .features-icon-wrapper,
+  .features-button,
+  .features-button-icon {
     transition: none;
   }
 
-  .feature-card::before {
+  .features-card::before {
     display: none;
   }
 }
 
 /* 고대비 모드 지원 */
 @media (prefers-contrast: high) {
-  .feature-card {
+  .features-card {
     border: 2px solid #000;
   }
 
-  .feature-card:hover {
+  .features-card:hover {
     border-color: #8b5a3c;
     border-width: 3px;
   }
 }
 
 /* 키보드 네비게이션 지원 */
-.feature-card:focus {
+.features-card:focus {
   outline: 2px solid #8b5a3c;
   outline-offset: 2px;
 }
 
-.feature-card:focus-visible {
+.features-card:focus-visible {
   outline: 2px solid #8b5a3c;
   outline-offset: 2px;
 }

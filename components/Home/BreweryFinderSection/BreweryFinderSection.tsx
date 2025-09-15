@@ -44,15 +44,13 @@ const BreweryFinderSection: React.FC<BreweryFinderSectionProps> = ({ windowWidth
   const handleBrewerySearch = () => {
     if (typeof window === 'undefined') return;
     
-    const url = new URL(window.location.href);
-    url.searchParams.delete('view');
-    url.searchParams.delete('brewery');
-    url.searchParams.delete('search');
-    url.searchParams.delete('searchType');
+    // URL 완전 초기화 - 기존 파라미터 완전 제거
+    const baseUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
+    const newUrl = new URL(baseUrl);
     
-    url.searchParams.set('view', 'brewery');
+    newUrl.searchParams.set('view', 'brewery');
     
-    window.location.href = url.toString();
+    window.location.href = newUrl.toString();
   };
 
   return (
@@ -68,13 +66,13 @@ const BreweryFinderSection: React.FC<BreweryFinderSectionProps> = ({ windowWidth
         </div>
 
         <div className="brewery-finder-form">
-          <div className="form-grid">
-            <div className="form-group">
-              <label className="form-label">
+          <div className="brewery-finder-form-grid">
+            <div className="brewery-finder-form-group">
+              <label className="brewery-finder-form-label">
                 지역 선택
               </label>
               <select
-                className="form-select"
+                className="brewery-finder-form-select"
                 value={brewerySearch.region}
                 onChange={(e) => setBrewerySearch(prev => ({ ...prev, region: e.target.value }))}
               >
@@ -86,12 +84,12 @@ const BreweryFinderSection: React.FC<BreweryFinderSectionProps> = ({ windowWidth
               </select>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">
+            <div className="brewery-finder-form-group">
+              <label className="brewery-finder-form-label">
                 전통주 종류
               </label>
               <select
-                className="form-select"
+                className="brewery-finder-form-select"
                 value={brewerySearch.type}
                 onChange={(e) => setBrewerySearch(prev => ({ ...prev, type: e.target.value }))}
               >
@@ -104,25 +102,25 @@ const BreweryFinderSection: React.FC<BreweryFinderSectionProps> = ({ windowWidth
             </div>
           </div>
 
-          <div className="checkbox-group">
-            <label className="checkbox-label">
+          <div className="brewery-finder-checkbox-group">
+            <label className="brewery-finder-checkbox-label">
               <input
                 type="checkbox"
-                className="checkbox"
+                className="brewery-finder-checkbox"
                 checked={brewerySearch.hasExperience}
                 onChange={(e) => setBrewerySearch(prev => ({ ...prev, hasExperience: e.target.checked }))}
               />
-              <Users size={16} className="checkbox-icon" />
+              <Users size={16} className="brewery-finder-checkbox-icon" />
               체험 프로그램 여부
             </label>
           </div>
 
           <button 
-            className="find-button"
+            className="brewery-finder-find-button"
             onClick={handleBrewerySearch}
             type="button"
           >
-            <Search size={18} className="find-button-icon" />
+            <Search size={18} className="brewery-finder-find-button-icon" />
             검색하기
           </button>
         </div>

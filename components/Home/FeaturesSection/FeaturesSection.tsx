@@ -11,17 +11,15 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ windowWidth }) => {
   const navigateToPage = (page: string) => {
     if (typeof window === 'undefined') return;
     
-    const url = new URL(window.location.href);
-    url.searchParams.delete('view');
-    url.searchParams.delete('brewery');
-    url.searchParams.delete('search');
-    url.searchParams.delete('searchType');
+    // URL 완전 초기화 - 기존 파라미터 완전 제거
+    const baseUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
+    const newUrl = new URL(baseUrl);
     
     if (page !== 'home') {
-      url.searchParams.set('view', page);
+      newUrl.searchParams.set('view', page);
     }
     
-    window.location.href = url.toString();
+    window.location.href = newUrl.toString();
   };
 
   const features = [
@@ -66,7 +64,7 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ windowWidth }) => {
             return (
               <div 
                 key={index}
-                className="feature-card"
+                className="features-card"
                 onClick={feature.onClick}
                 role="button"
                 tabIndex={0}
@@ -77,18 +75,18 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ windowWidth }) => {
                   }
                 }}
               >
-                <div className="feature-icon-wrapper">
+                <div className="features-icon-wrapper">
                   <IconComponent size={36} color="white" />
                 </div>
-                <h3 className="feature-title">
+                <h3 className="features-title-card">
                   {feature.title}
                 </h3>
-                <p className="feature-description">
+                <p className="features-description">
                   {feature.description}
                 </p>
-                <div className="feature-button">
+                <div className="features-button">
                   {feature.buttonText}
-                  <ChevronRight size={20} className="feature-button-icon" />
+                  <ChevronRight size={20} className="features-button-icon" />
                 </div>
               </div>
             );

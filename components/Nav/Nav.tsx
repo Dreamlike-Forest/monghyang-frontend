@@ -69,20 +69,17 @@ const Nav: React.FC = () => {
 
   const handleNavigation = (page: string) => {
     if (typeof window !== 'undefined') {
-      const url = new URL(window.location.href);
-      
-      // 모든 관련 파라미터 정리
-      url.searchParams.delete('view');
-      url.searchParams.delete('brewery');
-      url.searchParams.delete('product');
+      // URL 완전 초기화 - 기존 파라미터 완전 제거
+      const baseUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
+      const newUrl = new URL(baseUrl);
       
       // home이 아닌 경우에만 view 파라미터 설정
       if (page !== 'home') {
-        url.searchParams.set('view', page);
+        newUrl.searchParams.set('view', page);
       }
       
       // 페이지 새로고침으로 이동 (기존 방식 유지)
-      window.location.href = url.toString();
+      window.location.href = newUrl.toString();
     }
   };
 

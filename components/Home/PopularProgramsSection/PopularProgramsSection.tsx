@@ -47,23 +47,21 @@ const PopularProgramsSection: React.FC<PopularProgramsSectionProps> = ({ windowW
   const navigateToPage = (page: string, params?: Record<string, string>) => {
     if (typeof window === 'undefined') return;
     
-    const url = new URL(window.location.href);
-    url.searchParams.delete('view');
-    url.searchParams.delete('brewery');
-    url.searchParams.delete('search');
-    url.searchParams.delete('searchType');
+    // URL 완전 초기화 - 기존 파라미터 완전 제거
+    const baseUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
+    const newUrl = new URL(baseUrl);
     
     if (page !== 'home') {
-      url.searchParams.set('view', page);
+      newUrl.searchParams.set('view', page);
     }
     
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
-        url.searchParams.set(key, value);
+        newUrl.searchParams.set(key, value);
       });
     }
     
-    window.location.href = url.toString();
+    window.location.href = newUrl.toString();
   };
 
   const handleProgramClick = (programId: number) => {
@@ -82,14 +80,14 @@ const PopularProgramsSection: React.FC<PopularProgramsSectionProps> = ({ windowW
 
   return (
     <section className="popular-programs-section">
-      <div className="programs-container">
-        <div className="programs-header">
-          <div className="programs-header-content">
+      <div className="popular-programs-container">
+        <div className="popular-programs-header">
+          <div className="popular-programs-header-content">
             <h2>인기 체험 프로그램</h2>
             <p>다른 사람들이 많이 선택한 체험 프로그램을 만나보세요</p>
           </div>
           <button
-            className="view-all-button"
+            className="popular-programs-view-all-button"
             onClick={handleViewAllPrograms}
           >
             전체 보기
@@ -97,11 +95,11 @@ const PopularProgramsSection: React.FC<PopularProgramsSectionProps> = ({ windowW
           </button>
         </div>
 
-        <div className="programs-grid">
+        <div className="popular-programs-grid">
           {popularPrograms.map(program => (
             <div
               key={program.id}
-              className="program-card"
+              className="popular-programs-card"
               onClick={() => handleProgramClick(program.id)}
               role="button"
               tabIndex={0}
@@ -112,35 +110,35 @@ const PopularProgramsSection: React.FC<PopularProgramsSectionProps> = ({ windowW
                 }
               }}
             >
-              <div className="program-rating">
-                <div className="rating-stars">
+              <div className="popular-programs-rating">
+                <div className="popular-programs-rating-stars">
                   {Array.from({ length: 5 }, (_, i) => (
                     <Star
                       key={i}
                       size={16}
-                      className={i < Math.floor(program.rating) ? 'star-filled' : 'star-empty'}
+                      className={i < Math.floor(program.rating) ? 'popular-programs-star-filled' : 'popular-programs-star-empty'}
                     />
                   ))}
                 </div>
-                <span className="rating-score">
+                <span className="popular-programs-rating-score">
                   {program.rating}
                 </span>
               </div>
 
-              <h3 className="program-title">
+              <h3 className="popular-programs-title">
                 {program.title}
               </h3>
 
-              <p className="program-description">
+              <p className="popular-programs-description">
                 {program.description}
               </p>
 
-              <div className="program-footer">
-                <span className="program-price">
+              <div className="popular-programs-footer">
+                <span className="popular-programs-price">
                   {program.price}
                 </span>
-                <div className="program-location">
-                  <Calendar size={14} className="location-icon" />
+                <div className="popular-programs-location">
+                  <Calendar size={14} className="popular-programs-location-icon" />
                   {program.location}
                 </div>
               </div>

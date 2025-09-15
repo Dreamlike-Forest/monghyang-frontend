@@ -30,23 +30,20 @@ const HeroSection: React.FC<HeroSectionProps> = ({ windowWidth }) => {
   const navigateToPage = (page: string, params?: Record<string, string>) => {
     if (typeof window === 'undefined') return;
     
-    const url = new URL(window.location.href);
-    url.searchParams.delete('view');
-    url.searchParams.delete('brewery');
-    url.searchParams.delete('search');
-    url.searchParams.delete('searchType');
+    const baseUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
+    const newUrl = new URL(baseUrl);
     
     if (page !== 'home') {
-      url.searchParams.set('view', page);
+      newUrl.searchParams.set('view', page);
     }
     
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
-        url.searchParams.set(key, value);
+        newUrl.searchParams.set(key, value);
       });
     }
     
-    window.location.href = url.toString();
+    window.location.href = newUrl.toString();
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -108,35 +105,35 @@ const HeroSection: React.FC<HeroSectionProps> = ({ windowWidth }) => {
         </p>
 
         <div className="hero-search">
-          <form onSubmit={handleSearch} className="search-container">
-            <div className="search-type-selector" ref={dropdownRef}>
+          <form onSubmit={handleSearch} className="hero-search-container">
+            <div className="hero-search-type-selector" ref={dropdownRef}>
               <button
                 type="button"
-                className="search-type-button"
+                className="hero-search-type-button"
                 onClick={() => setIsSearchTypeOpen(!isSearchTypeOpen)}
               >
-                <CurrentIcon className="search-type-icon" />
+                <CurrentIcon className="hero-search-type-icon" />
                 {currentSearchType.label}
                 <ChevronDown 
-                  className={`search-type-chevron ${isSearchTypeOpen ? 'open' : ''}`} 
+                  className={`hero-search-type-chevron ${isSearchTypeOpen ? 'open' : ''}`} 
                 />
               </button>
               
               {isSearchTypeOpen && (
-                <div className="search-type-dropdown">
+                <div className="hero-search-type-dropdown">
                   {searchTypes.map((type) => {
                     const TypeIcon = type.icon;
                     return (
                       <button
                         key={type.value}
                         type="button"
-                        className={`search-type-option ${searchType === type.value ? 'active' : ''}`}
+                        className={`hero-search-type-option ${searchType === type.value ? 'active' : ''}`}
                         onClick={() => {
                           setSearchType(type.value);
                           setIsSearchTypeOpen(false);
                         }}
                       >
-                        <TypeIcon className="search-type-option-icon" />
+                        <TypeIcon className="hero-search-type-option-icon" />
                         {type.label}
                       </button>
                     );
@@ -147,7 +144,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ windowWidth }) => {
 
             <input
               type="text"
-              className="search-input"
+              className="hero-search-input"
               placeholder={searchType === 'brewery' 
                 ? "양조장명, 지역명을 검색해보세요" 
                 : "상품명, 양조장명을 검색해보세요"
@@ -155,13 +152,13 @@ const HeroSection: React.FC<HeroSectionProps> = ({ windowWidth }) => {
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
             />
-            <button type="submit" className="search-button">
-              <Search className="search-icon" />
+            <button type="submit" className="hero-search-button">
+              <Search className="hero-search-icon" />
               검색
             </button>
           </form>
 
-          <p className="search-guide">
+          <p className="hero-search-guide">
             {searchType === 'brewery' 
               ? '전국 양조장을 찾아 특별한 체험을 즐겨보세요' 
               : '다양한 전통주를 둘러보고 맛있는 술을 발견하세요'

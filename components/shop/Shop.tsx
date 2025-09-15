@@ -41,33 +41,49 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
   const [selectedProductBrewery, setSelectedProductBrewery] = useState<Brewery | null>(null);
   const [isProductDetailOpen, setIsProductDetailOpen] = useState(false);
 
-  // URL 파라미터에서 검색어 확인 및 필터 초기화 - 홈에서 전달된 검색 처리
+  // URL 파라미터 처리 - 완전 수정된 부분
   useEffect(() => {
     const search = searchParams.get('search');
     const searchType = searchParams.get('searchType');
+    const view = searchParams.get('view');
+    const productId = searchParams.get('product');
     
-    // 홈에서 상품 검색으로 온 경우
-    if (search && searchType === 'product') {
+    console.log('Shop URL 파라미터:', { search, searchType, view, productId });
+    
+    // 상품 상세페이지 처리 (최우선)
+    if (productId && allProducts.length > 0) {
+      const product = allProducts.find(p => p.product_id === parseInt(productId));
+      if (product) {
+        handleProductClick(product.product_id);
+        return; // 상품 상세페이지 처리 시 다른 로직 실행하지 않음
+      }
+    }
+    
+    // URL에 search 파라미터가 없으면 무조건 검색어 초기화
+    if (!search || !searchType) {
+      console.log('검색 파라미터 없음 - Shop 필터 초기화');
+      setActiveFilters(prev => ({
+        ...prev,
+        searchKeyword: ''
+      }));
+      return;
+    }
+    
+    // shop 페이지이면서 홈에서 product 검색으로 온 경우에만 검색어 설정
+    if (view === 'shop' && searchType === 'product') {
       console.log('홈에서 상품 검색으로 이동:', search);
       setActiveFilters(prev => ({
         ...prev,
         searchKeyword: search
       }));
+    } else {
+      // 잘못된 조합이면 검색어 초기화
+      console.log('잘못된 검색 타입 또는 페이지 - Shop 필터 초기화');
+      setActiveFilters(prev => ({
+        ...prev,
+        searchKeyword: ''
+      }));
     }
-    
-    // 기존 상품 상세페이지 URL 파라미터 처리
-    const checkURLParams = () => {
-      const productId = searchParams.get('product');
-      
-      if (productId && allProducts.length > 0) {
-        const product = allProducts.find(p => p.product_id === parseInt(productId));
-        if (product) {
-          handleProductClick(product.product_id);
-        }
-      }
-    };
-
-    checkURLParams();
   }, [searchParams, allProducts]);
 
   // 필터 적용 함수
@@ -223,7 +239,7 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
     window.history.pushState({ productDetail: true }, '', url.toString());
   };
 
-  // 상품 상세페이지 닫기 - URL 정리 개선
+  // 상품 상세페이지 닫기 - URL 정리 개선 (수정된 부분)
   const handleCloseProductDetail = () => {
     console.log('상품 상세페이지 닫기');
     
@@ -231,17 +247,15 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
     setSelectedProduct(null);
     setSelectedProductBrewery(null);
 
-    // URL에서 product 파라미터 제거
-    const url = new URL(window.location.href);
-    url.searchParams.delete('product');
+    // URL 완전 초기화 - 기존 파라미터 완전 제거
+    const baseUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
+    const newUrl = new URL(baseUrl);
     
-    // view 파라미터가 없으면 shop으로 설정
-    if (!url.searchParams.has('view')) {
-      url.searchParams.set('view', 'shop');
-    }
+    // shop view만 다시 설정
+    newUrl.searchParams.set('view', 'shop');
     
     // replaceState로 히스토리 문제 방지
-    window.history.replaceState({}, '', url.toString());
+    window.history.replaceState({}, '', newUrl.toString());
   };
 
   // 브라우저 뒤로가기 감지
