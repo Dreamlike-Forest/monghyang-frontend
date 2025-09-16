@@ -28,39 +28,54 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
   const [isLoading, setIsLoading] = useState(false);
   const itemsPerPage = 6; 
 
-  // URL 파라미터 처리 - 완전 수정된 부분
+  // URL 파라미터 처리 - 완전 수정된 부분 (BreweryFinderSection 필터 지원 추가)
   useEffect(() => {
     const search = searchParams.get('search');
     const searchType = searchParams.get('searchType');
     const view = searchParams.get('view');
     
-    console.log('Brewery URL 파라미터:', { search, searchType, view });
+    // BreweryFinderSection에서 전달된 필터 파라미터들
+    const filterRegion = searchParams.get('filterRegion');
+    const filterAlcoholType = searchParams.get('filterAlcoholType');
+    const filterExperience = searchParams.get('filterExperience');
     
-    // URL에 search 파라미터가 없으면 무조건 검색어 초기화
-    if (!search || !searchType) {
-      console.log('검색 파라미터 없음 - 필터 초기화');
-      setFilters(prev => ({
-        ...prev,
-        searchKeyword: ''
-      }));
-      return;
-    }
+    console.log('Brewery URL 파라미터:', { 
+      search, searchType, view, 
+      filterRegion, filterAlcoholType, filterExperience 
+    });
     
-    // brewery 페이지이면서 홈에서 brewery 검색으로 온 경우에만 검색어 설정
-    if (view === 'brewery' && searchType === 'brewery') {
+    // 새로운 필터 상태 객체 생성
+    const newFilters: BreweryFilterOptions = {
+      regions: [],
+      priceRange: { min: '', max: '' },
+      alcoholTypes: [],
+      badges: [],
+      searchKeyword: ''
+    };
+
+    // 1. 검색어 처리 (기존 로직)
+    if (search && searchType && view === 'brewery' && searchType === 'brewery') {
       console.log('홈에서 양조장 검색으로 이동:', search);
-      setFilters(prev => ({
-        ...prev,
-        searchKeyword: search
-      }));
-    } else {
-      // 잘못된 조합이면 검색어 초기화
-      console.log('잘못된 검색 타입 또는 페이지 - 필터 초기화');
-      setFilters(prev => ({
-        ...prev,
-        searchKeyword: ''
-      }));
+      newFilters.searchKeyword = search;
     }
+
+    // 2. BreweryFinderSection에서 전달된 필터들 처리
+    if (filterRegion) {
+      console.log('지역 필터 적용:', filterRegion);
+      newFilters.regions = [filterRegion];
+    }
+
+    if (filterAlcoholType) {
+      console.log('주종 필터 적용:', filterAlcoholType);
+      newFilters.alcoholTypes = [filterAlcoholType];
+    }
+
+    // 체험 프로그램 필터는 별도로 처리됨 (filteredBreweries에서 처리)
+
+    // 필터 상태 업데이트
+    setFilters(newFilters);
+    
+    console.log('적용된 필터:', newFilters);
   }, [searchParams]);
 
   // 검색 함수 - 개선된 매칭 로직
@@ -87,6 +102,9 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
 
   // 필터링된 데이터
   const filteredBreweries = useMemo(() => {
+    // 체험 프로그램 필터 체크
+    const filterExperience = searchParams.get('filterExperience');
+    
     return breweryData.filter(brewery => {
       // 검색어 필터 - 개선된 매칭
       if (!isMatchingSearch(brewery, filters.searchKeyword)) return false;
@@ -94,14 +112,18 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
       // 지역 필터
       if (filters.regions.length > 0 && !filters.regions.includes(brewery.region_name)) return false;
 
-      // 가격 필터 - 체험 프로그램 기준
+      // 가격 필터 - 체험 프로그램 기준 (타입 안전성 개선)
       if (brewery.experience_programs?.length) {
         const prices = brewery.experience_programs.map(p => p.price);
         const minPrice = Math.min(...prices);
         const maxPrice = Math.max(...prices);
         
-        if (filters.priceRange.min !== '' && maxPrice < Number(filters.priceRange.min)) return false;
-        if (filters.priceRange.max !== '' && minPrice > Number(filters.priceRange.max)) return false;
+        // 타입 안전한 가격 비교
+        const filterMinPrice = filters.priceRange.min;
+        const filterMaxPrice = filters.priceRange.max;
+        
+        if (filterMinPrice !== '' && typeof filterMinPrice === 'number' && maxPrice < filterMinPrice) return false;
+        if (filterMaxPrice !== '' && typeof filterMaxPrice === 'number' && minPrice > filterMaxPrice) return false;
       } else if (filters.priceRange.min !== '' || filters.priceRange.max !== '') {
         return false;
       }
@@ -130,6 +152,13 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
         if (!hasMatchingType) return false;
       }
 
+      // 체험 프로그램 필터 - BreweryFinderSection에서 온 경우
+      if (filterExperience === 'true') {
+        if (!brewery.experience_programs || brewery.experience_programs.length === 0) {
+          return false;
+        }
+      }
+
       // 배지 필터
       if (filters.badges.length > 0) {
         const hasMatchingBadge = filters.badges.some(badgeFilter => {
@@ -141,7 +170,7 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
 
       return true;
     });
-  }, [breweryData, filters]);
+  }, [breweryData, filters, searchParams]);
 
   // 카운트 계산
   const breweryCount = useMemo(() => {
@@ -252,6 +281,25 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // 현재 적용된 필터 표시를 위한 헬퍼 함수
+  const getActiveFiltersDisplay = () => {
+    const activeFilters = [];
+    
+    if (filters.regions.length > 0) {
+      activeFilters.push(`지역: ${filters.regions.join(', ')}`);
+    }
+    
+    if (filters.alcoholTypes.length > 0) {
+      activeFilters.push(`주종: ${filters.alcoholTypes.join(', ')}`);
+    }
+    
+    if (searchParams.get('filterExperience') === 'true') {
+      activeFilters.push('체험 프로그램 포함');
+    }
+    
+    return activeFilters;
+  };
+
   return (
     <div className={`brewery-container ${className || ''}`}>
       <div className="brewery-content">
@@ -274,6 +322,11 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
               {filters.searchKeyword && (
                 <span style={{ color: '#8b5a3c', fontWeight: '600' }}>
                   <br />"{filters.searchKeyword}" 검색 결과
+                </span>
+              )}
+              {getActiveFiltersDisplay().length > 0 && (
+                <span style={{ color: '#8b5a3c', fontWeight: '600' }}>
+                  <br />적용된 필터: {getActiveFiltersDisplay().join(' | ')}
                 </span>
               )}
             </p>

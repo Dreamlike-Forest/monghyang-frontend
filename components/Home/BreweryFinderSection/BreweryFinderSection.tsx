@@ -41,14 +41,54 @@ const BreweryFinderSection: React.FC<BreweryFinderSectionProps> = ({ windowWidth
     { value: 'wine', label: '과실주' }
   ];
 
+  // 수정된 검색 핸들러 - 실제 필터 값으로 매핑
   const handleBrewerySearch = () => {
     if (typeof window === 'undefined') return;
     
-    // URL 완전 초기화 - 기존 파라미터 완전 제거
     const baseUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
     const newUrl = new URL(baseUrl);
     
     newUrl.searchParams.set('view', 'brewery');
+    
+    // 지역 매핑 - 실제 데이터의 region_name과 매칭
+    if (brewerySearch.region) {
+      const regionMap: Record<string, string> = {
+        'seoul': '서울/경기',
+        'gyeonggi': '서울/경기', 
+        'gangwon': '강원도',
+        'chungcheong': '충청도',
+        'jeolla': '전라도',
+        'gyeongsang': '경상도',
+        'jeju': '제주도'
+      };
+      const mappedRegion = regionMap[brewerySearch.region] || brewerySearch.region;
+      newUrl.searchParams.set('filterRegion', mappedRegion);
+    }
+    
+    // 주종 매핑 - 실제 데이터의 alcohol_types와 매칭
+    if (brewerySearch.type) {
+      const typeMap: Record<string, string> = {
+        'makgeolli': '막걸리',
+        'soju': '증류주',
+        'yakju': '청주', 
+        'cheongju': '청주',
+        'wine': '과실주'
+      };
+      const mappedType = typeMap[brewerySearch.type] || brewerySearch.type;
+      newUrl.searchParams.set('filterAlcoholType', mappedType);
+    }
+    
+    // 체험 프로그램 필터
+    if (brewerySearch.hasExperience) {
+      newUrl.searchParams.set('filterExperience', 'true');
+    }
+    
+    console.log('BreweryFinderSection 검색 파라미터:', {
+      region: brewerySearch.region,
+      type: brewerySearch.type, 
+      hasExperience: brewerySearch.hasExperience
+    });
+    console.log('BreweryFinderSection 최종 URL:', newUrl.toString());
     
     window.location.href = newUrl.toString();
   };
