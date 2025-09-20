@@ -30,18 +30,6 @@ const Header: React.FC = () => {
   const languageDropdownRef = useRef<HTMLDivElement>(null);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
 
-  // URLSearchParams 초기화 헬퍼 함수
-  const clearAllSearchParams = (url: URL) => {
-    // clear() 대신 개별 삭제 방식 사용
-    const keysToDelete: string[] = [];
-    url.searchParams.forEach((value, key) => {
-      keysToDelete.push(key);
-    });
-    keysToDelete.forEach(key => {
-      url.searchParams.delete(key);
-    });
-  };
-
   // 로그인 상태 확인
   useEffect(() => {
     const checkAuthStatus = () => {
@@ -113,7 +101,7 @@ const Header: React.FC = () => {
     console.log('언어 변경:', language);
   };
 
-  // 로그인 핸들러 - clear() 사용하지 않고 개별 삭제
+  // 로그인 핸들러 - URL 완전 초기화
   const handleLogin = () => {
     if (typeof window === 'undefined') {
       console.warn('브라우저 환경이 아닙니다.');
@@ -135,17 +123,15 @@ const Header: React.FC = () => {
         console.log('상품 ID 저장됨:', productId);
       }
       
-      // 로그인 페이지로 이동 - clear() 대신 개별 삭제
-      const url = new URL(currentHref);
-      
-      // 모든 파라미터 개별 삭제
-      clearAllSearchParams(url);
+      // 로그인 페이지로 이동 - URL 완전 초기화
+      const baseUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
+      const newUrl = new URL(baseUrl);
       
       // 로그인 view 설정
-      url.searchParams.set('view', 'login');
+      newUrl.searchParams.set('view', 'login');
       
-      const newUrl = url.toString();
-      window.location.href = newUrl;
+      const urlString = newUrl.toString();
+      window.location.href = urlString;
       
     } catch (error) {
       console.error('로그인 페이지 이동 중 오류:', error);
@@ -159,6 +145,7 @@ const Header: React.FC = () => {
     }
   };
 
+  // 장바구니 핸들러 - URL 완전 초기화
   const handleCart = () => {
     if (typeof window === 'undefined') {
       console.warn('브라우저 환경이 아닙니다.');
@@ -166,23 +153,15 @@ const Header: React.FC = () => {
     }
     
     try {
-      const currentHref = window.location.href;
-      if (!currentHref) {
-        throw new Error('현재 URL을 가져올 수 없습니다.');
-      }
-
-      const url = new URL(currentHref);
-      
-      // 특정 파라미터들만 삭제
-      url.searchParams.delete('view');
-      url.searchParams.delete('brewery');
-      url.searchParams.delete('product');
+      // URL 완전 초기화
+      const baseUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
+      const newUrl = new URL(baseUrl);
       
       // shop view 설정
-      url.searchParams.set('view', 'shop');
+      newUrl.searchParams.set('view', 'shop');
       
-      const newUrl = url.toString();
-      window.location.href = newUrl;
+      const urlString = newUrl.toString();
+      window.location.href = urlString;
       
     } catch (error) {
       console.error('장바구니 페이지 이동 중 오류:', error);
@@ -200,6 +179,7 @@ const Header: React.FC = () => {
     setIsProfileDropdownOpen(!isProfileDropdownOpen);
   };
 
+  // 로그아웃 핸들러 - URL 완전 초기화
   const handleLogout = () => {
     if (typeof window === 'undefined') {
       console.warn('브라우저 환경이 아닙니다.');
@@ -219,19 +199,12 @@ const Header: React.FC = () => {
       
       console.log('로그아웃 완료');
       
-      // 홈으로 이동 - 특정 파라미터들만 삭제
-      const currentHref = window.location.href;
-      if (currentHref) {
-        const url = new URL(currentHref);
-        url.searchParams.delete('view');
-        url.searchParams.delete('brewery');
-        url.searchParams.delete('product');
-        
-        const newUrl = url.toString();
-        window.location.href = newUrl;
-      } else {
-        window.location.href = '/';
-      }
+      // 홈으로 이동 - URL 완전 초기화
+      const baseUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
+      const newUrl = new URL(baseUrl);
+      
+      const urlString = newUrl.toString();
+      window.location.href = urlString;
       
     } catch (error) {
       console.error('로그아웃 중 오류:', error);

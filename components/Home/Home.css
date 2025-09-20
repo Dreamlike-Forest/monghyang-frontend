@@ -1,492 +1,107 @@
-/* Home.css */
+/* Home.css - 메인 컨테이너 스타일 */
 .home-container {
-  min-height: calc(100vh - 110px); /* Header(50px) + Nav(60px) 제외 */
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  background: linear-gradient(135deg, #faf8f5 0%, #f3f1ee 50%, #ebe8e4 100%);
+  min-height: 100vh;
+  padding-bottom: 40px;
 }
 
-/* Hero 섹션 */
-.hero-section {
-  background: linear-gradient(135deg, rgba(139, 90, 60, 0.9) 0%, rgba(124, 77, 52, 0.95) 100%),
-              url('/images/hero-bg.jpg') center/cover;
-  color: white;
-  text-align: center;
-  padding: 80px 20px;
-  position: relative;
-  overflow: hidden;
+/* 공통 애니메이션 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.hero-section::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(139, 90, 60, 0.8) 0%, rgba(124, 77, 52, 0.9) 100%);
-  z-index: 1;
-}
-
-.hero-content {
-  position: relative;
-  z-index: 2;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.hero-title {
-  font-size: 3rem;
-  font-weight: 700;
-  margin-bottom: 20px;
-  letter-spacing: -0.025em;
-  line-height: 1.2;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.hero-subtitle {
-  font-size: 1.25rem;
-  margin-bottom: 40px;
-  opacity: 0.95;
-  line-height: 1.6;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.hero-search {
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.search-container {
-  position: relative;
-  display: flex;
-  align-items: center;
-  background: white;
-  border-radius: 50px;
-  padding: 8px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.search-container:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
-}
-
-.search-input {
-  flex: 1;
-  padding: 16px 24px;
-  border: none;
-  border-radius: 42px;
-  font-size: 16px;
-  outline: none;
-  color: #333;
-  background: transparent;
-}
-
-.search-input::placeholder {
-  color: #999;
-}
-
-.search-button {
-  background: #8b5a3c;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 56px;
-  height: 56px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(139, 90, 60, 0.3);
-}
-
-.search-button:hover {
-  background: #7c4d34;
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(139, 90, 60, 0.4);
-}
-
-.search-icon {
-  font-size: 20px;
-}
-
-/* 메인 컨텐츠 */
-.main-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 60px 20px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 60px;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* 섹션 공통 스타일 */
-.brewery-finder,
-.popular-programs {
-  background: white;
-  border-radius: 16px;
-  padding: 32px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e5e7eb;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+.home-section {
+  animation: fadeInUp 0.8s ease-out;
 }
 
-.brewery-finder:hover,
-.popular-programs:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+.home-section:nth-child(1) {
+  animation-delay: 0.1s;
 }
 
-.section-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #333;
-  margin-bottom: 24px;
+.home-section:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.home-section:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.home-section:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+/* 로딩 스타일 */
+.home-loading {
   display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 8px;
-}
-
-.section-icon {
-  font-size: 1.75rem;
-}
-
-/* 양조장 찾기 폼 */
-.finder-form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.form-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #374151;
-}
-
-.form-select {
-  padding: 12px 16px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 14px;
-  background: white;
-  cursor: pointer;
-  outline: none;
-  transition: all 0.2s ease;
-}
-
-.form-select:focus {
-  border-color: #8b5a3c;
-  box-shadow: 0 0 0 3px rgba(139, 90, 60, 0.1);
-}
-
-.form-select:hover {
-  border-color: #9ca3af;
-}
-
-.checkbox-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
-  padding: 12px 0;
-}
-
-.checkbox {
-  width: 18px;
-  height: 18px;
-  accent-color: #8b5a3c;
-  cursor: pointer;
-}
-
-.checkbox-label {
-  font-size: 14px;
-  color: #555;
-  cursor: pointer;
-  user-select: none;
-}
-
-.find-button {
-  padding: 14px 24px;
-  background: linear-gradient(135deg, #8b5a3c 0%, #7c4d34 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  margin-top: 8px;
-  box-shadow: 0 2px 8px rgba(139, 90, 60, 0.3);
-}
-
-.find-button:hover {
-  background: linear-gradient(135deg, #7c4d34 0%, #6d4129 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(139, 90, 60, 0.4);
-}
-
-.find-button:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(139, 90, 60, 0.3);
-}
-
-/* 인기 체험 프로그램 */
-.programs-grid {
-  display: flex;
+  min-height: 100vh;
   flex-direction: column;
   gap: 16px;
 }
 
-.program-card {
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
-  position: relative;
-  overflow: hidden;
+.home-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #8b5a3c;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
 
-.program-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(139, 90, 60, 0.1), transparent);
-  transition: left 0.5s ease;
-}
-
-.program-card:hover::before {
-  left: 100%;
-}
-
-.program-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
-  border-color: #8b5a3c;
-  background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
-}
-
-.program-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 12px;
-  position: relative;
-  z-index: 1;
-}
-
-.program-info {
-  flex: 1;
-}
-
-.program-title {
+.home-loading-text {
+  color: #666;
   font-size: 16px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 4px;
-  line-height: 1.3;
 }
 
-.program-description {
-  font-size: 13px;
-  color: #666;
-  line-height: 1.4;
-}
-
-.program-rating {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  color: #666;
-  flex-shrink: 0;
-}
-
-.rating-stars {
-  color: #f59e0b;
-  font-size: 14px;
-}
-
-.rating-score {
-  font-weight: 600;
-  color: #333;
-}
-
-.program-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #f0f0f0;
-  position: relative;
-  z-index: 1;
-}
-
-.program-price {
-  font-size: 16px;
-  font-weight: 700;
-  color: #8b5a3c;
-}
-
-.program-location {
-  font-size: 12px;
-  color: #999;
-  padding: 4px 12px;
-  background: #f3f4f6;
-  border-radius: 12px;
-  transition: all 0.2s ease;
-}
-
-.program-card:hover .program-location {
-  background: #8b5a3c;
-  color: white;
-}
-
-.view-all-button {
-  margin-top: 20px;
-  width: 100%;
-  padding: 12px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  color: #666;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.view-all-button:hover {
-  background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
-  color: #333;
-  border-color: #8b5a3c;
-  transform: translateY(-1px);
-}
-
-/* 반응형 디자인 */
-@media (max-width: 1024px) {
-  .main-content {
-    grid-template-columns: 1fr;
-    gap: 40px;
-    padding: 40px 20px;
-  }
-
-  .hero-title {
-    font-size: 2.5rem;
-  }
-
-  .hero-subtitle {
-    font-size: 1.125rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .hero-section {
-    padding: 60px 20px;
-  }
-
-  .hero-title {
-    font-size: 2rem;
-  }
-
-  .hero-subtitle {
-    font-size: 1rem;
-  }
-
-  .search-container {
-    flex-direction: column;
-    border-radius: 16px;
-    padding: 12px;
-  }
-
-  .search-input {
-    margin-bottom: 12px;
-    border-radius: 12px;
-    text-align: center;
-  }
-
-  .search-button {
-    width: 100%;
-    border-radius: 12px;
-    height: 48px;
-  }
-
-  .brewery-finder,
-  .popular-programs {
-    padding: 24px;
-    border-radius: 12px;
-  }
-
-  .main-content {
-    padding: 32px 16px;
-    gap: 32px;
-  }
-
-  .program-header {
-    flex-direction: column;
-    gap: 8px;
-    align-items: stretch;
-  }
-
-  .program-rating {
-    align-self: flex-end;
-  }
-}
-
-@media (max-width: 480px) {
-  .hero-section {
-    padding: 40px 16px;
-  }
-
-  .hero-title {
-    font-size: 1.75rem;
-  }
-
-  .brewery-finder,
-  .popular-programs {
-    padding: 20px;
-  }
-
-  .section-title {
-    font-size: 1.25rem;
-  }
-
-  .program-card {
-    padding: 16px;
-  }
-
-  .main-content {
-    padding: 24px 12px;
-  }
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* 접근성 개선 */
 @media (prefers-reduced-motion: reduce) {
-  .search-container,
-  .search-button,
-  .find-button,
-  .program-card,
-  .view-all-button,
-  .brewery-finder,
-  .popular-programs {
-    transition: none;
+  .home-section {
+    animation: none;
   }
+  
+  .home-loading-spinner {
+    animation: none;
+    border: 4px solid #8b5a3c;
+  }
+}
 
-  .program-card::before {
-    display: none;
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+  .home-container {
+    background: white;
+  }
+}
+
+/* 다크 모드 지원 (선택사항) */
+@media (prefers-color-scheme: dark) {
+  .home-container {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #404040 100%);
+  }
+  
+  .home-loading-text {
+    color: #e2e8f0;
   }
 }

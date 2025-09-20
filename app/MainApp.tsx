@@ -24,7 +24,7 @@ export default function MainApp() {
   const [breweryProducts, setBreweryProducts] = useState<ProductWithDetails[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // URL 파라미터 처리 개선 
+  // URL 파라미터 처리 개선 - 검색 파라미터 지원 추가
   useEffect(() => {
     const handleURLParams = async () => {
       setIsLoading(true);
@@ -33,8 +33,12 @@ export default function MainApp() {
         const view = searchParams.get('view') as View;
         const breweryId = searchParams.get('brewery');
         const productId = searchParams.get('product');
+        
+        // 검색 관련 파라미터들
+        const searchKeyword = searchParams.get('search');
+        const searchType = searchParams.get('searchType');
 
-        console.log('URL 파라미터:', { view, breweryId, productId });
+        console.log('URL 파라미터:', { view, breweryId, productId, searchKeyword, searchType });
 
         // 상품 상세페이지 처리 - shop 뷰로 처리
         if (productId) {
@@ -66,12 +70,25 @@ export default function MainApp() {
             setBreweryProducts([]);
           }
         } else if (view && ['home', 'about', 'brewery', 'shop', 'community', 'login'].includes(view)) {
+          // 일반 뷰 처리
           setCurrentView(view);
           // 뷰가 변경되면 선택된 양조장 초기화
           setSelectedBrewery(null);
           setBreweryProducts([]);
+
+          // 검색 파라미터가 있는 경우 로그 출력 (실제 검색은 각 컴포넌트에서 처리)
+          if (searchKeyword && searchType) {
+            console.log(`${searchType} 검색 요청: "${searchKeyword}"`);
+            if (searchType === 'brewery' && view !== 'brewery') {
+              // 양조장 검색인데 brewery 뷰가 아니면 brewery로 이동
+              setCurrentView('brewery');
+            } else if (searchType === 'product' && view !== 'shop') {
+              // 상품 검색인데 shop 뷰가 아니면 shop으로 이동
+              setCurrentView('shop');
+            }
+          }
         } else {
-          // view 파라미터가 없으면 home으로 설정
+          // view 파라미터가 없거나 유효하지 않으면 home으로 설정
           setCurrentView('home');
           setSelectedBrewery(null);
           setBreweryProducts([]);
@@ -113,6 +130,8 @@ export default function MainApp() {
     url.searchParams.delete('view');
     url.searchParams.delete('brewery');
     url.searchParams.delete('product');
+    url.searchParams.delete('search');
+    url.searchParams.delete('searchType');
     
     // 새로운 파라미터 설정
     if (view !== 'home') {

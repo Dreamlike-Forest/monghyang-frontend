@@ -38,7 +38,7 @@
   counter-reset: brewery-nav-counter;
 }
 
-/* 각 네비게이션 아이템 */
+/* 각 네비게이션 아이템 - transition 제거 */
 .brewery-nav-item {
   display: flex;
   align-items: center;
@@ -52,14 +52,14 @@
   font-size: 15px;
   font-weight: 500;
   color: #374151;
-  transition: all 0.3s ease;
+  /* transition 완전 제거 */
   margin-bottom: 8px;
   text-align: left;
   position: relative;
   border-left: 3px solid transparent;
 }
 
-/* 네비게이션 아이템 호버 효과 */
+/* 네비게이션 아이템 호버 효과 - transition 제거 */
 .brewery-nav-item:hover {
   background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f4 100%);
   color: #8b5a3c;
@@ -73,7 +73,7 @@
   background: #f3f4f6;
 }
 
-/* 현재 활성 섹션 스타일 */
+/* 현재 활성 섹션 스타일 - transition 제거 */
 .brewery-nav-item.active {
   background: linear-gradient(135deg, #8b5a3c 0%, #7c4d34 100%);
   color: white;
@@ -85,7 +85,7 @@
   filter: brightness(0) invert(1);
 }
 
-/* 네비게이션 아이콘 */
+/* 네비게이션 아이콘 - transition 제거 */
 .brewery-nav-icon {
   font-size: 18px;
   width: 24px;
@@ -96,7 +96,7 @@
   flex-shrink: 0;
   background: rgba(139, 90, 60, 0.1);
   border-radius: 6px;
-  transition: all 0.3s ease;
+  /* transition 제거 */
 }
 
 .brewery-nav-item:hover .brewery-nav-icon {
@@ -115,7 +115,7 @@
   letter-spacing: -0.01em;
 }
 
-/* 네비게이션 아이템 번호 (호버시 표시) */
+/* 네비게이션 아이템 번호 (호버시 표시) - transition 제거 */
 .brewery-nav-item::before {
   content: counter(brewery-nav-counter);
   counter-increment: brewery-nav-counter;
@@ -134,7 +134,7 @@
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transition: all 0.3s ease;
+  /* transition 제거 */
 }
 
 .brewery-nav-item:hover::before {
