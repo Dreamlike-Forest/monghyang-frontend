@@ -1,6 +1,8 @@
 .popular-programs-section {
-  background: #f7fafc;
+  background: #f7fafc !important;
   padding: 80px 20px;
+  color-scheme: light;
+  -webkit-color-scheme: light;
 }
 
 .popular-programs-container {
@@ -62,7 +64,7 @@
 }
 
 .popular-programs-card {
-  background: white;
+  background: white !important;
   border-radius: 16px;
   padding: 24px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
@@ -71,6 +73,8 @@
   border: 1px solid #e2e8f0;
   position: relative;
   overflow: hidden;
+  color-scheme: light;
+  -webkit-color-scheme: light;
 }
 
 .popular-programs-card::before {
@@ -324,4 +328,38 @@
 .popular-programs-star-empty {
   color: #d1d5db;
   fill: none;
+}
+
+/* 다크 모드 강제 비활성화 */
+@media (prefers-color-scheme: dark) {
+  .popular-programs-section {
+    background: #f7fafc !important;
+    color: #333 !important;
+  }
+  
+  .popular-programs-card {
+    background: white !important;
+    color: #333 !important;
+  }
+  
+  .popular-programs-header-content h2,
+  .popular-programs-title {
+    color: #2d3748 !important;
+  }
+  
+  .popular-programs-header-content p,
+  .popular-programs-description,
+  .popular-programs-rating-score {
+    color: #4a5568 !important;
+  }
+  
+  .popular-programs-location {
+    background: #f3f4f6 !important;
+    color: #8b5a3c !important;
+  }
+  
+  .popular-programs-card:hover .popular-programs-location {
+    background: #8b5a3c !important;
+    color: white !important;
+  }
 }

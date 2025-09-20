@@ -6,6 +6,9 @@
   padding: 80px 20px;
   position: relative;
   overflow: hidden;
+  /* 브라우저 다크모드 강제 방지 */
+  color-scheme: light;
+  -webkit-color-scheme: light;
 }
 
 .hero-section::before {
@@ -52,12 +55,14 @@
   position: relative;
   display: flex;
   align-items: center;
-  background: white;
+  background: white !important;
   border-radius: 50px;
   padding: 8px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   gap: 0;
+  color-scheme: light;
+  -webkit-color-scheme: light;
 }
 
 .hero-search-container:hover {
@@ -78,18 +83,20 @@
   padding: 16px 20px;
   border: none;
   border-radius: 50px;
-  background: #f8f9fa;
-  color: #333;
+  background: #f8f9fa !important;
+  color: #333 !important;
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
   min-width: fit-content;
   white-space: nowrap;
   transition: all 0.2s ease;
+  color-scheme: light;
+  -webkit-color-scheme: light;
 }
 
 .hero-search-type-button:hover {
-  background: #e9ecef;
+  background: #e9ecef !important;
 }
 
 .hero-search-type-button:focus {
@@ -120,13 +127,15 @@
   top: 100%;
   left: 0;
   right: 0;
-  background: white;
+  background: white !important;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   z-index: 10;
   margin-top: 8px;
   overflow: hidden;
   animation: heroDropdownFadeIn 0.2s ease-out;
+  color-scheme: light;
+  -webkit-color-scheme: light;
 }
 
 @keyframes heroDropdownFadeIn {
@@ -144,8 +153,8 @@
   width: 100%;
   padding: 12px 16px;
   border: none;
-  background: white;
-  color: #333;
+  background: white !important;
+  color: #333 !important;
   cursor: pointer;
   font-size: 14px;
   display: flex;
@@ -153,15 +162,17 @@
   gap: 8px;
   transition: all 0.2s ease;
   text-align: left;
+  color-scheme: light;
+  -webkit-color-scheme: light;
 }
 
 .hero-search-type-option:hover {
-  background: #f8f9fa;
+  background: #f8f9fa !important;
 }
 
 .hero-search-type-option.active {
-  background: #f0f9ff;
-  color: #0369a1;
+  background: #f0f9ff !important;
+  color: #0369a1 !important;
 }
 
 .hero-search-type-option-icon {
@@ -177,12 +188,14 @@
   border-radius: 0;
   font-size: 16px;
   outline: none;
-  color: #333;
+  color: #333 !important;
   background: transparent;
+  color-scheme: light;
+  -webkit-color-scheme: light;
 }
 
 .hero-search-input::placeholder {
-  color: #999;
+  color: #999 !important;
 }
 
 .hero-search-button {
@@ -198,7 +211,7 @@
   gap: 8px;
   font-size: 16px;
   font-weight: 600;
-  transition: background-color 0.2s ease, box-shadow 0.2s ease; /* transform 제거 */
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
   box-shadow: 0 2px 8px rgba(139, 90, 60, 0.3);
   min-width: fit-content;
   white-space: nowrap;
@@ -207,12 +220,9 @@
 .hero-search-button:hover {
   background: #7c4d34;
   box-shadow: 0 4px 12px rgba(139, 90, 60, 0.4);
-  /* transform 제거 - 클릭 시 움직임 방지 */
 }
 
-/* 클릭 시 움직임 완전 제거 */
 .hero-search-button:active {
-  /* transform 제거 - 클릭 시 움직임 방지 */
   background: #7c4d34;
   box-shadow: 0 2px 8px rgba(139, 90, 60, 0.3);
 }
@@ -274,7 +284,6 @@
     justify-content: center;
   }
 
-  /* 드롭다운 모바일 대응 */
   .hero-search-type-dropdown {
     position: fixed;
     top: auto;
@@ -346,47 +355,47 @@
   }
 }
 
-/* 다크 모드 지원 (선택사항) */
+/* 다크 모드 강제 비활성화 */
 @media (prefers-color-scheme: dark) {
   .hero-search-container {
-    background: #2d3748;
-    color: #e2e8f0;
+    background: white !important;
+    color: #333 !important;
   }
 
   .hero-search-type-button {
-    background: #4a5568;
-    color: #e2e8f0;
+    background: #f8f9fa !important;
+    color: #333 !important;
   }
 
   .hero-search-type-button:hover {
-    background: #2d3748;
+    background: #e9ecef !important;
   }
 
   .hero-search-type-dropdown {
-    background: #2d3748;
-    border: 1px solid #4a5568;
+    background: white !important;
+    border: 1px solid #e2e8f0 !important;
   }
 
   .hero-search-type-option {
-    background: #2d3748;
-    color: #e2e8f0;
+    background: white !important;
+    color: #333 !important;
   }
 
   .hero-search-type-option:hover {
-    background: #4a5568;
+    background: #f8f9fa !important;
   }
 
   .hero-search-type-option.active {
-    background: #2b6cb0;
-    color: #e2e8f0;
+    background: #f0f9ff !important;
+    color: #0369a1 !important;
   }
 
   .hero-search-input {
     background: transparent;
-    color: #e2e8f0;
+    color: #333 !important;
   }
 
   .hero-search-input::placeholder {
-    color: #a0aec0;
+    color: #999 !important;
   }
 }
