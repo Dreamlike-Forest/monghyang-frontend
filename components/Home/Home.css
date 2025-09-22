@@ -1,8 +1,11 @@
-/* Home.css - 메인 컨테이너 스타일 */
+/* 메인 컨테이너 스타일 */
 .home-container {
   background: linear-gradient(135deg, #faf8f5 0%, #f3f1ee 50%, #ebe8e4 100%);
   min-height: 100vh;
   padding-bottom: 40px;
+  /* 브라우저 다크모드 강제 방지 */
+  color-scheme: light;
+  -webkit-color-scheme: light;
 }
 
 /* 공통 애니메이션 */
@@ -95,13 +98,14 @@
   }
 }
 
-/* 다크 모드 지원 (선택사항) */
+/* 다크 모드 강제 비활성화 */
 @media (prefers-color-scheme: dark) {
   .home-container {
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #404040 100%);
+    background: linear-gradient(135deg, #faf8f5 0%, #f3f1ee 50%, #ebe8e4 100%) !important;
+    color: #333 !important;
   }
   
   .home-loading-text {
-    color: #e2e8f0;
+    color: #666 !important;
   }
 }

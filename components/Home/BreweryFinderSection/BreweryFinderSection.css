@@ -1,7 +1,9 @@
 .brewery-finder-section {
-  background: white;
+  background: white !important;
   padding: 80px 20px;
   border-top: 1px solid #e2e8f0;
+  color-scheme: light;
+  -webkit-color-scheme: light;
 }
 
 .brewery-finder-container {
@@ -28,11 +30,13 @@
 }
 
 .brewery-finder-form {
-  background: #f7fafc;
+  background: #f7fafc !important;
   border-radius: 16px;
   padding: 32px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   border: 1px solid #e2e8f0;
+  color-scheme: light;
+  -webkit-color-scheme: light;
 }
 
 .brewery-finder-form-grid {
@@ -59,7 +63,8 @@
   border: 1px solid #d1d5db;
   border-radius: 8px;
   font-size: 16px;
-  background: white;
+  background: white !important;
+  color: #333 !important;
   cursor: pointer;
   outline: none;
   transition: all 0.2s ease;
@@ -69,6 +74,8 @@
   background-repeat: no-repeat;
   background-size: 16px;
   padding-right: 40px;
+  color-scheme: light;
+  -webkit-color-scheme: light;
 }
 
 .brewery-finder-form-select:focus {
@@ -279,4 +286,32 @@
 @keyframes breweryFinderSpin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* 다크 모드 강제 비활성화 */
+@media (prefers-color-scheme: dark) {
+  .brewery-finder-section {
+    background: white !important;
+    color: #333 !important;
+  }
+  
+  .brewery-finder-form {
+    background: #f7fafc !important;
+    color: #333 !important;
+  }
+  
+  .brewery-finder-form-select {
+    background: white !important;
+    color: #333 !important;
+  }
+  
+  .brewery-finder-title {
+    color: #2d3748 !important;
+  }
+  
+  .brewery-finder-subtitle,
+  .brewery-finder-form-label,
+  .brewery-finder-checkbox-label {
+    color: #4a5568 !important;
+  }
 }

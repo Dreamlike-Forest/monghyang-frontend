@@ -1,7 +1,8 @@
-/* FeaturesSection.css */
 .features-section {
   padding: 80px 20px;
   background: transparent;
+  color-scheme: light;
+  -webkit-color-scheme: light;
 }
 
 .features-container {
@@ -36,7 +37,7 @@
 }
 
 .features-card {
-  background: white;
+  background: white !important;
   border-radius: 20px;
   padding: 40px 30px;
   text-align: center;
@@ -46,6 +47,8 @@
   cursor: pointer;
   position: relative;
   overflow: hidden;
+  color-scheme: light;
+  -webkit-color-scheme: light;
 }
 
 .features-card::before {
@@ -227,4 +230,22 @@
 .features-card:focus-visible {
   outline: 2px solid #8b5a3c;
   outline-offset: 2px;
+}
+
+/* 다크 모드 강제 비활성화 */
+@media (prefers-color-scheme: dark) {
+  .features-card {
+    background: white !important;
+    color: #333 !important;
+  }
+  
+  .features-title,
+  .features-title-card {
+    color: #2d3748 !important;
+  }
+  
+  .features-subtitle,
+  .features-description {
+    color: #4a5568 !important;
+  }
 }
