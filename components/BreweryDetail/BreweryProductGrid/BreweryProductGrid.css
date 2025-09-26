@@ -239,11 +239,46 @@
   opacity: 0.8;
 }
 
+/* 토스트 메시지 스타일 - 양조장 상품 그리드용 */
+.brewery-toast-message {
+  position: fixed;
+  top: 100px;
+  right: 20px;
+  background-color: #8b5a3c;
+  color: white;
+  padding: 16px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 9999;
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.brewery-toast-message.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.brewery-toast-message.hide {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
 /* 태블릿 반응형 - 2열로 변경 */
 @media (max-width: 1024px) {
   .products-grid {
     grid-template-columns: repeat(2, 1fr); 
     gap: 16px;
+  }
+
+  .brewery-toast-message {
+    right: 16px;
+    padding: 14px 20px;
+    font-size: 13px;
   }
 }
 
@@ -272,6 +307,17 @@
   
   .current-price {
     font-size: 15px;
+  }
+
+  .brewery-toast-message {
+    right: 12px;
+    left: 12px;
+    width: calc(100% - 24px);
+    max-width: 300px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 12px 16px;
+    font-size: 12px;
   }
 }
 
@@ -312,6 +358,10 @@
   .product-image-placeholder::before {
     animation: none;
   }
+
+  .brewery-toast-message {
+    transition: none;
+  }
 }
 
 /* 포커스 스타일 */
@@ -333,5 +383,9 @@
   
   .add-to-cart-btn {
     border: 2px solid #8b5a3c;
+  }
+
+  .brewery-toast-message {
+    border: 2px solid white;
   }
 }

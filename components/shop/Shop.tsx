@@ -204,7 +204,7 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
     setCurrentPage(page);
   };
 
-  // 상품 클릭 핸들러 - 상품 상세페이지 열기
+  // 상품 클릭 핸들러 - 상품 상세페이지 열기 + 스크롤 맨 위로 이동
   const handleProductClick = (productId: number) => {
     console.log('상품 클릭:', productId);
     
@@ -226,6 +226,13 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
     setSelectedProductBrewery(brewery || null);
     setIsProductDetailOpen(true);
 
+    // **중요: 스크롤을 맨 위로 이동**
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'smooth'
+    });
+
     // URL 업데이트 (브라우저 히스토리에 추가)
     updateURLForProductDetail(productId);
   };
@@ -239,7 +246,7 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
     window.history.pushState({ productDetail: true }, '', url.toString());
   };
 
-  // 상품 상세페이지 닫기 - URL 정리 개선 (수정된 부분)
+  // 상품 상세페이지 닫기 - URL 정리 개선 + 스크롤 복원
   const handleCloseProductDetail = () => {
     console.log('상품 상세페이지 닫기');
     
@@ -256,6 +263,13 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
     
     // replaceState로 히스토리 문제 방지
     window.history.replaceState({}, '', newUrl.toString());
+
+    // **상품 목록으로 돌아갈 때도 스크롤 맨 위로 이동**
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'smooth'
+    });
   };
 
   // 브라우저 뒤로가기 감지
@@ -269,6 +283,13 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
         setIsProductDetailOpen(false);
         setSelectedProduct(null);
         setSelectedProductBrewery(null);
+        
+        // 뒤로가기 시에도 스크롤 맨 위로 이동
+        window.scrollTo({
+          top: 0,
+          left: 0,
+          behavior: 'smooth'
+        });
       }
     };
 

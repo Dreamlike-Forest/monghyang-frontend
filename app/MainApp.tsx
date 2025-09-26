@@ -7,15 +7,13 @@ import BreweryDetail from '../components/BreweryDetail/BreweryDetail';
 import About from '../components/About/About'; 
 import Home from '../components/Home/Home';
 import Community from '../components/community/Community';
-import Header from '../components/Header/Header';
-import Nav from '../components/Nav/Nav';
-import Footer from '../components/Footer/Footer';
+import Cart from '../components/Cart/Cart'; 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Brewery as BreweryType, ProductWithDetails } from '../types/mockData';
 import { getBreweriesWithExperience, getProductsWithBrewery } from '../data/mockData';
 
-type View = 'home' | 'about' | 'brewery' | 'shop' | 'community' | 'login' | 'brewery-detail' | 'product-detail';
+type View = 'home' | 'about' | 'brewery' | 'shop' | 'community' | 'login' | 'brewery-detail' | 'product-detail' | 'cart';
 
 export default function MainApp() {
   const searchParams = useSearchParams();
@@ -69,8 +67,8 @@ export default function MainApp() {
             setSelectedBrewery(null);
             setBreweryProducts([]);
           }
-        } else if (view && ['home', 'about', 'brewery', 'shop', 'community', 'login'].includes(view)) {
-          // 일반 뷰 처리
+        } else if (view && ['home', 'about', 'brewery', 'shop', 'community', 'login', 'cart'].includes(view)) { // 수정: cart 추가
+          // 일반 뷰 처리 - cart 추가
           setCurrentView(view);
           // 뷰가 변경되면 선택된 양조장 초기화
           setSelectedBrewery(null);
@@ -200,6 +198,9 @@ export default function MainApp() {
 
       case 'login':
         return <Login />;
+
+      case 'cart': // 추가: Cart 컴포넌트 렌더링
+        return <Cart />;
 
       case 'brewery-detail':
         if (selectedBrewery) {
