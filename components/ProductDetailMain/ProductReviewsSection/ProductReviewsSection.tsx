@@ -4,8 +4,7 @@ import React, { useState, useEffect } from 'react';
 import PostDetail from '../../community/PostDetail/PostDetail';
 import ProductReviewModal from '../ProductReviewModal/ProductReviewModal';
 import { WritePostData, Post, PostImage } from '../../../types/community'; 
-
-// 커뮤니티 CSS 파일들 import - 경로 확인 필요
+import { checkAuthAndPrompt } from '../../../utils/authUtils'; 
 import '../../community/PostCard/PostCard.css';
 import './ProductReviewsSection.css';
 
@@ -93,7 +92,27 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
     return content.slice(0, maxLength) + '...';
   };
 
+  // 리뷰 클릭 핸들러 - 로그인 확인 추가
   const handleReviewClick = (review: Post) => {
+    console.log('상품 리뷰 읽기 클릭 - 로그인 상태 확인');
+    
+    // 로그인 확인 및 유도
+    const canProceed = checkAuthAndPrompt(
+      '리뷰 읽기 기능',
+      () => {
+        console.log('리뷰 읽기 기능 - 로그인 페이지로 이동');
+      },
+      () => {
+        console.log('상품 리뷰 읽기 취소됨');
+      }
+    );
+
+    if (!canProceed) {
+      return; // 로그인하지 않았거나 사용자가 취소한 경우
+    }
+
+    // 로그인된 사용자만 여기에 도달
+    console.log('상품 리뷰 읽기 진행:', review.title);
     setSelectedReview(review);
   };
 
@@ -133,8 +152,27 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
     updateCommunityReview(postId, { comment_count: localReviews.find(r => r.post_id === postId)!.comment_count + 1 });
   };
 
+  // 리뷰 작성 핸들러 - 로그인 확인 추가
   const handleWriteReview = () => {
-    console.log('리뷰 작성 버튼 클릭됨:', { productName, productId });
+    console.log('상품 리뷰 작성 버튼 클릭 - 로그인 상태 확인');
+    
+    // 로그인 확인 및 유도
+    const canProceed = checkAuthAndPrompt(
+      '리뷰 작성 기능',
+      () => {
+        console.log('리뷰 작성 기능 - 로그인 페이지로 이동');
+      },
+      () => {
+        console.log('상품 리뷰 작성 취소됨');
+      }
+    );
+
+    if (!canProceed) {
+      return; // 로그인하지 않았거나 사용자가 취소한 경우
+    }
+
+    // 로그인된 사용자만 여기에 도달
+    console.log('상품 리뷰 작성 진행:', { productName, productId });
     setIsReviewModalOpen(true);
   };
 
@@ -183,12 +221,13 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
 
         {/* 빈 상태 */}
         <div className="product-reviews-empty">
-          <div className="product-empty-icon">🶁</div>
+          <div className="product-empty-icon">🍶</div>
           <h3 className="product-empty-title">술 리뷰가 존재하지 않습니다</h3>
           <p className="product-empty-description">
             아직 이 상품에 대한 리뷰가 없습니다.<br />
             첫 번째 리뷰를 작성해보세요!
           </p>
+          {/* 리뷰 작성 버튼 - 로그인 확인 포함 */}
           <button 
             className="product-write-review-btn" 
             onClick={handleWriteReview}
@@ -305,7 +344,7 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
                 </div>
               ) : (
                 <div className="post-thumbnail-placeholder">
-                  <div className="thumbnail-icon">🶁</div>
+                  <div className="thumbnail-icon">🍶</div>
                   <div className="thumbnail-text">리뷰</div>
                 </div>
               )}
@@ -345,7 +384,7 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
               {/* 추가 정보 */}
               {review.product_name && (
                 <div className="post-extra-info">
-                  <span>🶁 {review.product_name}</span>
+                  <span>🍶 {review.product_name}</span>
                 </div>
               )}
 
@@ -430,6 +469,7 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
 
       {/* 하단 리뷰 작성 버튼 - "더 많은 리뷰 보기" 버튼 제거됨 */}
       <div className="product-reviews-actions">
+        {/* 리뷰 작성 버튼 - 로그인 확인 포함 */}
         <button 
           className="product-write-review-bottom-btn" 
           onClick={handleWriteReview}
