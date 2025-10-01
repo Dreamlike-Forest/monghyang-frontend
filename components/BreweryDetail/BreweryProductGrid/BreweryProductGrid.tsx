@@ -2,6 +2,8 @@
 
 import React, { useState, useCallback } from 'react';
 import { ProductWithDetails } from '../../../types/mockData';
+import { addToCart } from '../../Cart/CartStore';
+import { checkAuthAndPrompt } from '../../../utils/authUtils'; 
 import './BreweryProductGrid.css';
 
 interface BreweryProductGridProps {
@@ -19,25 +21,86 @@ const BreweryProductGrid: React.FC<BreweryProductGridProps> = ({
 }) => {
   const [imageLoadStates, setImageLoadStates] = useState<Record<number, 'loading' | 'loaded' | 'error'>>({});
 
-  // 장바구니 추가 핸들러
+  // 토스트 메시지 표시 함수 - CSS 클래스 사용
+  const showToastMessage = (message: string) => {
+    const toast = document.createElement('div');
+    toast.textContent = message;
+    toast.className = 'brewery-toast-message';
+
+    document.body.appendChild(toast);
+    
+    // 애니메이션 트리거
+    setTimeout(() => {
+      toast.classList.add('show');
+    }, 10);
+
+    // 3초 후 제거
+    setTimeout(() => {
+      toast.classList.remove('show');
+      toast.classList.add('hide');
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  };
+
+  // 장바구니 추가 핸들러 - 로그인 확인 추가
   const handleAddToCart = useCallback((e: React.MouseEvent, productId: number) => {
     e.stopPropagation();
     e.preventDefault();
     
-    if (onAddToCart) {
-      onAddToCart(productId);
-    } else {
-      console.log('장바구니 추가:', productId);
+    console.log('양조장 상품 장바구니 담기 버튼 클릭 - 로그인 상태 확인');
+    
+    // 상품 정보 찾기
+    const product = products.find(p => p.product_id === productId);
+    if (!product) {
+      console.error('상품을 찾을 수 없습니다:', productId);
+      alert('상품 정보를 찾을 수 없습니다.');
+      return;
     }
-  }, [onAddToCart]);
 
-  // 상품 클릭 핸들러 - 상품 상세페이지로 직접 이동
+    // 로그인 확인 및 유도
+    const canProceed = checkAuthAndPrompt(
+      '장바구니 기능',
+      () => {
+        console.log('장바구니 기능 - 로그인 페이지로 이동');
+      },
+      () => {
+        console.log('양조장 상품 장바구니 담기 취소됨');
+      }
+    );
+
+    if (!canProceed) {
+      return; // 로그인하지 않았거나 사용자가 취소한 경우
+    }
+
+    // 로그인된 사용자만 여기에 도달
+    try {
+      // CartStore에서 직접 장바구니에 추가
+      const success = addToCart(product);
+      
+      if (success) {
+        // 성공 메시지 표시
+        showToastMessage(`${product.name}이(가) 장바구니에 추가되었습니다.`);
+        
+        // 기존 콜백도 호출 (있다면)
+        if (onAddToCart) {
+          onAddToCart(productId);
+        }
+      } else {
+        // 실패 시 알림 (최대 수량 초과 등)
+        alert('더 이상 담을 수 없습니다. 장바구니를 확인해주세요.');
+      }
+    } catch (error) {
+      console.error('장바구니 추가 중 오류:', error);
+      alert('장바구니에 담는 중 오류가 발생했습니다.');
+    }
+  }, [products, onAddToCart]);
+
+  // 상품 클릭 핸들러
   const handleProductClick = useCallback((productId: number) => {
     if (onProductClick) {
       onProductClick(productId);
     } else {
       console.log('상품 상세페이지로 이동:', productId);
-      // 상품 상세페이지로 직접 이동하는 로직
       navigateToProductDetail(productId);
     }
   }, [onProductClick]);
@@ -46,15 +109,12 @@ const BreweryProductGrid: React.FC<BreweryProductGridProps> = ({
   const navigateToProductDetail = (productId: number) => {
     const currentURL = new URL(window.location.href);
     
-    // 기존 파라미터 정리
     currentURL.searchParams.delete('brewery');
     currentURL.searchParams.delete('view');
     
-    // 상품 상세페이지 파라미터 설정
     currentURL.searchParams.set('view', 'shop');
     currentURL.searchParams.set('product', productId.toString());
     
-    // URL 업데이트 및 페이지 이동
     window.history.pushState({}, '', currentURL.toString());
     window.location.reload();
   };
@@ -184,6 +244,7 @@ const BreweryProductGrid: React.FC<BreweryProductGridProps> = ({
                     </span>
                   </div>
                   
+                  {/* 장바구니 담기 버튼 - 로그인 확인 포함 */}
                   <button 
                     className="add-to-cart-btn"
                     onClick={(e) => handleAddToCart(e, product.product_id)}

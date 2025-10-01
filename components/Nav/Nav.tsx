@@ -83,6 +83,7 @@ const Nav: React.FC = () => {
     }
   };
 
+  // navItems 배열에 cart는 포함하지 않음 (Header에서만 접근)
   const navItems = [
     {
       id: 'about',

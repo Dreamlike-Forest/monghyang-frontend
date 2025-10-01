@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from 'react';
 import { Brewery } from '../../../types/mockData';
 import ExperienceReservation from '../../ExperienceReservation/ExperienceReservation';
+import { checkAuthAndPrompt } from '../../../utils/authUtils'; // 로그인 확인 유틸 추가
 import './BreweryExperiencePrograms.css';
 
 interface BreweryExperienceProgramsProps {
@@ -74,7 +75,27 @@ const BreweryExperiencePrograms: React.FC<BreweryExperienceProgramsProps> = ({
     }));
   }, []);
 
+  // 체험 예약 핸들러 - 로그인 확인 추가
   const handleReservation = (experienceId: number) => {
+    console.log('체험 예약 버튼 클릭 - 로그인 상태 확인');
+    
+    // 로그인 확인 및 유도
+    const canProceed = checkAuthAndPrompt(
+      '체험 예약 기능',
+      () => {
+        console.log('체험 예약 기능 - 로그인 페이지로 이동');
+      },
+      () => {
+        console.log('체험 예약 취소됨');
+      }
+    );
+
+    if (!canProceed) {
+      return; // 로그인하지 않았거나 사용자가 취소한 경우
+    }
+
+    // 로그인된 사용자만 여기에 도달
+    console.log('체험 예약 진행:', experienceId);
     setSelectedExperienceId(experienceId);
     setShowReservation(true);
     
@@ -166,6 +187,7 @@ const BreweryExperiencePrograms: React.FC<BreweryExperienceProgramsProps> = ({
                       {program.detail}
                     </p>
                     
+                    {/* 예약하기 버튼 - 로그인 확인 포함 */}
                     <button 
                       className="brewery-experience-reserve-btn"
                       onClick={() => handleReservation(program.joy_id)}

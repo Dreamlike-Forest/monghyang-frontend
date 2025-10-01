@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { ProductWithDetails } from '../../../types/mockData';
+import { addToCart } from '../../Cart/CartStore'; // CartStore에서 직접 import
+import { checkAuthAndPrompt } from '../../../utils/authUtils'; // 인증 유틸리티 import
 import './ProductOverviewSection.css';
 
 interface ProductOverviewSectionProps {
@@ -15,6 +17,41 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [imageLoadErrors, setImageLoadErrors] = useState<Set<number>>(new Set());
+
+  // 토스트 메시지 표시 함수
+  const showToastMessage = (message: string) => {
+    const toast = document.createElement('div');
+    toast.textContent = message;
+    toast.style.position = 'fixed';
+    toast.style.top = '100px';
+    toast.style.right = '20px';
+    toast.style.backgroundColor = '#8b5a3c';
+    toast.style.color = 'white';
+    toast.style.padding = '16px 24px';
+    toast.style.borderRadius = '8px';
+    toast.style.fontSize = '14px';
+    toast.style.fontWeight = '600';
+    toast.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.2)';
+    toast.style.zIndex = '9999';
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(-20px)';
+    toast.style.transition = 'all 0.3s ease';
+
+    document.body.appendChild(toast);
+    
+    // 애니메이션 트리거
+    setTimeout(() => {
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateY(0)';
+    }, 10);
+
+    // 3초 후 제거
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(-20px)';
+      setTimeout(() => document.body.removeChild(toast), 300);
+    }, 3000);
+  };
 
   // 이미지 URL 유효성 검사 함수
   const isValidImageUrl = (url: string): boolean => {
@@ -164,7 +201,7 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
     return price.toLocaleString();
   };
 
-  // 할인률 계산
+  // 할인율 계산
   const getDiscountRate = (): number => {
     if (product.originalPrice && product.minPrice < product.originalPrice) {
       return Math.round(((product.originalPrice - product.minPrice) / product.originalPrice) * 100);
@@ -172,18 +209,69 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
     return product.discountRate || 0;
   };
 
-  // 장바구니 추가 함수
+  // 장바구니 추가 함수 - 로그인 확인 추가
   const handleAddToCart = () => {
-    console.log('장바구니에 추가:', product.name);
-    // 여기에 장바구니 추가 로직 구현
-    alert(`${product.name}이(가) 장바구니에 추가되었습니다.`);
+    console.log('상품 상세페이지 장바구니 담기 버튼 클릭 - 로그인 상태 확인');
+    
+    // 로그인 확인 및 유도
+    const canProceed = checkAuthAndPrompt(
+      '장바구니 기능',
+      () => {
+        console.log('장바구니 기능 - 로그인 페이지로 이동');
+      },
+      () => {
+        console.log('상품 상세페이지 장바구니 담기 취소됨');
+      }
+    );
+
+    if (!canProceed) {
+      return; // 로그인하지 않았거나 사용자가 취소한 경우
+    }
+
+    // 로그인된 사용자만 여기에 도달
+    try {
+      const success = addToCart(product);
+      
+      if (success) {
+        showToastMessage(`${product.name}이(가) 장바구니에 추가되었습니다.`);
+        console.log('상품 상세페이지에서 장바구니에 추가 완료:', product.name);
+      } else {
+        alert('더 이상 담을 수 없습니다. 장바구니를 확인해주세요.');
+      }
+    } catch (error) {
+      console.error('장바구니 추가 중 오류:', error);
+      alert('장바구니에 담는 중 오류가 발생했습니다.');
+    }
   };
 
-  // 구매하기 함수
+  // 구매하기 함수 - 로그인 확인 추가
   const handleBuyNow = () => {
-    console.log('즉시 구매:', product.name);
-    // 여기에 즉시 구매 로직 구현
-    alert(`${product.name} 구매 페이지는 준비중입니다.`);
+    console.log('상품 상세페이지 구매하기 버튼 클릭 - 로그인 상태 확인');
+    
+    // 로그인 확인 및 유도
+    const canProceed = checkAuthAndPrompt(
+      '구매 기능',
+      () => {
+        console.log('구매 기능 - 로그인 페이지로 이동');
+      },
+      () => {
+        console.log('상품 상세페이지 구매하기 취소됨');
+      }
+    );
+
+    if (!canProceed) {
+      return; // 로그인하지 않았거나 사용자가 취소한 경우
+    }
+
+    // 로그인된 사용자만 여기에 도달
+    try {
+      console.log('즉시 구매:', product.name);
+      // 여기에 즉시 구매 로직 구현
+      alert(`${product.name} 구매 페이지는 준비중입니다.`);
+    } catch (error) {
+      console.error('구매 처리 중 오류:', error);
+      alert('구매 처리 중 오류가 발생했습니다.');
+    }
   };
 
   const discountRate = getDiscountRate();
@@ -206,24 +294,9 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
                   <img 
                     src={productImages[currentImageIndex]} 
                     alt={`${product.name} 상품 이미지 ${currentImageIndex + 1}`}
-                    className="productdetail-product-main-image"
+                    className="productdetail-product-main-image-absolute"
                     onError={() => handleImageError(currentImageIndex)}
                     loading="lazy"
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      objectPosition: 'center',
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      margin: 0,
-                      padding: 0,
-                      border: 'none',
-                      outline: 'none'
-                    }}
                   />
                 ) : (
                   <div className="productdetail-product-image-placeholder">
@@ -273,7 +346,7 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
             )}
           </div>
           
-          {/* 썸네일 이미지들 */}
+          {/* 인네일 이미지들 */}
           {hasMultipleImages && validImageCount > 1 && (
             <div className="productdetail-product-thumbnails">
               {productImages.map((image, index) => (
@@ -289,11 +362,11 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
                   {!imageLoadErrors.has(index) ? (
                     <img 
                       src={image} 
-                      alt={`${product.name} 썸네일 ${index + 1}`}
+                      alt={`${product.name} 인네일 ${index + 1}`}
                       onError={() => handleImageError(index)}
                     />
                   ) : (
-                    <div className="productdetail-thumbnail-error">❌</div>
+                    <div className="productdetail-thumbnail-error">⌘</div>
                   )}
                 </button>
               ))}
@@ -419,7 +492,7 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
             )}
           </div>
 
-          {/* 장바구니 & 구매하기 버튼 */}
+          {/* 장바구니 & 구매하기 버튼 - 로그인 확인 포함 */}
           <div className="productdetail-add-to-cart-section">
             <div className="productdetail-product-action-buttons">
               <button className="productdetail-add-to-cart-button" onClick={handleAddToCart}>

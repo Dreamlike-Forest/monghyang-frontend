@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import PostDetail from '../../community/PostDetail/PostDetail';
 import BreweryReviewModal from '../BreweryReviewModal/BreweryReviewModal';
 import { WritePostData, Post, PostImage } from '../../../types/community'; 
+import { checkAuthAndPrompt } from '../../../utils/authUtils'; 
 
 // 커뮤니티 CSS 파일들 import
 import '../../community/PostCard/PostCard.css';
@@ -171,7 +172,27 @@ const BreweryReviewsSection: React.FC<BreweryReviewsSectionProps> = ({
     return content.slice(0, maxLength) + '...';
   };
 
+  // 리뷰 클릭 핸들러 - 로그인 확인 추가
   const handleReviewClick = (review: Post) => {
+    console.log('양조장 리뷰 읽기 클릭 - 로그인 상태 확인');
+    
+    // 로그인 확인 및 유도
+    const canProceed = checkAuthAndPrompt(
+      '리뷰 읽기 기능',
+      () => {
+        console.log('리뷰 읽기 기능 - 로그인 페이지로 이동');
+      },
+      () => {
+        console.log('양조장 리뷰 읽기 취소됨');
+      }
+    );
+
+    if (!canProceed) {
+      return; // 로그인하지 않았거나 사용자가 취소한 경우
+    }
+
+    // 로그인된 사용자만 여기에 도달
+    console.log('양조장 리뷰 읽기 진행:', review.title);
     setSelectedReview(review);
   };
 
@@ -205,8 +226,27 @@ const BreweryReviewsSection: React.FC<BreweryReviewsSectionProps> = ({
     );
   };
 
+  // 리뷰 작성 핸들러 - 로그인 확인 추가
   const handleWriteReview = () => {
-    console.log('리뷰 작성 버튼 클릭됨:', { breweryName, breweryId });
+    console.log('양조장 리뷰 작성 버튼 클릭 - 로그인 상태 확인');
+    
+    // 로그인 확인 및 유도
+    const canProceed = checkAuthAndPrompt(
+      '리뷰 작성 기능',
+      () => {
+        console.log('리뷰 작성 기능 - 로그인 페이지로 이동');
+      },
+      () => {
+        console.log('양조장 리뷰 작성 취소됨');
+      }
+    );
+
+    if (!canProceed) {
+      return; // 로그인하지 않았거나 사용자가 취소한 경우
+    }
+
+    // 로그인된 사용자만 여기에 도달
+    console.log('양조장 리뷰 작성 진행:', { breweryName, breweryId });
     setIsReviewModalOpen(true);
   };
 
@@ -281,6 +321,7 @@ const BreweryReviewsSection: React.FC<BreweryReviewsSectionProps> = ({
             아직 이 양조장에 대한 체험 리뷰가 없습니다.<br />
             첫 번째 리뷰를 작성해보세요!
           </p>
+          {/* 리뷰 작성 버튼 - 로그인 확인 포함 */}
           <button 
             className="brewery-write-review-btn" 
             onClick={handleWriteReview}
@@ -522,6 +563,7 @@ const BreweryReviewsSection: React.FC<BreweryReviewsSectionProps> = ({
 
       {/* 하단 리뷰 작성 버튼 - "더 많은 리뷰 보기" 버튼 제거됨 */}
       <div className="brewery-reviews-actions">
+        {/* 리뷰 작성 버튼 - 로그인 확인 포함 */}
         <button 
           className="brewery-write-review-bottom-btn" 
           onClick={handleWriteReview}

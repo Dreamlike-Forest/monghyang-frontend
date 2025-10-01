@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { getCartItemCount, subscribeToCart } from '../Cart/CartStore';
+import { checkAuthAndPrompt, isLoggedIn } from '../../utils/authUtils'; 
 import './Header.css';
 
 interface Language {
@@ -20,10 +22,42 @@ const languages: Language[] = [
   { code: 'en', name: 'English', flag: '🇺🇸' }
 ];
 
+// 장바구니 아이콘 컴포넌트 - 로그인 확인 추가
+const CartIcon: React.FC<{ onClick: () => void }> = ({ onClick }) => {
+  const [cartItemCount, setCartItemCount] = useState(0);
+
+  useEffect(() => {
+    // 초기 장바구니 아이템 수 가져오기
+    setCartItemCount(getCartItemCount());
+
+    // 장바구니 변경사항 구독
+    const unsubscribe = subscribeToCart(() => {
+      const newCount = getCartItemCount();
+      console.log('Header: 장바구니 아이템 수 업데이트:', newCount);
+      setCartItemCount(newCount);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  return (
+    <button className="header-button cart-button" onClick={onClick}>
+      <div className="header-cart-icon-container">
+        🛒 장바구니
+        {cartItemCount > 0 && (
+          <span className="cart-badge">
+            {cartItemCount > 99 ? '99+' : cartItemCount}
+          </span>
+        )}
+      </div>
+    </button>
+  );
+};
+
 const Header: React.FC = () => {
   const [currentLanguage, setCurrentLanguage] = useState<Language>(languages[0]);
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false); // 로그인 상태명 변경으로 충돌 방지
   const [user, setUser] = useState<User | null>(null);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   
@@ -40,8 +74,11 @@ const Header: React.FC = () => {
           
           if (isAuthenticated && userData) {
             const parsedUserData = JSON.parse(userData);
-            setIsLoggedIn(true);
+            setIsUserLoggedIn(true);
             setUser(parsedUserData);
+          } else {
+            setIsUserLoggedIn(false);
+            setUser(null);
           }
         } catch (error) {
           console.error('사용자 데이터 파싱 오류:', error);
@@ -49,6 +86,8 @@ const Header: React.FC = () => {
             localStorage.removeItem('isLoggedIn');
             localStorage.removeItem('userData');
           }
+          setIsUserLoggedIn(false);
+          setUser(null);
         }
       }
     };
@@ -145,8 +184,26 @@ const Header: React.FC = () => {
     }
   };
 
-  // 장바구니 핸들러 - URL 완전 초기화
+  // 장바구니 핸들러 - 로그인 확인 추가
   const handleCart = () => {
+    console.log('장바구니 버튼 클릭 - 로그인 상태 확인');
+    
+    // 로그인 확인 및 유도
+    const canProceed = checkAuthAndPrompt(
+      '장바구니 기능',
+      () => {
+        console.log('로그인 페이지로 이동');
+      },
+      () => {
+        console.log('장바구니 접근 취소됨');
+      }
+    );
+
+    if (!canProceed) {
+      return; // 로그인하지 않았거나 사용자가 취소한 경우
+    }
+
+    // 로그인된 사용자만 여기에 도달
     if (typeof window === 'undefined') {
       console.warn('브라우저 환경이 아닙니다.');
       return;
@@ -157,8 +214,8 @@ const Header: React.FC = () => {
       const baseUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
       const newUrl = new URL(baseUrl);
       
-      // shop view 설정
-      newUrl.searchParams.set('view', 'shop');
+      // cart view 설정
+      newUrl.searchParams.set('view', 'cart');
       
       const urlString = newUrl.toString();
       window.location.href = urlString;
@@ -166,9 +223,9 @@ const Header: React.FC = () => {
     } catch (error) {
       console.error('장바구니 페이지 이동 중 오류:', error);
       try {
-        window.location.href = '/?view=shop';
+        window.location.href = '/?view=cart';
       } catch (fallbackError) {
-        console.error('기본 쇼핑 페이지 이동도 실패:', fallbackError);
+        console.error('기본 장바구니 페이지 이동도 실패:', fallbackError);
         window.location.reload();
       }
     }
@@ -191,9 +248,10 @@ const Header: React.FC = () => {
       localStorage.removeItem('isLoggedIn');
       localStorage.removeItem('userData');
       sessionStorage.removeItem('returnToProduct'); // 저장된 상품 정보도 삭제
+      sessionStorage.removeItem('returnUrl'); // 저장된 리턴 URL도 삭제
       
       // 상태 초기화
-      setIsLoggedIn(false);
+      setIsUserLoggedIn(false);
       setUser(null);
       setIsProfileDropdownOpen(false);
       
@@ -264,7 +322,7 @@ const Header: React.FC = () => {
           </div>
 
           {/* 로그인 상태에 따른 UI 분기 */}
-          {isLoggedIn && user ? (
+          {isUserLoggedIn && user ? (
             <>
               {/* 사용자 닉네임 */}
               <div className="user-greeting">
@@ -334,10 +392,8 @@ const Header: React.FC = () => {
             </button>
           )}
 
-          {/* 장바구니 버튼 */}
-          <button className="header-button cart-button" onClick={handleCart}>
-            🛒 장바구니
-          </button>
+          {/* 장바구니 버튼 - 로그인 확인 포함 */}
+          <CartIcon onClick={handleCart} />
         </div>
       </div>
     </header>
