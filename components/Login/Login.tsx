@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import './Login.css';
 import SignupContainer from './SignupContainer/SignupContainer';
+import { login } from '../../utils/authUtils';
 
 const Login: React.FC = () => {
   const [showSignup, setShowSignup] = useState(false);
@@ -11,6 +12,8 @@ const Login: React.FC = () => {
     password: '',
     rememberMe: false
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string>('');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -18,22 +21,62 @@ const Login: React.FC = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+    // 입력 시 에러 메시지 제거
+    if (error) {
+      setError('');
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('로그인 시도:', formData);
-    // 실제 로그인 로직 구현
+    
+    // 유효성 검사
+    if (!formData.email) {
+      setError('이메일을 입력해주세요.');
+      return;
+    }
+    
+    if (!formData.password) {
+      setError('비밀번호를 입력해주세요.');
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      // authUtils의 login 함수 사용
+      const result = await login(formData.email, formData.password);
+      
+      if (result.success) {
+        // 로그인 성공 시 리다이렉트
+        const returnUrl = sessionStorage.getItem('returnUrl');
+        if (returnUrl) {
+          sessionStorage.removeItem('returnUrl');
+          window.location.href = returnUrl;
+        } else {
+          window.location.href = '/';
+        }
+      } else {
+        // 로그인 실패
+        setError(result.message || '로그인에 실패했습니다.');
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.error('로그인 처리 중 오류:', error);
+      setError('로그인 처리 중 오류가 발생했습니다.');
+      setIsLoading(false);
+    }
   };
 
   const handleSocialLogin = (provider: string) => {
     console.log(`${provider} 로그인 시도`);
-    // 소셜 로그인 로직 구현
+    alert(`${provider} 로그인 기능은 준비 중입니다.`);
   };
 
   const handleForgotPassword = () => {
     console.log('비밀번호 찾기');
-    // 비밀번호 찾기 로직 구현
+    alert('비밀번호 찾기 기능은 준비 중입니다.');
   };
 
   const handleSignupClick = () => {
@@ -78,11 +121,28 @@ const Login: React.FC = () => {
             padding: '8px'
           }}
           title="뒤로가기"
+          disabled={isLoading}
         >
           ←
         </button>
         
         <h1 className="login-title">로그인</h1>
+        
+        {/* 에러 메시지 표시 */}
+        {error && (
+          <div style={{
+            padding: '12px 16px',
+            marginBottom: '20px',
+            backgroundColor: '#fef2f2',
+            border: '1px solid #fecaca',
+            borderRadius: '8px',
+            color: '#dc2626',
+            fontSize: '14px',
+            textAlign: 'center'
+          }}>
+            {error}
+          </div>
+        )}
         
         {/* 이메일 입력 */}
         <div className="form-group">
@@ -96,6 +156,7 @@ const Login: React.FC = () => {
             value={formData.email}
             onChange={handleInputChange}
             required
+            disabled={isLoading}
           />
         </div>
 
@@ -111,6 +172,7 @@ const Login: React.FC = () => {
             value={formData.password}
             onChange={handleInputChange}
             required
+            disabled={isLoading}
           />
         </div>
 
@@ -124,6 +186,7 @@ const Login: React.FC = () => {
               className="remember-checkbox"
               checked={formData.rememberMe}
               onChange={handleInputChange}
+              disabled={isLoading}
             />
             <label htmlFor="rememberMe" className="remember-label">
               로그인 상태 유지
@@ -133,15 +196,53 @@ const Login: React.FC = () => {
             type="button"
             className="forgot-password"
             onClick={handleForgotPassword}
+            disabled={isLoading}
           >
             비밀번호 찾기
           </button>
         </div>
 
         {/* 로그인 버튼 */}
-        <button type="submit" className="login-button">
-          로그인
+        <button 
+          type="submit" 
+          className="login-button"
+          disabled={isLoading}
+          style={{
+            opacity: isLoading ? 0.7 : 1,
+            cursor: isLoading ? 'not-allowed' : 'pointer'
+          }}
+        >
+          {isLoading ? (
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              gap: '8px'
+            }}>
+              <div style={{
+                width: '16px',
+                height: '16px',
+                border: '2px solid rgba(255, 255, 255, 0.3)',
+                borderTop: '2px solid white',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite'
+              }}></div>
+              로그인 중...
+            </div>
+          ) : (
+            '로그인'
+          )}
         </button>
+
+        {/* 로딩 애니메이션 CSS */}
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          `
+        }} />
 
         {/* 구분선 */}
         <div className="divider">
@@ -150,16 +251,17 @@ const Login: React.FC = () => {
 
         {/* 소셜 로그인 */}
         <div className="social-login">
-          {/* 구글 로그인 - SVG 아이콘 사용 */}
           <button
             type="button"
             className="social-button google-login"
             onClick={() => handleSocialLogin('google')}
+            disabled={isLoading}
           >
             <img 
               src="/logo/Google_logo.svg" 
               alt="Google"
               className="google-icon"
+              style={{ width: '18px', height: '18px' }}
             />
             Google로 계속하기
           </button>
@@ -167,7 +269,14 @@ const Login: React.FC = () => {
 
         {/* 회원가입 링크 */}
         <div className="signup-link">
-          아직 계정이 없으신가요? <button type="button" onClick={handleSignupClick}>회원가입</button>
+          아직 계정이 없으신가요? 
+          <button 
+            type="button" 
+            onClick={handleSignupClick}
+            disabled={isLoading}
+          >
+            회원가입
+          </button>
         </div>
       </form>
     </div>

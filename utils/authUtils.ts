@@ -4,6 +4,148 @@ export interface User {
   email: string;
 }
 
+// 환경 변수에서 API URL 가져오기 (보안 강화)
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000/api';
+
+// 개발 환경에서 API URL 확인 (프로덕션에서는 제거됨)
+if (process.env.NODE_ENV === 'development') {
+  console.log('🔗 API Base URL:', API_BASE_URL);
+}
+
+// ==================== 로그인 관련 ====================
+
+// 로그인 API 호출
+export const login = async (email: string, password: string): Promise<{
+  success: boolean;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/auth/login?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (response.ok) {
+      // 응답 헤더에서 토큰 추출
+      const sessionId = response.headers.get('X-Session-Id');
+      const refreshToken = response.headers.get('X-Refresh-Token');
+      
+      if (sessionId && refreshToken) {
+        // localStorage에 저장
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('sessionId', sessionId);
+        localStorage.setItem('refreshToken', refreshToken);
+        localStorage.setItem('userData', JSON.stringify({
+          email: email,
+          nickname: email.split('@')[0], // 임시로 이메일 앞부분을 닉네임으로
+        }));
+        
+        return { success: true };
+      } else {
+        return { success: false, message: '인증 토큰을 받지 못했습니다.' };
+      }
+    } else {
+      return { success: false, message: '로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.' };
+    }
+  } catch (error) {
+    console.error('로그인 오류:', error);
+    return { success: false, message: '서버와의 연결에 실패했습니다.' };
+  }
+};
+
+// ==================== 로그아웃 관련 ====================
+
+// 로그아웃 API 호출
+export const logout = async (): Promise<boolean> => {
+  try {
+    if (typeof window === 'undefined') return false;
+
+    const sessionId = localStorage.getItem('sessionId');
+    const refreshToken = localStorage.getItem('refreshToken');
+
+    // 서버에 로그아웃 요청
+    if (sessionId && refreshToken) {
+      try {
+        await fetch(`${API_BASE_URL}/auth/logout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Session-Id': sessionId,
+            'X-Refresh-Token': refreshToken,
+          },
+        });
+      } catch (error) {
+        console.error('로그아웃 API 호출 오류:', error);
+      }
+    }
+
+    // 로컬 스토리지 정리
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('sessionId');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('userData');
+    
+    return true;
+  } catch (error) {
+    console.error('로그아웃 오류:', error);
+    return false;
+  }
+};
+
+// ==================== 토큰 갱신 관련 ====================
+
+// 토큰 갱신 API 호출
+export const refreshAccessToken = async (): Promise<{
+  success: boolean;
+  message?: string;
+}> => {
+  try {
+    if (typeof window === 'undefined') {
+      return { success: false, message: '클라이언트 환경이 아닙니다.' };
+    }
+
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) {
+      return { success: false, message: '리프레시 토큰이 없습니다.' };
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/auth/refresh?X-Refresh-Token=${encodeURIComponent(refreshToken)}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (response.ok) {
+      // 새로운 세션 ID 추출
+      const newSessionId = response.headers.get('X-Session-Id');
+      if (newSessionId) {
+        localStorage.setItem('sessionId', newSessionId);
+        return { success: true };
+      } else {
+        return { success: false, message: '새로운 세션을 받지 못했습니다.' };
+      }
+    } else {
+      // 토큰 갱신 실패 시 로그아웃 처리
+      await logout();
+      return { success: false, message: '세션이 만료되었습니다.' };
+    }
+  } catch (error) {
+    console.error('토큰 갱신 오류:', error);
+    return { success: false, message: '토큰 갱신에 실패했습니다.' };
+  }
+};
+
+// ==================== 인증 상태 확인 ====================
+
 // 로그인 상태 확인
 export const isLoggedIn = (): boolean => {
   if (typeof window === 'undefined') {
@@ -12,8 +154,11 @@ export const isLoggedIn = (): boolean => {
   
   try {
     const isAuthenticated = localStorage.getItem('isLoggedIn') === 'true';
+    const sessionId = localStorage.getItem('sessionId');
+    const refreshToken = localStorage.getItem('refreshToken');
     const userData = localStorage.getItem('userData');
-    return isAuthenticated && !!userData;
+    
+    return isAuthenticated && !!sessionId && !!refreshToken && !!userData;
   } catch (error) {
     console.error('로그인 상태 확인 오류:', error);
     return false;
@@ -37,6 +182,115 @@ export const getCurrentUser = (): User | null => {
     return null;
   }
 };
+
+// 세션 ID 가져오기
+export const getSessionId = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  
+  try {
+    return localStorage.getItem('sessionId');
+  } catch (error) {
+    console.error('세션 ID 조회 오류:', error);
+    return null;
+  }
+};
+
+// 리프레시 토큰 가져오기
+export const getRefreshToken = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  
+  try {
+    return localStorage.getItem('refreshToken');
+  } catch (error) {
+    console.error('리프레시 토큰 조회 오류:', error);
+    return null;
+  }
+};
+
+// ==================== 인증이 필요한 API 요청 ====================
+
+// 인증이 필요한 API 요청을 위한 fetch 래퍼
+export const authenticatedFetch = async (
+  url: string,
+  options: RequestInit = {}
+): Promise<Response> => {
+  const sessionId = getSessionId();
+  
+  if (!sessionId) {
+    throw new Error('로그인이 필요합니다.');
+  }
+
+  // 세션 ID를 헤더에 추가
+  const headers = {
+    ...options.headers,
+    'X-Session-Id': sessionId,
+  };
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    });
+
+    // 401 Unauthorized 응답인 경우 토큰 갱신 시도
+    if (response.status === 401) {
+      const refreshResult = await refreshAccessToken();
+      
+      if (refreshResult.success) {
+        // 새로운 세션 ID로 재시도
+        const newSessionId = getSessionId();
+        const retryHeaders = {
+          ...options.headers,
+          'X-Session-Id': newSessionId!,
+        };
+        
+        return fetch(url, {
+          ...options,
+          headers: retryHeaders,
+        });
+      } else {
+        // 토큰 갱신 실패 시 로그인 페이지로 리다이렉트
+        redirectToLogin();
+        throw new Error('세션이 만료되었습니다. 다시 로그인해주세요.');
+      }
+    }
+
+    return response;
+  } catch (error) {
+    console.error('인증된 요청 오류:', error);
+    throw error;
+  }
+};
+
+// ==================== 네비게이션 관련 ====================
+
+// 로그인 페이지로 리다이렉트
+export const redirectToLogin = (returnUrl?: string): void => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  
+  try {
+    // 현재 페이지 정보 저장 (로그인 후 돌아올 페이지)
+    if (returnUrl) {
+      sessionStorage.setItem('returnUrl', returnUrl);
+    } else {
+      const currentPath = window.location.pathname + window.location.search;
+      sessionStorage.setItem('returnUrl', currentPath);
+    }
+    
+    // 로그인 페이지로 이동
+    const loginUrl = new URL(window.location.pathname, window.location.origin);
+    loginUrl.searchParams.set('view', 'login');
+    
+    window.location.href = loginUrl.toString();
+  } catch (error) {
+    console.error('로그인 페이지 이동 오류:', error);
+    window.location.href = '/?view=login';
+  }
+};
+
+// ==================== 커스텀 확인 다이얼로그 ====================
 
 // 커스텀 확인 다이얼로그 생성
 const showCustomConfirm = (message: string): Promise<boolean> => {
@@ -223,7 +477,6 @@ const showCustomConfirm = (message: string): Promise<boolean> => {
       modal.style.animation = 'modalSlideOut 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53)';
       setTimeout(() => {
         overlay.remove();
-        // 스타일 태그도 정리
         const styleElement = document.getElementById('custom-modal-styles');
         if (styleElement) {
           styleElement.remove();
@@ -261,25 +514,17 @@ const showCustomConfirm = (message: string): Promise<boolean> => {
     modal.appendChild(buttonContainer);
     overlay.appendChild(modal);
 
-    // 개선된 애니메이션 CSS 추가
+    // 애니메이션 CSS 추가
     const style = document.createElement('style');
     style.id = 'custom-modal-styles';
     style.textContent = `
       @keyframes overlayFadeIn {
-        from {
-          opacity: 0;
-        }
-        to {
-          opacity: 1;
-        }
+        from { opacity: 0; }
+        to { opacity: 1; }
       }
       @keyframes overlayFadeOut {
-        from {
-          opacity: 1;
-        }
-        to {
-          opacity: 0;
-        }
+        from { opacity: 1; }
+        to { opacity: 0; }
       }
       @keyframes modalSlideIn {
         0% {
@@ -306,7 +551,6 @@ const showCustomConfirm = (message: string): Promise<boolean> => {
         }
       }
       
-      /* 반응형 스타일 */
       @media (max-width: 480px) {
         #custom-confirm-modal > div {
           padding: 28px 24px !important;
@@ -327,33 +571,9 @@ const showCustomConfirm = (message: string): Promise<boolean> => {
   });
 };
 
-// 로그인 페이지로 리다이렉트
-export const redirectToLogin = (returnUrl?: string): void => {
-  if (typeof window === 'undefined') {
-    return;
-  }
-  
-  try {
-    // 현재 페이지 정보 저장 (로그인 후 돌아올 페이지)
-    if (returnUrl) {
-      sessionStorage.setItem('returnUrl', returnUrl);
-    } else {
-      const currentPath = window.location.pathname + window.location.search;
-      sessionStorage.setItem('returnUrl', currentPath);
-    }
-    
-    // 로그인 페이지로 이동
-    const loginUrl = new URL(window.location.pathname, window.location.origin);
-    loginUrl.searchParams.set('view', 'login');
-    
-    window.location.href = loginUrl.toString();
-  } catch (error) {
-    console.error('로그인 페이지 이동 오류:', error);
-    window.location.href = '/?view=login';
-  }
-};
+// ==================== 로그인 확인 및 프롬프트 ====================
 
-// 로그인 확인 및 유도 다이얼로그 - 커스텀 모달 사용
+// 로그인 확인 및 유도 다이얼로그
 export const checkAuthAndPrompt = (
   actionName: string = '이 기능',
   onConfirm?: () => void,
