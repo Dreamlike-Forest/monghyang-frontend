@@ -16,11 +16,13 @@ export const mockBreweries: Brewery[] = [
     bank_name: "농협은행",
     introduction: "전통 방식으로 빚은 프리미엄 증류주 전문 양조장입니다.",
     brewery_website: "http://anseong-brewery.co.kr",
+    start_time: "09:00",
+    end_time: "18:00",
     region_name: "서울/경기",
     alcohol_types: ["증류주", "전통주"],
     price_range: "high",
-    image_key: "brewery_anseong_main_20240115.jpg", // 카드용 메인 이미지 키
-    brewery_images: [ // 갤러리용 이미지 키 배열 (4장)
+    image_key: "brewery_anseong_main_20240115.jpg",
+    brewery_images: [
       "brewery_anseong_main_20240115.jpg",
       "brewery_anseong_interior_20240115.jpg", 
       "brewery_anseong_distillery_20240115.jpg",
@@ -46,11 +48,13 @@ export const mockBreweries: Brewery[] = [
     bank_name: "전북은행",
     introduction: "전주 한옥마을에서 전통 방식으로 만드는 복분자 막걸리 전문점입니다.",
     brewery_website: "http://jeonju-makgeolli.kr",
+    start_time: "10:00",
+    end_time: "19:00",
     region_name: "전라도",
     alcohol_types: ["막걸리", "과실주"],
     price_range: "low",
     image_key: "brewery_jeonju_main_20210610.jpg",
-    brewery_images: [ // 갤러리용 이미지 키 배열 (3장)
+    brewery_images: [
       "brewery_jeonju_main_20210610.jpg",
       "brewery_jeonju_hanok_20210610.jpg",
       "brewery_jeonju_making_20210610.jpg"
@@ -75,11 +79,13 @@ export const mockBreweries: Brewery[] = [
     bank_name: "충북은행",
     introduction: "깔끔하고 부드러운 맛의 프리미엄 청주를 생산하는 양조장입니다.",
     brewery_website: "http://cheongju-brewery.com",
+    start_time: "09:30",
+    end_time: "17:30",
     region_name: "충청도",
     alcohol_types: ["청주", "약주"],
     price_range: "medium",
     image_key: "brewery_cheongju_main_20190308.jpg",
-    brewery_images: [ // 갤러리용 이미지 키 배열 (5장 - 최대)
+    brewery_images: [
       "brewery_cheongju_main_20190308.jpg",
       "brewery_cheongju_tank_20190308.jpg",
       "brewery_cheongju_bottle_20190308.jpg",
@@ -105,11 +111,13 @@ export const mockBreweries: Brewery[] = [
     bank_name: "경남은행",
     introduction: "전통 증류 방식으로 만든 프리미엄 소주 전문 양조장입니다.",
     brewery_website: "http://jinju-soju.kr",
+    start_time: "08:00",
+    end_time: "17:00",
     region_name: "경상도",
     alcohol_types: ["소주", "증류주"],
     price_range: "high",
     image_key: "brewery_jinju_main_20220105.jpg",
-    brewery_images: [ // 갤러리용 이미지 키 배열 (2장)
+    brewery_images: [
       "brewery_jinju_main_20220105.jpg",
       "brewery_jinju_distillery_20220105.jpg"
     ],
@@ -132,11 +140,13 @@ export const mockBreweries: Brewery[] = [
     bank_name: "농협은행",
     introduction: "국산 포도로 만든 프리미엄 와인 전문 양조장입니다.",
     brewery_website: "http://yeongdong-wine.com",
+    start_time: "10:00",
+    end_time: "20:00",
     region_name: "충청도",
     alcohol_types: ["와인", "과실주"],
     price_range: "medium",
     image_key: "brewery_yeongdong_main_20210103.jpg",
-    brewery_images: [ // 갤러리용 이미지 키 배열 (4장)
+    brewery_images: [
       "brewery_yeongdong_main_20210103.jpg",
       "brewery_yeongdong_vineyard_20210103.jpg",
       "brewery_yeongdong_cellar_20210103.jpg",
@@ -161,11 +171,13 @@ export const mockBreweries: Brewery[] = [
     bank_name: "충북은행",
     introduction: "전통 방식으로 빚은 생막걸리 전문 양조장입니다.",
     brewery_website: "http://chungju-makgeolli.kr",
+    start_time: "09:00",
+    end_time: "18:00",
     region_name: "충청도",
     alcohol_types: ["막걸리", "생막걸리"],
     price_range: "low",
     image_key: "brewery_chungju_main_20200101.jpg",
-    brewery_images: [ // 갤러리용 이미지 키 배열 (1장만)
+    brewery_images: [
       "brewery_chungju_main_20200101.jpg"
     ],
     badges: [
@@ -231,7 +243,6 @@ export const mockJoyPrograms: Joy[] = [
   }
 ];
 
-// 9개 상품 데이터 - image_key로 변수명 통일
 export const mockProducts: Product[] = [
   {
     product_id: 1,
@@ -457,7 +468,6 @@ export const mockProducts: Product[] = [
   }
 ];
 
-// 데이터 조합 헬퍼 함수들 (기존과 동일)
 export const getBreweriesWithExperience = (): Brewery[] => {
   return mockBreweries.map(brewery => ({
     ...brewery,
@@ -475,7 +485,6 @@ export const getProductsWithBrewery = (): ProductWithDetails[] => {
   });
 };
 
-// Shop 필터 옵션 데이터 (기존과 동일)
 export const mockFilterOptions: ProductFilterOptions = {
   types: [
     { id: 'takju', name: '탁주/막걸리', count: 3 },

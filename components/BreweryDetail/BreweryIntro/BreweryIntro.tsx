@@ -10,6 +10,14 @@ interface BreweryIntroProps {
 }
 
 const BreweryIntro: React.FC<BreweryIntroProps> = ({ brewery, forwardRef }) => {
+  // 영업시간 포맷팅 함수
+  const formatBusinessHours = (startTime?: string, endTime?: string): string => {
+    if (!startTime || !endTime) {
+      return '영업시간 정보 없음';
+    }
+    return `${startTime} ~ ${endTime}`;
+  };
+
   return (
     <div ref={forwardRef} className="section-container" id="intro">
       <h2 className="section-title">양조장 소개</h2>
@@ -35,6 +43,14 @@ const BreweryIntro: React.FC<BreweryIntroProps> = ({ brewery, forwardRef }) => {
               <span className="brewery-detail-value">{brewery.business_phone}</span>
             </div>
             
+            {/* 영업시간 - 홈페이지 위치에서 이동 */}
+            <div className="brewery-detail-item">
+              <span className="brewery-detail-label">영업시간</span>
+              <span className="brewery-detail-value">
+                {formatBusinessHours(brewery.start_time, brewery.end_time)}
+              </span>
+            </div>
+            
             {brewery.business_email && (
               <div className="brewery-detail-item">
                 <span className="brewery-detail-label">이메일</span>
@@ -42,6 +58,7 @@ const BreweryIntro: React.FC<BreweryIntroProps> = ({ brewery, forwardRef }) => {
               </div>
             )}
             
+            {/* 홈페이지 - 이메일 밑으로 이동 */}
             {brewery.brewery_website && (
               <div className="brewery-detail-item">
                 <span className="brewery-detail-label">홈페이지</span>

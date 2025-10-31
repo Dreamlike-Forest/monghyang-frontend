@@ -72,7 +72,7 @@ export interface Joy {
   place: string;
   detail: string;
   price: number;
-  image_key?: string; // 체험 프로그램 이미지 키 (선택적)
+  image_key?: string;
 }
 
 export interface Brewery {
@@ -90,11 +90,13 @@ export interface Brewery {
   bank_name: string;
   introduction?: string;
   brewery_website?: string;
+  start_time?: string; // 영업 시작 시간 추가
+  end_time?: string;   // 영업 종료 시간 추가
   region_name: string;
   alcohol_types: string[];
   price_range: 'low' | 'medium' | 'high';
-  image_key?: string; // 메인 이미지 키 (회원가입 시 업로드)
-  brewery_images?: string[]; // 추가 이미지 키들 배열 (갤러리용, 최대 5개)
+  image_key?: string;
+  brewery_images?: string[];
   experience_programs?: Joy[];
   badges?: {
     type: 'text' | 'image';
@@ -104,12 +106,10 @@ export interface Brewery {
   }[];
 }
 
-// Shop 컴포넌트에서 사용하는 확장된 Product 타입
 export interface ProductWithDetails extends Product {
   brewery: string; 
 }
 
-// 필터 옵션 타입들
 export interface FilterOption {
   id: string;
   name: string;
