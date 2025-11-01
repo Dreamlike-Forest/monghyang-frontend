@@ -21,6 +21,7 @@ const Login: React.FC = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+    
     // 입력 시 에러 메시지 제거
     if (error) {
       setError('');
@@ -41,30 +42,61 @@ const Login: React.FC = () => {
       return;
     }
 
+    // 이메일 형식 검증
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('올바른 이메일 형식을 입력해주세요.');
+      return;
+    }
+
     setIsLoading(true);
     setError('');
 
     try {
-      // authUtils의 login 함수 사용
+      console.log('로그인 시도:', { email: formData.email });
+      
+      // authUtils의 login 함수 사용 (실제 API 호출)
       const result = await login(formData.email, formData.password);
       
       if (result.success) {
+        console.log('로그인 성공, 리다이렉트 준비');
+        
+        // "로그인 상태 유지" 옵션 처리 (선택적)
+        if (formData.rememberMe && typeof window !== 'undefined') {
+          localStorage.setItem('rememberMe', 'true');
+        }
+        
         // 로그인 성공 시 리다이렉트
-        const returnUrl = sessionStorage.getItem('returnUrl');
-        if (returnUrl) {
+        if (typeof window !== 'undefined') {
+          // 저장된 리턴 URL 확인
+          const returnUrl = sessionStorage.getItem('returnUrl');
+          const returnProduct = sessionStorage.getItem('returnToProduct');
+          
+          // 세션 스토리지 정리
           sessionStorage.removeItem('returnUrl');
-          window.location.href = returnUrl;
-        } else {
-          window.location.href = '/';
+          sessionStorage.removeItem('returnToProduct');
+          
+          // 리다이렉트
+          if (returnUrl) {
+            console.log('저장된 URL로 리다이렉트:', returnUrl);
+            window.location.href = returnUrl;
+          } else if (returnProduct) {
+            console.log('상품 페이지로 리다이렉트:', returnProduct);
+            window.location.href = `/?view=shop&product=${returnProduct}`;
+          } else {
+            console.log('홈으로 리다이렉트');
+            window.location.href = '/';
+          }
         }
       } else {
         // 로그인 실패
+        console.error('로그인 실패:', result.message);
         setError(result.message || '로그인에 실패했습니다.');
         setIsLoading(false);
       }
     } catch (error) {
-      console.error('로그인 처리 중 오류:', error);
-      setError('로그인 처리 중 오류가 발생했습니다.');
+      console.error('로그인 처리 중 예외 발생:', error);
+      setError('로그인 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
       setIsLoading(false);
     }
   };
@@ -89,10 +121,9 @@ const Login: React.FC = () => {
 
   const handleBackToHome = () => {
     if (typeof window !== 'undefined') {
-      const url = new URL(window.location.href);
-      url.searchParams.delete('view');
-      url.searchParams.delete('brewery');
-      window.location.href = url.toString();
+      // URL 파라미터 완전 제거하고 홈으로 이동
+      const baseUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
+      window.location.href = baseUrl;
     }
   };
 
@@ -157,6 +188,7 @@ const Login: React.FC = () => {
             onChange={handleInputChange}
             required
             disabled={isLoading}
+            autoComplete="email"
           />
         </div>
 
@@ -173,6 +205,7 @@ const Login: React.FC = () => {
             onChange={handleInputChange}
             required
             disabled={isLoading}
+            autoComplete="current-password"
           />
         </div>
 
@@ -254,7 +287,7 @@ const Login: React.FC = () => {
           <button
             type="button"
             className="social-button google-login"
-            onClick={() => handleSocialLogin('google')}
+            onClick={() => handleSocialLogin('Google')}
             disabled={isLoading}
           >
             <img 
