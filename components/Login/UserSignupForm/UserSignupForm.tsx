@@ -3,13 +3,15 @@
 import React, { useState } from 'react';
 import TermsAgreement from '../TermsAgreement/TermsAgreement';
 import AddressSearch from '../AddressSearch/AddressSearch';
+import { signup, checkEmailAvailability } from '../../../utils/authUtils'; 
 import './UserSignupForm.css';
 
 interface UserSignupFormProps {
   onBack: () => void;
+  onBackToLogin: () => void; 
 }
 
-const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
+const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack, onBackToLogin }) => { 
   const [formData, setFormData] = useState({
     // 회원 테이블 필드
     email: '',
@@ -22,27 +24,29 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
     gender: '',
     address: '',
     address_detail: '',
-    zonecode: '', // 우편번호 추가
-    is_agreed: false
+    zonecode: '',
   });
 
   const [emailChecked, setEmailChecked] = useState(false);
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [is_agreed, setIsAgreed] = useState(false); 
+  const [isSubmitting, setIsSubmitting] = useState(false); // 제출 중 상태 추가
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
-    const checked = (e.target as HTMLInputElement).checked;
+    const { name, value } = e.target;
     
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: value
     }));
 
     // 이메일이 변경되면 중복확인을 다시 해야 함
     if (name === 'email') {
       setEmailChecked(false);
+      if (errors.email) {
+         setErrors(prev => ({ ...prev, email: '' }));
+      }
     }
 
     // 에러 초기화
@@ -71,6 +75,7 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
     }
   };
 
+  // 이메일 중복확인 (API 연동)
   const handleEmailCheck = async () => {
     if (!formData.email) {
       setErrors(prev => ({ ...prev, email: '이메일을 입력해주세요.' }));
@@ -84,13 +89,23 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
     }
 
     setIsCheckingEmail(true);
+    setErrors(prev => ({ ...prev, email: '' }));
     
-    // 실제 API 호출 시뮬레이션
-    setTimeout(() => {
-      setEmailChecked(true);
+    try {
+      const result = await checkEmailAvailability(formData.email);
+      if (result.available) {
+        setEmailChecked(true);
+        alert(result.message || '사용 가능한 이메일입니다.');
+      } else {
+        setEmailChecked(false);
+        setErrors(prev => ({ ...prev, email: result.message || '이미 사용 중인 이메일입니다.' }));
+      }
+    } catch (error: any) {
+      setEmailChecked(false);
+      setErrors(prev => ({ ...prev, email: error.message || '이메일 확인 중 오류 발생' }));
+    } finally {
       setIsCheckingEmail(false);
-      setErrors(prev => ({ ...prev, email: '' }));
-    }, 1000);
+    }
   };
 
   // 약관 동의 핸들러 
@@ -126,21 +141,47 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // 폼 제출 핸들러 (API 연동)
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) {
       return;
     }
 
-    // 최종 제출 데이터에 약관 동의 포함
+    setIsSubmitting(true);
+
     const submitData = {
-      ...formData,
-      is_agreed
+      email: formData.email,
+      password: formData.password,
+      nickname: formData.nickname,
+      name: formData.name,
+      phone: formData.phone,
+      birth: formData.birth,
+      gender: formData.gender,
+      address: formData.address,
+      address_detail: formData.address_detail,
+      is_agreed: is_agreed
     };
     
-    console.log('일반 사용자 회원가입:', submitData);
-    // 실제 회원가입 API 호출
+    try {
+      const result = await signup(submitData, 'user');
+      if (result.success) {
+        // 회원가입 성공 시 로그인 화면으로
+        onBackToLogin(); 
+      } else {
+        // API 서버에서 받은 에러 메시지 표시
+        setErrors(prev => ({ ...prev, submit: result.message }));
+      }
+    } catch (error: any) {
+      setErrors(prev => ({ ...prev, submit: error.message || '알 수 없는 오류가 발생했습니다.' }));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  const handleBack = () => {
+    onBack(); // SignupContainer로 돌아가기
   };
 
   return (
@@ -148,7 +189,7 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
       <div className="user-signup-content">
         <button
           type="button"
-          onClick={onBack}
+          onClick={handleBack} 
           className="user-back-button"
           title="뒤로가기"
         >
@@ -170,6 +211,7 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
                 placeholder="example@email.com"
                 value={formData.email}
                 onChange={handleInputChange}
+                disabled={isCheckingEmail}
               />
               <button
                 type="button"
@@ -334,8 +376,19 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
             error={errors.terms}
           />
 
-          <button type="submit" className="user-submit-button">
-            회원가입 완료
+          {/* 제출 에러 메시지 */}
+          {errors.submit && (
+            <div className="user-error-message" style={{ marginBottom: '16px', textAlign: 'center' }}>
+              {errors.submit}
+            </div>
+          )}
+
+          <button 
+            type="submit" 
+            className="user-submit-button"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? '회원가입 중...' : '회원가입 완료'}
           </button>
         </form>
       </div>

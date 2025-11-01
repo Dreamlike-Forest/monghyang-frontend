@@ -3,13 +3,16 @@
 import React, { useState } from 'react';
 import TermsAgreement from '../TermsAgreement/TermsAgreement';
 import AddressSearch from '../AddressSearch/AddressSearch';
+import ImageUpload from '../../community/ImageUpload/ImageUpload';
+import { signup, checkEmailAvailability } from '../../../utils/authUtils'; 
 import './SellerSignupForm.css';
 
 interface SellerSignupFormProps {
   onBack: () => void;
+  onBackToLogin: () => void; 
 }
 
-const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
+const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack, onBackToLogin }) => { 
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -19,9 +22,9 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
     gender: '',
     birth: '',
     name: '',
-    seller_address: '',
+    seller_address: '', 
     seller_address_detail: '',
-    seller_zonecode: '',
+    seller_zonecode: '', 
     business_registration_number: '',
     seller_account_number: '',
     seller_depositor: '',
@@ -29,10 +32,14 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
     introduction: ''
   });
 
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imageDescriptions, setImageDescriptions] = useState<string[]>([]);
+
   const [emailChecked, setEmailChecked] = useState(false);
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
-  const [is_agreed, setIsAgreed] = useState(false);
+  const [is_agreed, setIsAgreed] = useState(false); 
+  const [isSubmitting, setIsSubmitting] = useState(false); 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -45,6 +52,9 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
     // 이메일이 변경되면 중복확인을 다시 해야 함
     if (name === 'email') {
       setEmailChecked(false);
+      if (errors.email) {
+         setErrors(prev => ({ ...prev, email: '' }));
+      }
     }
 
     // 에러 초기화
@@ -73,6 +83,7 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
     }
   };
 
+  // 이메일 중복확인 (API 연동)
   const handleEmailCheck = async () => {
     if (!formData.email) {
       setErrors(prev => ({ ...prev, email: '업무용 이메일을 입력해주세요.' }));
@@ -86,13 +97,23 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
     }
 
     setIsCheckingEmail(true);
-    
-    // 실제 API 호출 시뮬레이션
-    setTimeout(() => {
-      setEmailChecked(true);
+    setErrors(prev => ({ ...prev, email: '' }));
+
+    try {
+      const result = await checkEmailAvailability(formData.email);
+      if (result.available) {
+        setEmailChecked(true);
+        alert(result.message || '사용 가능한 이메일입니다.');
+      } else {
+        setEmailChecked(false);
+        setErrors(prev => ({ ...prev, email: result.message || '이미 사용 중인 이메일입니다.' }));
+      }
+    } catch (error: any) {
+      setEmailChecked(false);
+      setErrors(prev => ({ ...prev, email: error.message || '이메일 확인 중 오류 발생' }));
+    } finally {
       setIsCheckingEmail(false);
-      setErrors(prev => ({ ...prev, email: '' }));
-    }, 1000);
+    }
   };
 
   const handleAgreementChange = (agreed: boolean) => {
@@ -131,15 +152,47 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // 폼 제출 핸들러 (API 연동)
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) {
       return;
     }
 
-    console.log('판매자 회원가입:', { ...formData, is_agreed });
-    // 실제 회원가입 API 호출
+    setIsSubmitting(true);
+
+    const submitData = {
+      email: formData.email,
+      password: formData.password,
+      nickname: formData.nickname,
+      name: formData.name,
+      phone: formData.phone,
+      birth: formData.birth,
+      gender: formData.gender,
+      address: formData.seller_address,
+      address_detail: formData.seller_address_detail,
+      business_registration_number: formData.business_registration_number,
+      seller_account_number: formData.seller_account_number,
+      seller_depositor: formData.seller_depositor,
+      seller_bank_name: formData.seller_bank_name,
+      introduction: formData.introduction,
+      is_agreed_seller: is_agreed, 
+      images: imageFiles 
+    };
+
+    try {
+      const result = await signup(submitData, 'seller');
+      if (result.success) {
+        onBackToLogin(); // [오류 수정] 성공 시 로그인 페이지로
+      } else {
+        setErrors(prev => ({ ...prev, submit: result.message }));
+      }
+    } catch (error: any) {
+      setErrors(prev => ({ ...prev, submit: error.message || '알 수 없는 오류가 발생했습니다.' }));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -169,6 +222,7 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
                 placeholder="business@company.com"
                 value={formData.email}
                 onChange={handleInputChange}
+                disabled={isCheckingEmail}
               />
               <button
                 type="button"
@@ -409,6 +463,21 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
             />
             {errors.introduction && <span className="seller-error-message">{errors.introduction}</span>}
           </div>
+          
+          {/* 이미지 업로드 (신규 추가) */}
+          <div className="seller-form-group">
+            <label className="seller-form-label">대표 이미지 (선택)</label>
+            <ImageUpload
+              images={imageFiles}
+              maxImages={1}
+              onImagesChange={(files) => setImageFiles(files)}
+              onDescriptionsChange={(descriptions) => setImageDescriptions(descriptions)}
+              descriptions={imageDescriptions}
+              disabled={isSubmitting}
+              accept="image/jpeg,image/jpg,image/png,image/webp"
+              maxFileSize={5}
+            />
+          </div>
 
           {/* 약관 동의 컴포넌트 */}
           <TermsAgreement
@@ -417,9 +486,20 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
             userType="seller"
             error={errors.terms}
           />
+          
+          {/* 제출 에러 메시지 */}
+          {errors.submit && (
+            <div className="seller-error-message" style={{ marginBottom: '16px', textAlign: 'center' }}>
+              {errors.submit}
+            </div>
+          )}
 
-          <button type="submit" className="seller-submit-button">
-            회원가입 완료
+          <button 
+            type="submit" 
+            className="seller-submit-button"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? '회원가입 중...' : '회원가입 완료'}
           </button>
         </form>
       </div>
