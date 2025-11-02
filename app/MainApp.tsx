@@ -61,13 +61,20 @@ export default function MainApp() {
             setBreweryProducts(products);
             setCurrentView('brewery-detail');
             console.log('양조장 상세페이지로 설정:', foundBrewery.brewery_name);
+            
+            // *** 추가: 양조장 상세페이지 진입 시 스크롤 초기화 ***
+            setTimeout(() => {
+              window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+              document.documentElement.scrollTop = 0;
+              document.body.scrollTop = 0;
+            }, 0);
           } else {
             console.log('양조장을 찾을 수 없음, brewery 목록으로 리다이렉트');
             setCurrentView('brewery');
             setSelectedBrewery(null);
             setBreweryProducts([]);
           }
-        } else if (view && ['home', 'about', 'brewery', 'shop', 'community', 'login', 'cart'].includes(view)) { // 수정: cart 추가
+        } else if (view && ['home', 'about', 'brewery', 'shop', 'community', 'login', 'cart'].includes(view)) {
           // 일반 뷰 처리 - cart 추가
           setCurrentView(view);
           // 뷰가 변경되면 선택된 양조장 초기화
@@ -199,7 +206,7 @@ export default function MainApp() {
       case 'login':
         return <Login />;
 
-      case 'cart': // 추가: Cart 컴포넌트 렌더링
+      case 'cart':
         return <Cart />;
 
       case 'brewery-detail':

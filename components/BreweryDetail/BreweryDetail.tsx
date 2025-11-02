@@ -38,6 +38,21 @@ const BreweryDetail: React.FC<BreweryDetailProps> = ({
     reviewsRef
   };
 
+  // *** 추가: 컴포넌트 마운트 시 스크롤을 최상단으로 이동 ***
+  useEffect(() => {
+    // 여러 방법으로 스크롤 초기화 (브라우저 호환성 보장)
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    
+    // 약간의 지연을 두고 한 번 더 실행 (안전장치)
+    const scrollTimer = setTimeout(() => {
+      window.scrollTo(0, 0);
+    }, 0);
+    
+    return () => clearTimeout(scrollTimer);
+  }, [brewery.brewery_id]); // brewery_id가 변경될 때마다 실행
+
   // 스크롤 위치에 따른 활성 섹션 감지 - 개선된 로직
   useEffect(() => {
     const handleScroll = () => {
@@ -197,7 +212,7 @@ const BreweryDetail: React.FC<BreweryDetailProps> = ({
             products={products} 
             forwardRef={productsRef}
             onAddToCart={handleAddToCart}
-            onProductClick={handleProductClick}  // 수정된 핸들러 전달
+            onProductClick={handleProductClick}
           />
 
           {/* 체험 리뷰 섹션 - 제목 중복 제거 */}
