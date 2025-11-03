@@ -1,3 +1,4 @@
+// components/ProductDetailMain/ProductOverviewSection/ProductOverviewSection.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -145,18 +146,17 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
   };
 
   // [신규] 썸네일 클릭 시 대표 이미지와 스왑하는 함수
-  const handleThumbnailClick = (clickedIndex: number) => {
-    // clickedIndex는 1, 2, 3, 4 중 하나 (displayedImages 배열 기준)
-    if (imageLoadErrors.has(displayedImages[clickedIndex])) return; // 에러난 이미지는 클릭 무시
+  const handleThumbnailClick = (clickedImageUrl: string) => {
+    if (imageLoadErrors.has(clickedImageUrl)) return; // 에러난 이미지는 클릭 무시
 
-    // 배열 복사
     const newDisplayedImages = [...displayedImages];
-    
+    const clickedIndex = newDisplayedImages.indexOf(clickedImageUrl);
+
+    if (clickedIndex <= 0) return; // 이미 대표 이미지거나 존재하지 않으면 무시
+
     // 0번째(대표) 이미지와 클릭된 썸네일(clickedIndex)의 이미지를 스왑
     const mainImage = newDisplayedImages[0];
-    const clickedImage = newDisplayedImages[clickedIndex];
-    
-    newDisplayedImages[0] = clickedImage;
+    newDisplayedImages[0] = clickedImageUrl;
     newDisplayedImages[clickedIndex] = mainImage;
 
     // 상태 업데이트
@@ -248,6 +248,14 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
   const currentImageFailed = hasImages && imageLoadErrors.has(displayedImages[0]);
   const allImagesFailed = hasImages && displayedImages.every(imgUrl => imageLoadErrors.has(imgUrl));
 
+  // [수정] 썸네일 4칸을 채우는 배열 생성
+  const thumbnailSlots: (string | null)[] = Array(4).fill(null);
+  displayedImages.slice(1).forEach((imgUrl, index) => {
+    if (index < 4) { // 썸네일은 최대 4개
+      thumbnailSlots[index] = imgUrl;
+    }
+  });
+
   return (
     <div ref={forwardRef} className="productdetail-product-section-container" id="productdetail-overview">
       
@@ -267,54 +275,56 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
                     loading="eager" // 메인 이미지는 즉시 로드
                   />
                 ) : (
+                  // [수정] 메인 이미지 로드 실패 시에도 "준비 중"으로 통일
                   <div className="productdetail-product-image-placeholder">
-                    <div className="productdetail-product-placeholder-icon">📷</div>
+                    <div className="productdetail-product-placeholder-icon">🍶</div>
                     <div className="productdetail-product-placeholder-text">
-                      이미지를 불러올 수 없습니다.
+                      이미지 준비 중
                     </div>
                   </div>
                 )}
-                
-                {/* [삭제] 네비게이션 버튼 (이전/다음) 제거 */}
-                {/* [삭제] 이미지 카운터 제거 */}
               </>
             ) : (
               <div className="productdetail-product-image-placeholder">
                 <div className="productdetail-product-placeholder-icon">🍶</div>
                 <div className="productdetail-product-placeholder-text">
-                  {allImagesFailed ? '이미지를 불러올 수 없습니다' : '이미지 준비 중'}
+                  {allImagesFailed ? '이미지 준비 중' : '이미지 준비 중'}
                 </div>
               </div>
             )}
           </div>
           
-          {/* [수정] 썸네일 이미지들 - 1번(대표) 이미지를 제외하고 2x2 그리드로 표시 */}
+          {/* [수정] 썸네일 4칸을 기준으로 렌더링 */}
           {hasMultipleImages && (
             <div className={`productdetail-product-thumbnails ${displayedImages.length <= 4 ? 'center-items' : ''}`}>
-              {displayedImages.slice(1).map((imageUrl, index) => {
-                const originalIndex = index + 1; // displayedImages에서의 실제 인덱스
-                const isError = imageLoadErrors.has(imageUrl);
+              {thumbnailSlots.map((imageUrl, index) => {
+                const isError = imageUrl ? imageLoadErrors.has(imageUrl) : false;
+                const isEmpty = !imageUrl;
                 
                 return (
                   <button
-                    key={imageUrl + originalIndex} // 스왑 시 키가 고유하도록 URL과 인덱스 조합
-                    className={`productdetail-product-thumbnail ${isError ? 'error' : ''}`}
-                    onClick={() => handleThumbnailClick(originalIndex)}
-                    disabled={isError}
-                    aria-label={`${originalIndex + 1}번째 이미지로 변경`}
-                    title={isError ? '이미지 로드 실패' : `${originalIndex + 1}번째 이미지 보기`}
+                    key={imageUrl || `empty-${index}`}
+                    className={`productdetail-product-thumbnail ${isError ? 'error' : ''} ${isEmpty ? 'empty' : ''}`}
+                    onClick={() => imageUrl && handleThumbnailClick(imageUrl)}
+                    disabled={isError || isEmpty}
+                    aria-label={isEmpty ? '빈 이미지 슬롯' : `${index + 2}번째 이미지로 변경`}
+                    title={isError ? '이미지 없음' : (isEmpty ? '이미지 없음' : `${index + 2}번째 이미지 보기`)}
                   >
-                    {!isError ? (
+                    {imageUrl && !isError ? (
                       <img 
                         src={imageUrl} 
-                        alt={`${product.name} 썸네일 ${originalIndex + 1}`}
+                        alt={`${product.name} 썸네일 ${index + 2}`}
                         onError={() => handleImageError(imageUrl)}
                         loading="lazy"
                       />
                     ) : (
-                      <div className="productdetail-thumbnail-error">
-                        <div className="productdetail-thumbnail-placeholder">
-                          ⚠️
+                      // [수정] 빈 슬롯과 에러 슬롯 모두 "이미지 준비 중" 플레이스홀더 표시
+                      <div className="productdetail-thumbnail-placeholder">
+                        <div className="productdetail-thumbnail-placeholder-icon">
+                          {'🍶'}
+                        </div>
+                        <div className="productdetail-thumbnail-placeholder-text">
+                          {'이미지 준비 중'}
                         </div>
                       </div>
                     )}

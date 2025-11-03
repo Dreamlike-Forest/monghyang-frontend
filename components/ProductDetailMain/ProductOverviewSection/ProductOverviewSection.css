@@ -1,3 +1,4 @@
+/* components/ProductDetailMain/ProductOverviewSection/ProductOverviewSection.css */
 /* 상품 개요 레이아웃 */
 .productdetail-product-overview-layout {
   display: grid;
@@ -57,8 +58,14 @@
 }
 
 /* [삭제] 이미지 네비게이션 버튼 관련 CSS 제거 */
+.productdetail-product-image-nav-btn {
+  display: none;
+}
 
 /* [삭제] 이미지 카운터 관련 CSS 제거 */
+.productdetail-product-image-counter {
+  display: none;
+}
 
 /* 이미지 플레이스홀더 */
 .productdetail-product-image-placeholder {
@@ -120,16 +127,20 @@
 }
 
 .productdetail-product-thumbnail.active {
-  /* [수정] 현재 활성화된 썸네일(대표 이미지)은 표시하지 않으므로 active 스타일 불필요 */
-  /* 단, 스왑 기능을 위해 남겨둘 수 있으나, 현재 로직에서는 사용되지 않음 */
-  /* border-color: #8b5a3c; */
-  /* box-shadow: 0 0 0 2px #8b5a3c; */
+  /* 현재 로직에서는 사용되지 않음 (스왑 방식) */
 }
 
 .productdetail-product-thumbnail.error {
-  border-color: #ef4444;
+  border-color: transparent; /* 에러 시 테두리 제거 (플레이스홀더가 보임) */
   cursor: not-allowed;
-  opacity: 0.5;
+  opacity: 0.7;
+}
+
+/* [추가] 빈 썸네일 슬롯 스타일 */
+.productdetail-product-thumbnail.empty {
+  border: 2px dashed #e5e7eb; /* 비어있는 슬롯 점선 표시 */
+  cursor: not-allowed;
+  background: #f9fafb; /* 빈 슬롯 배경색 */
 }
 
 .productdetail-product-thumbnail img {
@@ -138,17 +149,9 @@
   object-fit: cover;
 }
 
-.productdetail-thumbnail-error {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  color: #ef4444;
-}
+/* [삭제] .productdetail-thumbnail-error 제거 */
 
-/* 썸네일 플레이스홀더 */
+/* [수정] 썸네일 플레이스홀더 (에러, 빈 슬롯 공용) */
 .productdetail-thumbnail-placeholder {
   width: 100%;
   height: 100%;
@@ -158,8 +161,38 @@
   justify-content: center;
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   color: #6c757d;
-  font-size: 32px;
 }
+
+/* [추가] 썸네일 플레이스홀더 아이콘 */
+.productdetail-thumbnail-placeholder-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  opacity: 0.6;
+  color: #8b5a3c;
+}
+
+/* [추가] 썸네일 플레이스홀더 텍스트 */
+.productdetail-thumbnail-placeholder-text {
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: center;
+  opacity: 0.7;
+  line-height: 1.3;
+}
+
+/* '로드 실패' 시 아이콘 색상 변경 (요청에 따라 '준비 중'으로 통일) */
+.productdetail-product-thumbnail.error .productdetail-thumbnail-placeholder-icon {
+  color: #8b5a3c; /* ⚠️ 대신 🍶 아이콘이므로 갈색 유지 */
+}
+
+/* 빈 슬롯은 아이콘/텍스트 더 연하게 */
+.productdetail-product-thumbnail.empty .productdetail-thumbnail-placeholder-icon {
+  opacity: 0.4;
+}
+.productdetail-product-thumbnail.empty .productdetail-thumbnail-placeholder-text {
+  opacity: 0.5;
+}
+
 
 /* 오른쪽: 상품 정보 섹션 */
 .productdetail-product-info-section {
@@ -600,7 +633,7 @@
     font-size: 14px;
     border-radius: 10px;
   }
-
+  
   .productdetail-product-main-image-container {
     height: auto;
     aspect-ratio: 1; /* 정사각형 비율 유지 */
