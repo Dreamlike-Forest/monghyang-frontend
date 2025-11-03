@@ -23,11 +23,12 @@ export interface ProductTag {
   tagType: ProductTagType;
 }
 
+// *** 수정: 상품 이미지 인터페이스 (ERD 반영) ***
 export interface ProductImage {
-  product_image_id: number;
+  product_image_id: number; 
   product_id: number;
-  key: string;
-  seq: number;
+  key: string; 
+  seq: number; 
 }
 
 export interface ProductReview {
@@ -39,11 +40,12 @@ export interface ProductReview {
   created_at: string;
 }
 
+// *** 수정: Product 인터페이스 - 이미지 배열 명확화 ***
 export interface Product {
   product_id: number;
   user_id: number;
   brewery_id: number; 
-  image_key: string; 
+  image_key: string;  
   name: string;
   alcohol: number;
   is_sell: boolean;
@@ -52,7 +54,7 @@ export interface Product {
   is_delete: boolean;
   options: ProductOption[];
   info: ProductInfo;
-  images: ProductImage[];
+  images: ProductImage[];  
   reviews: ProductReview[];
   tags: ProductTag[];
   averageRating: number;
@@ -90,8 +92,8 @@ export interface Brewery {
   bank_name: string;
   introduction?: string;
   brewery_website?: string;
-  start_time?: string; // 영업 시작 시간 추가
-  end_time?: string;   // 영업 종료 시간 추가
+  start_time?: string; 
+  end_time?: string;   
   region_name: string;
   alcohol_types: string[];
   price_range: 'low' | 'medium' | 'high';

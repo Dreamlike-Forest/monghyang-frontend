@@ -1,4 +1,4 @@
-import { Brewery, Product, Joy, ProductWithDetails, ProductFilterOptions } from '../types/mockData';
+import { Brewery, Product, Joy, ProductWithDetails, ProductFilterOptions, ProductImage } from '../types/mockData';
 
 export const mockBreweries: Brewery[] = [
   {
@@ -21,7 +21,7 @@ export const mockBreweries: Brewery[] = [
     region_name: "서울/경기",
     alcohol_types: ["증류주", "전통주"],
     price_range: "high",
-    image_key: "brewery_anseong_main_20240115.jpg",
+    image_key: "https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=800&h=800&fit=crop", // [수정] 확인용 URL
     brewery_images: [
       "brewery_anseong_main_20240115.jpg",
       "brewery_anseong_interior_20240115.jpg", 
@@ -53,7 +53,7 @@ export const mockBreweries: Brewery[] = [
     region_name: "전라도",
     alcohol_types: ["막걸리", "과실주"],
     price_range: "low",
-    image_key: "brewery_jeonju_main_20210610.jpg",
+    image_key: "https://images.unsplash.com/photo-1544024994-f6e9e3f1b536?w=800&h=800&fit=crop", // [수정] 확인용 URL
     brewery_images: [
       "brewery_jeonju_main_20210610.jpg",
       "brewery_jeonju_hanok_20210610.jpg",
@@ -84,7 +84,7 @@ export const mockBreweries: Brewery[] = [
     region_name: "충청도",
     alcohol_types: ["청주", "약주"],
     price_range: "medium",
-    image_key: "brewery_cheongju_main_20190308.jpg",
+    image_key: "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=800&h=800&fit=crop", // [수정] 확인용 URL
     brewery_images: [
       "brewery_cheongju_main_20190308.jpg",
       "brewery_cheongju_tank_20190308.jpg",
@@ -96,6 +96,7 @@ export const mockBreweries: Brewery[] = [
       { type: 'text', content: '할인', color: '#ef4444' }
     ]
   },
+  // ... (다른 양조장 데이터 생략) ...
   {
     brewery_id: 4,
     user_id: 4,
@@ -243,12 +244,13 @@ export const mockJoyPrograms: Joy[] = [
   }
 ];
 
+// mockProducts: Product[] 타입을 ProductImage[]로 명시적으로 캐스팅합니다.
 export const mockProducts: Product[] = [
   {
     product_id: 1,
     user_id: 1,
     brewery_id: 1,
-    image_key: 'product_anseong_premium_20240115.jpg',
+    image_key: 'https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=800&h=800&fit=crop', // 대표 이미지 (1개)
     name: '토박이 안성',
     alcohol: 40,
     is_sell: true,
@@ -260,7 +262,15 @@ export const mockProducts: Product[] = [
       { product_option_id: 2, product_id: 1, volume: 750, price: 85000 }
     ],
     info: { product_info_id: 1, product_id: 1, description: '전통 방식으로 빚은 프리미엄 증류주' },
-    images: [],
+    
+    // [수정] 4개의 썸네일용 목(mock) 이미지 데이터 추가
+    images: [
+      { product_image_id: 101, product_id: 1, key: 'https://images.unsplash.com/photo-1571613316887-6f8d5cbf7ef7?w=800&h=800&fit=crop', seq: 1 }, // 2번째 이미지
+      { product_image_id: 102, product_id: 1, key: 'https://images.unsplash.com/photo-1582106245687-a2a4c81d5a65?w=800&h=800&fit=crop', seq: 2 }, // 3번째 이미지
+      { product_image_id: 103, product_id: 1, key: 'https://images.unsplash.com/photo-1534354871393-df4a6e8a2ec3?w=800&h=800&fit=crop', seq: 3 }, // 4번째 이미지
+      { product_image_id: 104, product_id: 1, key: 'https://images.unsplash.com/photo-1569529465841-dfecdab7503b?w=800&h=800&fit=crop', seq: 4 }  // 5번째 이미지
+    ] as ProductImage[],
+
     reviews: [],
     tags: [
       { product_tag_id: 1, product_tag_type_id: 1, product_id: 1, tagType: { product_tag_type_id: 1, name: '베스트' } }
@@ -275,7 +285,7 @@ export const mockProducts: Product[] = [
     product_id: 2,
     user_id: 2,
     brewery_id: 2,
-    image_key: 'product_jeonju_bokbunja_20240110.jpg',
+    image_key: 'https://images.unsplash.com/photo-1551218808-94e220e084d2?w=800&h=800&fit=crop', // [수정] 확인용 URL
     name: '복분자 막걸리',
     alcohol: 7,
     is_sell: true,
@@ -286,7 +296,7 @@ export const mockProducts: Product[] = [
       { product_option_id: 3, product_id: 2, volume: 750, price: 12000 }
     ],
     info: { product_info_id: 2, product_id: 2, description: '달콤한 복분자가 들어간 프리미엄 막걸리' },
-    images: [],
+    images: [] as ProductImage[], // 이 상품은 이미지가 1개만 표시됩니다.
     reviews: [],
     tags: [
       { product_tag_id: 2, product_tag_type_id: 2, product_id: 2, tagType: { product_tag_type_id: 2, name: '신상품' } }
@@ -301,7 +311,7 @@ export const mockProducts: Product[] = [
     product_id: 3,
     user_id: 3,
     brewery_id: 3,
-    image_key: 'product_cheongju_premium_20240108.jpg',
+    image_key: 'https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=800&h=800&fit=crop', // [수정] 확인용 URL
     name: '극찬 청명',
     alcohol: 13,
     is_sell: true,
@@ -312,7 +322,11 @@ export const mockProducts: Product[] = [
       { product_option_id: 4, product_id: 3, volume: 500, price: 29750 }
     ],
     info: { product_info_id: 3, product_id: 3, description: '깔끔하고 부드러운 맛의 프리미엄 청주' },
-    images: [],
+    // [수정] 이 상품은 3개의 이미지만 표시되도록 설정 (테스트용)
+    images: [
+      { product_image_id: 105, product_id: 3, key: 'https://images.unsplash.com/photo-1596556345922-67b7c4b6d5ce?w=800&h=800&fit=crop', seq: 1 },
+      { product_image_id: 106, product_id: 3, key: 'https://images.unsplash.com/photo-1567696911980-2eed69a46042?w=800&h=800&fit=crop', seq: 2 }
+    ] as ProductImage[],
     reviews: [],
     tags: [
       { product_tag_id: 3, product_tag_type_id: 3, product_id: 3, tagType: { product_tag_type_id: 3, name: '할인' } }
@@ -339,7 +353,7 @@ export const mockProducts: Product[] = [
       { product_option_id: 5, product_id: 4, volume: 375, price: 48000 }
     ],
     info: { product_info_id: 4, product_id: 4, description: '전통 증류 방식으로 만든 프리미엄 소주' },
-    images: [],
+    images: [] as ProductImage[],
     reviews: [],
     tags: [],
     averageRating: 4.8,
@@ -362,7 +376,7 @@ export const mockProducts: Product[] = [
       { product_option_id: 6, product_id: 5, volume: 750, price: 32000 }
     ],
     info: { product_info_id: 5, product_id: 5, description: '국산 포도로 만든 프리미엄 와인' },
-    images: [],
+    images: [] as ProductImage[],
     reviews: [],
     tags: [],
     averageRating: 4.3,
@@ -385,7 +399,7 @@ export const mockProducts: Product[] = [
       { product_option_id: 7, product_id: 6, volume: 950, price: 8000 }
     ],
     info: { product_info_id: 6, product_id: 6, description: '전통 방식으로 빚은 생막걸리' },
-    images: [],
+    images: [] as ProductImage[],
     reviews: [],
     tags: [],
     averageRating: 4.5,
@@ -408,7 +422,7 @@ export const mockProducts: Product[] = [
       { product_option_id: 8, product_id: 7, volume: 500, price: 65000 }
     ],
     info: { product_info_id: 7, product_id: 7, description: '5년 숙성된 최고급 증류주' },
-    images: [],
+    images: [] as ProductImage[],
     reviews: [],
     tags: [
       { product_tag_id: 4, product_tag_type_id: 4, product_id: 7, tagType: { product_tag_type_id: 4, name: '프리미엄' } }
@@ -433,7 +447,7 @@ export const mockProducts: Product[] = [
       { product_option_id: 9, product_id: 8, volume: 750, price: 9500 }
     ],
     info: { product_info_id: 8, product_id: 8, description: '전주 전통 제조법으로 만든 클래식 막걸리' },
-    images: [],
+    images: [] as ProductImage[],
     reviews: [],
     tags: [
       { product_tag_id: 5, product_tag_type_id: 5, product_id: 8, tagType: { product_tag_type_id: 5, name: '전통' } }
@@ -458,7 +472,7 @@ export const mockProducts: Product[] = [
       { product_option_id: 10, product_id: 9, volume: 720, price: 42000 }
     ],
     info: { product_info_id: 9, product_id: 9, description: '드라이한 맛이 특징인 고급 청주' },
-    images: [],
+    images: [] as ProductImage[],
     reviews: [],
     tags: [],
     averageRating: 4.6,
