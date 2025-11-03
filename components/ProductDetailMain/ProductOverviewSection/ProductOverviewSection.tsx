@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { ProductWithDetails } from '../../../types/mockData';
-import { addToCart } from '../../Cart/CartStore'; 
-import { checkAuthAndPrompt } from '../../../utils/authUtils'; 
+import { addToCart } from '../../Cart/CartStore'; // CartStore에서 직접 import
+import { checkAuthAndPrompt } from '../../../utils/authUtils'; // 인증 유틸리티 import
 import './ProductOverviewSection.css';
 
 interface ProductOverviewSectionProps {
@@ -15,9 +15,10 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
   product, 
   forwardRef 
 }) => {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [imageLoadErrors, setImageLoadErrors] = useState<Set<number>>(new Set());
-  const [productImages, setProductImages] = useState<string[]>([]);
+  // [수정] 이미지 URL 배열을 직접 상태로 관리 (순서 변경을 위해)
+  const [displayedImages, setDisplayedImages] = useState<string[]>([]);
+  // [수정] 에러 상태를 URL(string) 기준으로 관리
+  const [imageLoadErrors, setImageLoadErrors] = useState<Set<string>>(new Set());
 
   // 토스트 메시지 표시 함수
   const showToastMessage = (message: string) => {
@@ -100,15 +101,10 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
       if (product.images && product.images.length > 0) {
         // 'seq' 기준으로 정렬
         const sortedImages = [...product.images].sort((a, b) => {
-          // [오류 수정] a.image_seq -> a.seq, b.image_seq -> b.seq
-          // a.seq와 b.seq가 'ProductImage' 타입에 존재함
           return a.seq - b.seq;
         });
 
-        sortedImages.forEach(image => { // line 103
-          // 'key' 사용
-          // [오류 수정] image.image_key -> image.key
-          // image.key가 'ProductImage' 타입에 존재함
+        sortedImages.forEach(image => {
           const imageKey = image.key; 
           const imageUrl = getImageUrl(imageKey);
           
@@ -134,89 +130,39 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
       return allImages.slice(0, 5);
     };
 
-    setProductImages(getProductImages());
-    setCurrentImageIndex(0); // 상품이 바뀔 때 첫 이미지로 리셋
+    setDisplayedImages(getProductImages()); // [수정]
     setImageLoadErrors(new Set()); // 에러 상태 리셋
   }, [product]); // product가 변경될 때마다 이미지 목록 재생성
 
-  const hasImages = productImages.length > 0;
-  const hasMultipleImages = productImages.length > 1;
+  const hasImages = displayedImages.length > 0;
+  const hasMultipleImages = displayedImages.length > 1;
 
-  // 이미지 로드 에러 처리
-  const handleImageError = (index: number) => {
-    setImageLoadErrors(prev => new Set(prev).add(index));
+  // [수정] 이미지 로드 에러 처리 (URL 기반)
+  const handleImageError = (imageUrl: string) => {
+    if (imageUrl) {
+      setImageLoadErrors(prev => new Set(prev).add(imageUrl));
+    }
+  };
+
+  // [신규] 썸네일 클릭 시 대표 이미지와 스왑하는 함수
+  const handleThumbnailClick = (clickedIndex: number) => {
+    // clickedIndex는 1, 2, 3, 4 중 하나 (displayedImages 배열 기준)
+    if (imageLoadErrors.has(displayedImages[clickedIndex])) return; // 에러난 이미지는 클릭 무시
+
+    // 배열 복사
+    const newDisplayedImages = [...displayedImages];
     
-    if (index === currentImageIndex) {
-      const nextValidIndex = findNextValidImage(index);
-      if (nextValidIndex !== -1) {
-        setCurrentImageIndex(nextValidIndex);
-      }
-    }
+    // 0번째(대표) 이미지와 클릭된 썸네일(clickedIndex)의 이미지를 스왑
+    const mainImage = newDisplayedImages[0];
+    const clickedImage = newDisplayedImages[clickedIndex];
+    
+    newDisplayedImages[0] = clickedImage;
+    newDisplayedImages[clickedIndex] = mainImage;
+
+    // 상태 업데이트
+    setDisplayedImages(newDisplayedImages);
   };
 
-  // 다음/이전 유효한 이미지 찾기
-  const findNextValidImage = (startIndex: number): number => {
-    for (let i = 0; i < productImages.length; i++) {
-      const index = (startIndex + i + 1) % productImages.length;
-      if (!imageLoadErrors.has(index)) {
-        return index;
-      }
-    }
-    return -1;
-  };
-
-  const findPrevValidImage = (startIndex: number): number => {
-    for (let i = 0; i < productImages.length; i++) {
-      const index = (startIndex - i - 1 + productImages.length) % productImages.length;
-      if (!imageLoadErrors.has(index)) {
-        return index;
-      }
-    }
-    return -1;
-  };
-
-  // 네비게이션 함수들
-  const nextImage = () => {
-    if (!hasMultipleImages) return;
-    const nextIndex = findNextValidImage(currentImageIndex);
-    if (nextIndex !== -1) {
-      setCurrentImageIndex(nextIndex);
-    }
-  };
-
-  const prevImage = () => {
-    if (!hasMultipleImages) return;
-    const prevIndex = findPrevValidImage(currentImageIndex);
-    if (prevIndex !== -1) {
-      setCurrentImageIndex(prevIndex);
-    }
-  };
-
-  const goToImage = (index: number) => {
-    if (imageLoadErrors.has(index)) return;
-    setCurrentImageIndex(index);
-  };
-
-  // 키보드 네비게이션
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!hasMultipleImages) return;
-      
-      switch (e.key) {
-        case 'ArrowLeft':
-          e.preventDefault();
-          prevImage();
-          break;
-        case 'ArrowRight':
-          e.preventDefault();
-          nextImage();
-          break;
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [hasMultipleImages, currentImageIndex, productImages.length]);
 
   // 가격 포맷팅
   const formatPrice = (price: number): string => {
@@ -298,13 +244,12 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
   };
 
   const discountRate = getDiscountRate();
-  const currentImageFailed = imageLoadErrors.has(currentImageIndex);
-  const allImagesFailed = productImages.every((_, index) => imageLoadErrors.has(index));
-  const validImageCount = productImages.length - imageLoadErrors.size;
+  // [수정] 대표 이미지가 에러인지 확인
+  const currentImageFailed = hasImages && imageLoadErrors.has(displayedImages[0]);
+  const allImagesFailed = hasImages && displayedImages.every(imgUrl => imageLoadErrors.has(imgUrl));
 
   return (
     <div ref={forwardRef} className="productdetail-product-section-container" id="productdetail-overview">
-      {/* 섹션 제목 제거 */}
       
       <div className="productdetail-product-overview-layout">
         {/* 왼쪽: 상품 이미지 */}
@@ -312,13 +257,13 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
           <div className="productdetail-product-main-image-container">
             {hasImages && !allImagesFailed ? (
               <>
-                {/* 메인 이미지 */}
+                {/* [수정] 메인 이미지 - 항상 displayedImages[0] 렌더링 */}
                 {!currentImageFailed ? (
                   <img 
-                    src={productImages[currentImageIndex]} 
-                    alt={`${product.name} 상품 이미지 ${currentImageIndex + 1}`}
+                    src={displayedImages[0]} 
+                    alt={`${product.name} 상품 이미지 1`}
                     className="productdetail-product-main-image-absolute"
-                    onError={() => handleImageError(currentImageIndex)}
+                    onError={() => handleImageError(displayedImages[0])}
                     loading="eager" // 메인 이미지는 즉시 로드
                   />
                 ) : (
@@ -330,34 +275,8 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
                   </div>
                 )}
                 
-                {/* 네비게이션 버튼 */}
-                {hasMultipleImages && validImageCount > 1 && (
-                  <>
-                    <button 
-                      className="productdetail-product-image-nav-btn productdetail-product-prev-btn"
-                      onClick={prevImage}
-                      aria-label="이전 이미지"
-                      disabled={validImageCount <= 1}
-                    >
-                      ‹
-                    </button>
-                    <button 
-                      className="productdetail-product-image-nav-btn productdetail-product-next-btn"
-                      onClick={nextImage}
-                      aria-label="다음 이미지"
-                      disabled={validImageCount <= 1}
-                    >
-                      ›
-                    </button>
-                  </>
-                )}
-                
-                {/* 이미지 카운터 */}
-                {hasMultipleImages && (
-                  <div className="productdetail-product-image-counter">
-                    {currentImageIndex + 1} / {productImages.length}
-                  </div>
-                )}
+                {/* [삭제] 네비게이션 버튼 (이전/다음) 제거 */}
+                {/* [삭제] 이미지 카운터 제거 */}
               </>
             ) : (
               <div className="productdetail-product-image-placeholder">
@@ -369,36 +288,39 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
             )}
           </div>
           
-          {/* 썸네일 이미지들 - 2x2 그리드로 수정 */}
-          {hasMultipleImages && validImageCount > 1 && (
-            <div className={`productdetail-product-thumbnails ${productImages.length <= 4 ? 'center-items' : ''}`}>
-              {productImages.map((image, index) => (
-                <button
-                  key={index}
-                  className={`productdetail-product-thumbnail ${
-                    index === currentImageIndex ? 'active' : ''
-                  } ${imageLoadErrors.has(index) ? 'error' : ''}`}
-                  onClick={() => goToImage(index)}
-                  disabled={imageLoadErrors.has(index)}
-                  aria-label={`${index + 1}번째 이미지로 이동`}
-                  title={imageLoadErrors.has(index) ? '이미지 로드 실패' : `이미지 ${index + 1}`}
-                >
-                  {!imageLoadErrors.has(index) ? (
-                    <img 
-                      src={image} 
-                      alt={`${product.name} 썸네일 ${index + 1}`}
-                      onError={() => handleImageError(index)}
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="productdetail-thumbnail-error">
-                      <div className="productdetail-thumbnail-placeholder">
-                        ⚠️
+          {/* [수정] 썸네일 이미지들 - 1번(대표) 이미지를 제외하고 2x2 그리드로 표시 */}
+          {hasMultipleImages && (
+            <div className={`productdetail-product-thumbnails ${displayedImages.length <= 4 ? 'center-items' : ''}`}>
+              {displayedImages.slice(1).map((imageUrl, index) => {
+                const originalIndex = index + 1; // displayedImages에서의 실제 인덱스
+                const isError = imageLoadErrors.has(imageUrl);
+                
+                return (
+                  <button
+                    key={imageUrl + originalIndex} // 스왑 시 키가 고유하도록 URL과 인덱스 조합
+                    className={`productdetail-product-thumbnail ${isError ? 'error' : ''}`}
+                    onClick={() => handleThumbnailClick(originalIndex)}
+                    disabled={isError}
+                    aria-label={`${originalIndex + 1}번째 이미지로 변경`}
+                    title={isError ? '이미지 로드 실패' : `${originalIndex + 1}번째 이미지 보기`}
+                  >
+                    {!isError ? (
+                      <img 
+                        src={imageUrl} 
+                        alt={`${product.name} 썸네일 ${originalIndex + 1}`}
+                        onError={() => handleImageError(imageUrl)}
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="productdetail-thumbnail-error">
+                        <div className="productdetail-thumbnail-placeholder">
+                          ⚠️
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </button>
-              ))}
+                    )}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>

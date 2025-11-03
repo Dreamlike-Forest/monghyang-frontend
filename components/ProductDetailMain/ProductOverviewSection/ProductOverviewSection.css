@@ -56,68 +56,9 @@
   transform: scale(1.03);
 }
 
-/* 이미지 네비게이션 버튼 */
-.productdetail-product-image-nav-btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(0, 0, 0, 0.7);
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 56px;
-  height: 56px;
-  cursor: pointer;
-  font-size: 24px;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  z-index: 3;
-  backdrop-filter: blur(4px);
-  opacity: 0;
-  visibility: hidden;
-}
+/* [삭제] 이미지 네비게이션 버튼 관련 CSS 제거 */
 
-.productdetail-product-main-image-container:hover .productdetail-product-image-nav-btn {
-  opacity: 1;
-  visibility: visible;
-}
-
-.productdetail-product-image-nav-btn:hover:not(:disabled) {
-  background: rgba(0, 0, 0, 0.9);
-  transform: translateY(-50%) scale(1.1);
-}
-
-.productdetail-product-image-nav-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-/* 이전/다음 버튼 위치 */
-.productdetail-product-prev-btn {
-  left: 20px;
-}
-
-.productdetail-product-next-btn {
-  right: 20px;
-}
-
-/* 이미지 카운터 */
-.productdetail-product-image-counter {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 600;
-  z-index: 3;
-  backdrop-filter: blur(4px);
-}
+/* [삭제] 이미지 카운터 관련 CSS 제거 */
 
 /* 이미지 플레이스홀더 */
 .productdetail-product-image-placeholder {
@@ -170,6 +111,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   background: #f3f4f6;
+  /* [삭제] 확인용 임시 스타일 제거 */
 }
 
 .productdetail-product-thumbnail:hover {
@@ -178,8 +120,10 @@
 }
 
 .productdetail-product-thumbnail.active {
-  border-color: #8b5a3c;
-  box-shadow: 0 0 0 2px #8b5a3c;
+  /* [수정] 현재 활성화된 썸네일(대표 이미지)은 표시하지 않으므로 active 스타일 불필요 */
+  /* 단, 스왑 기능을 위해 남겨둘 수 있으나, 현재 로직에서는 사용되지 않음 */
+  /* border-color: #8b5a3c; */
+  /* box-shadow: 0 0 0 2px #8b5a3c; */
 }
 
 .productdetail-product-thumbnail.error {
@@ -568,22 +512,6 @@
     aspect-ratio: 1; /* 정사각형 비율 유지 */
   }
   
-  .productdetail-product-image-nav-btn {
-    opacity: 1;
-    visibility: visible;
-    width: 48px;
-    height: 48px;
-    font-size: 20px;
-  }
-  
-  .productdetail-product-prev-btn {
-    left: 16px;
-  }
-  
-  .productdetail-product-next-btn {
-    right: 16px;
-  }
-  
   /* 모바일에서도 2x2 그리드 유지 */
   .productdetail-product-thumbnails {
     grid-template-columns: repeat(2, 1fr);
@@ -672,13 +600,7 @@
     font-size: 14px;
     border-radius: 10px;
   }
-  
-  .productdetail-product-image-nav-btn {
-    width: 44px;
-    height: 44px;
-    font-size: 18px;
-  }
-  
+
   .productdetail-product-main-image-container {
     height: auto;
     aspect-ratio: 1; /* 정사각형 비율 유지 */
@@ -694,20 +616,10 @@
 }
 
 @media (prefers-contrast: high) {
-  .productdetail-product-image-nav-btn {
-    background: rgba(0, 0, 0, 0.9);
-    border: 2px solid white;
-  }
-  
   .productdetail-product-thumbnail {
     border-width: 4px;
   }
   
-  .productdetail-product-image-counter {
-    background: rgba(0, 0, 0, 0.9);
-    border: 1px solid white;
-  }
-
   .productdetail-add-to-cart-button,
   .productdetail-buy-now-button {
     border: 3px solid;
@@ -719,7 +631,6 @@
 }
 
 /* 포커스 스타일 */
-.productdetail-product-image-nav-btn:focus,
 .productdetail-product-thumbnail:focus,
 .productdetail-add-to-cart-button:focus,
 .productdetail-buy-now-button:focus {
@@ -729,13 +640,6 @@
 
 /* 터치 디바이스 최적화 */
 @media (hover: none) and (pointer: coarse) {
-  .productdetail-product-image-nav-btn {
-    width: 52px;
-    height: 52px;
-    opacity: 0.8;
-    visibility: visible;
-  }
-  
   .productdetail-product-thumbnail {
     max-width: 160px;
   }
