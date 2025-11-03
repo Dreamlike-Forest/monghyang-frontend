@@ -146,18 +146,24 @@
   line-height: 1.5;
 }
 
-/* 썸네일 이미지들 */
+/* 썸네일 이미지들 - 2x2 그리드 레이아웃 */
 .productdetail-product-thumbnails {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2열 그리드 */
   gap: 12px;
-  overflow-x: auto;
-  padding: 8px 0;
+  padding: 0;
+}
+
+/* 썸네일이 4개 이하일 때 중앙 정렬 */
+.productdetail-product-thumbnails.center-items {
+  justify-items: center;
 }
 
 .productdetail-product-thumbnail {
   flex-shrink: 0;
-  width: 100px;
-  height: 100px;
+  width: 100%; /* 그리드 셀 전체 너비 */
+  aspect-ratio: 1; /* 정사각형 비율 유지 */
+  max-width: 280px; /* 최대 크기 제한 */
   border-radius: 12px;
   overflow: hidden;
   border: 3px solid transparent;
@@ -196,6 +202,19 @@
   justify-content: center;
   font-size: 28px;
   color: #ef4444;
+}
+
+/* 썸네일 플레이스홀더 */
+.productdetail-thumbnail-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  color: #6c757d;
+  font-size: 32px;
 }
 
 /* 오른쪽: 상품 정보 섹션 */
@@ -523,12 +542,17 @@
   .productdetail-product-main-image-container {
     border-radius: 16px;
     height: auto;
-    aspect-ratio: 2;
+    aspect-ratio: 1; /* 정사각형 비율 유지 */
+  }
+  
+  /* 썸네일 그리드 유지 */
+  .productdetail-product-thumbnails {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
   
   .productdetail-product-thumbnail {
-    width: 90px;
-    height: 90px;
+    max-width: 240px;
   }
 }
 
@@ -541,7 +565,7 @@
   
   .productdetail-product-main-image-container {
     height: auto;
-    aspect-ratio: 2;
+    aspect-ratio: 1; /* 정사각형 비율 유지 */
   }
   
   .productdetail-product-image-nav-btn {
@@ -560,13 +584,15 @@
     right: 16px;
   }
   
+  /* 모바일에서도 2x2 그리드 유지 */
   .productdetail-product-thumbnails {
-    justify-content: center;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
   }
   
   .productdetail-product-thumbnail {
-    width: 80px;
-    height: 80px;
+    max-width: 180px;
+    border-radius: 8px;
   }
   
   .productdetail-product-details-grid {
@@ -625,9 +651,15 @@
     gap: 16px;
   }
   
+  /* 작은 화면에서도 2x2 그리드 유지 */
+  .productdetail-product-thumbnails {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+  
   .productdetail-product-thumbnail {
-    width: 70px;
-    height: 70px;
+    max-width: 150px;
+    border-radius: 6px;
   }
 
   .productdetail-product-info-section {
@@ -649,7 +681,7 @@
   
   .productdetail-product-main-image-container {
     height: auto;
-    aspect-ratio: 2;
+    aspect-ratio: 1; /* 정사각형 비율 유지 */
   }
 }
 
@@ -705,8 +737,7 @@
   }
   
   .productdetail-product-thumbnail {
-    width: 85px;
-    height: 85px;
+    max-width: 160px;
   }
 
   .productdetail-add-to-cart-button:active,
