@@ -1,10 +1,9 @@
-// components/ProductDetailMain/ProductOverviewSection/ProductOverviewSection.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { ProductWithDetails } from '../../../types/mockData';
-import { addToCart } from '../../Cart/CartStore'; // CartStore에서 직접 import
-import { checkAuthAndPrompt } from '../../../utils/authUtils'; // 인증 유틸리티 import
+import { addToCart } from '../../Cart/CartStore'; 
+import { checkAuthAndPrompt } from '../../../utils/authUtils'; 
 import './ProductOverviewSection.css';
 
 interface ProductOverviewSectionProps {
@@ -16,9 +15,9 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
   product, 
   forwardRef 
 }) => {
-  // [수정] 이미지 URL 배열을 직접 상태로 관리 (순서 변경을 위해)
+  // 이미지 URL 배열을 직접 상태로 관리 (순서 변경을 위해)
   const [displayedImages, setDisplayedImages] = useState<string[]>([]);
-  // [수정] 에러 상태를 URL(string) 기준으로 관리
+  //에러 상태를 URL(string) 기준으로 관리
   const [imageLoadErrors, setImageLoadErrors] = useState<Set<string>>(new Set());
 
   // 토스트 메시지 표시 함수
@@ -90,7 +89,6 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
     const getProductImages = (): string[] => {
       const allImages: string[] = [];
       
-      // 1. 메인 이미지 (image_key) 추가
       if (product.image_key) {
         const mainImageUrl = getImageUrl(product.image_key);
         if (isValidImageUrl(mainImageUrl)) {
@@ -98,7 +96,6 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
         }
       }
       
-      // 2. 추가 이미지들 (images 배열) 추가 - 최대 4개 더
       if (product.images && product.images.length > 0) {
         // 'seq' 기준으로 정렬
         const sortedImages = [...product.images].sort((a, b) => {
@@ -115,7 +112,7 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
         });
       }
       
-      // 3. 이미지가 없을 경우 샘플 이미지 추가
+      // 이미지가 없을 경우 샘플 이미지 추가
       if (allImages.length === 0) {
         const sampleImages = [
           'https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=800&h=800&fit=crop',
@@ -132,27 +129,27 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
     };
 
     setDisplayedImages(getProductImages()); // [수정]
-    setImageLoadErrors(new Set()); // 에러 상태 리셋
-  }, [product]); // product가 변경될 때마다 이미지 목록 재생성
+    setImageLoadErrors(new Set()); 
+  }, [product]); 
 
   const hasImages = displayedImages.length > 0;
   const hasMultipleImages = displayedImages.length > 1;
 
-  // [수정] 이미지 로드 에러 처리 (URL 기반)
+  // 이미지 로드 에러 처리 (URL 기반)
   const handleImageError = (imageUrl: string) => {
     if (imageUrl) {
       setImageLoadErrors(prev => new Set(prev).add(imageUrl));
     }
   };
 
-  // [신규] 썸네일 클릭 시 대표 이미지와 스왑하는 함수
+  //썸네일 클릭 시 대표 이미지와 스왑하는 함수
   const handleThumbnailClick = (clickedImageUrl: string) => {
-    if (imageLoadErrors.has(clickedImageUrl)) return; // 에러난 이미지는 클릭 무시
+    if (imageLoadErrors.has(clickedImageUrl)) return; 
 
     const newDisplayedImages = [...displayedImages];
     const clickedIndex = newDisplayedImages.indexOf(clickedImageUrl);
 
-    if (clickedIndex <= 0) return; // 이미 대표 이미지거나 존재하지 않으면 무시
+    if (clickedIndex <= 0) return;
 
     // 0번째(대표) 이미지와 클릭된 썸네일(clickedIndex)의 이미지를 스왑
     const mainImage = newDisplayedImages[0];
@@ -244,11 +241,11 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
   };
 
   const discountRate = getDiscountRate();
-  // [수정] 대표 이미지가 에러인지 확인
+  // 대표 이미지가 에러인지 확인
   const currentImageFailed = hasImages && imageLoadErrors.has(displayedImages[0]);
   const allImagesFailed = hasImages && displayedImages.every(imgUrl => imageLoadErrors.has(imgUrl));
 
-  // [수정] 썸네일 4칸을 채우는 배열 생성
+  // 썸네일 4칸을 채우는 배열 생성
   const thumbnailSlots: (string | null)[] = Array(4).fill(null);
   displayedImages.slice(1).forEach((imgUrl, index) => {
     if (index < 4) { // 썸네일은 최대 4개
@@ -265,7 +262,7 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
           <div className="productdetail-product-main-image-container">
             {hasImages && !allImagesFailed ? (
               <>
-                {/* [수정] 메인 이미지 - 항상 displayedImages[0] 렌더링 */}
+                {/* 메인 이미지 - 항상 displayedImages[0] 렌더링 */}
                 {!currentImageFailed ? (
                   <img 
                     src={displayedImages[0]} 
@@ -275,7 +272,7 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
                     loading="eager" // 메인 이미지는 즉시 로드
                   />
                 ) : (
-                  // [수정] 메인 이미지 로드 실패 시에도 "준비 중"으로 통일
+                  //  메인 이미지 로드 실패 시에도 "준비 중"으로 통일
                   <div className="productdetail-product-image-placeholder">
                     <div className="productdetail-product-placeholder-icon">🍶</div>
                     <div className="productdetail-product-placeholder-text">
@@ -294,7 +291,7 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
             )}
           </div>
           
-          {/* [수정] 썸네일 4칸을 기준으로 렌더링 */}
+          {/* 썸네일 4칸을 기준으로 렌더링 */}
           {hasMultipleImages && (
             <div className={`productdetail-product-thumbnails ${displayedImages.length <= 4 ? 'center-items' : ''}`}>
               {thumbnailSlots.map((imageUrl, index) => {
@@ -318,7 +315,7 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
                         loading="lazy"
                       />
                     ) : (
-                      // [수정] 빈 슬롯과 에러 슬롯 모두 "이미지 준비 중" 플레이스홀더 표시
+                      // 빈 슬롯과 에러 슬롯 모두 "이미지 준비 중" 플레이스홀더 표시
                       <div className="productdetail-thumbnail-placeholder">
                         <div className="productdetail-thumbnail-placeholder-icon">
                           {'🍶'}
