@@ -62,7 +62,7 @@ export default function MainApp() {
             setCurrentView('brewery-detail');
             console.log('양조장 상세페이지로 설정:', foundBrewery.brewery_name);
             
-            // *** 추가: 양조장 상세페이지 진입 시 스크롤 초기화 ***
+            // 양조장 상세페이지 진입 시 스크롤 초기화
             setTimeout(() => {
               window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
               document.documentElement.scrollTop = 0;

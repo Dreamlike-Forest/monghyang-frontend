@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import SearchBar from '../SearchBar/SearchBar';
-import { ProductFilterOptions, ProductActiveFilters } from '../../../types/mockData';
+import { FilterOptions, ActiveFilters } from '../../../types/shop';
 import './ProductFilter.css';
 
 interface ProductFilterProps {
-  filterOptions: ProductFilterOptions;
-  activeFilters: ProductActiveFilters;
-  onFilterChange: (filters: Partial<ProductActiveFilters>) => void;
+  filterOptions: FilterOptions;
+  activeFilters: ActiveFilters;
+  onFilterChange: (filters: Partial<ActiveFilters>) => void;
 }
 
 const ProductFilter: React.FC<ProductFilterProps> = ({
@@ -27,7 +27,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
   }, [activeFilters.priceMin, activeFilters.priceMax]);
 
   // 체크박스 필터 변경 핸들러 (주종, 인증)
-  const handleCheckboxChange = (category: keyof ProductActiveFilters, value: string) => {
+  const handleCheckboxChange = (category: keyof ActiveFilters, value: string) => {
     const currentArray = activeFilters[category] as string[];
     let newArray: string[];
     
@@ -86,7 +86,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
   };
 
   // 개별 필터 제거 핸들러
-  const removeFilter = (category: keyof ProductActiveFilters, value: string) => {
+  const removeFilter = (category: keyof ActiveFilters, value: string) => {
     if (Array.isArray(activeFilters[category])) {
       const currentArray = activeFilters[category] as string[];
       const newArray = currentArray.filter(item => item !== value);
@@ -112,7 +112,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
 
   // 활성화된 필터 태그 생성 함수
   const getActiveFilterTags = () => {
-    const tags: { category: keyof ProductActiveFilters; label: string; value: string }[] = [];
+    const tags: { category: keyof ActiveFilters; label: string; value: string }[] = [];
     
     // 주종 필터 태그
     activeFilters.types.forEach(type => {

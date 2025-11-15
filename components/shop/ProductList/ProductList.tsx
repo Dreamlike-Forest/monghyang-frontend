@@ -2,7 +2,7 @@
 
 import ProductCard from '../ProductCard/ProductCard';
 import Pagination from '../Pagination/Pagination';
-import { ProductWithDetails } from '../../../types/mockData';
+import { ProductWithDetails } from '../../../types/shop';
 import './ProductList.css';
 
 interface ProductListProps {

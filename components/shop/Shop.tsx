@@ -6,7 +6,8 @@ import ProductFilter from './ProductFilter/ProductFilter';
 import ProductList from './ProductList/ProductList';
 import ProductDetail from './ProductDetail/ProductDetail';
 import ProductDetailMain from '../ProductDetailMain/ProductDetailMain'; 
-import { ProductWithDetails, ProductActiveFilters, Brewery } from '../../types/mockData';
+import { ProductWithDetails, ActiveFilters } from '../../types/shop';
+import { Brewery } from '../../types/mockData';
 import { getProductsWithBrewery, mockFilterOptions, getBreweriesWithExperience } from '../../data/mockData';
 import './Shop.css';
 
@@ -21,7 +22,7 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
   const [allProducts] = useState<ProductWithDetails[]>(getProductsWithBrewery());
   const [allBreweries] = useState<Brewery[]>(getBreweriesWithExperience());
   const [filteredProducts, setFilteredProducts] = useState<ProductWithDetails[]>(getProductsWithBrewery());
-  const [activeFilters, setActiveFilters] = useState<ProductActiveFilters>({
+  const [activeFilters, setActiveFilters] = useState<ActiveFilters>({
     types: [],
     alcoholRange: '',
     regions: [],
@@ -134,10 +135,10 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
       if (activeFilters.alcoholRange) {
         filtered = filtered.filter(product => {
           switch (activeFilters.alcoholRange) {
-             case 'low': return product.alcohol >= 0 && product.alcohol <= 6;
-             case 'medium': return product.alcohol >= 7 && product.alcohol <= 15;
-             case 'high1': return product.alcohol >= 16 && product.alcohol <= 25;
-             case 'high2': return product.alcohol >= 25 && product.alcohol <= 100;
+            case 'low': return product.alcohol >= 0 && product.alcohol <= 6;
+            case 'medium': return product.alcohol >= 7 && product.alcohol <= 15;
+            case 'high1': return product.alcohol >= 16 && product.alcohol <= 25;
+            case 'high2': return product.alcohol >= 25 && product.alcohol <= 100;
             default: return true;
           }
         });
@@ -192,7 +193,7 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
     applyFilters();
   }, [applyFilters]);
 
-  const handleFilterChange = (newFilters: Partial<ProductActiveFilters>) => {
+  const handleFilterChange = (newFilters: Partial<ActiveFilters>) => {
     setActiveFilters(prev => ({ ...prev, ...newFilters }));
   };
 
