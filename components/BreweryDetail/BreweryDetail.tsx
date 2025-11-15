@@ -22,6 +22,24 @@ const BreweryDetail: React.FC<BreweryDetailProps> = ({
 }) => {
   const [activeSection, setActiveSection] = useState<string>('images');
   
+  // 🔥 데이터 검증 추가
+  useEffect(() => {
+    console.log('🍺 BreweryDetail - 받은 데이터:', brewery);
+    
+    if (!brewery) {
+      console.error('❌ brewery 데이터가 없습니다!');
+    } else {
+      console.log('✅ brewery 데이터 확인:', {
+        id: brewery.brewery_id,
+        name: brewery.brewery_name,
+        address: brewery.brewery_address,
+        hasImages: brewery.brewery_images?.length || 0,
+        hasExperiences: brewery.experience_programs?.length || 0,
+        productCount: products.length
+      });
+    }
+  }, [brewery, products]);
+  
   // 스크롤 참조
   const imagesRef = useRef<HTMLDivElement>(null);
   const introRef = useRef<HTMLDivElement>(null);
@@ -38,7 +56,40 @@ const BreweryDetail: React.FC<BreweryDetailProps> = ({
     reviewsRef
   };
 
-  // *** 추가: 컴포넌트 마운트 시 스크롤을 최상단으로 이동 ***
+  // 🔥 brewery가 없으면 로딩 또는 에러 표시
+  if (!brewery) {
+    return (
+      <div className="brewery-detail-container">
+        <div className="brewery-loading-state">
+          <div className="brewery-loading-spinner"></div>
+          <p>양조장 정보를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 🔥 필수 필드 검증
+  if (!brewery.brewery_id || !brewery.brewery_name) {
+    return (
+      <div className="brewery-detail-container">
+        <div className="brewery-error-state">
+          <div className="brewery-error-icon">⚠️</div>
+          <h2 className="brewery-error-title">양조장 정보가 올바르지 않습니다</h2>
+          <p className="brewery-error-message">
+            필수 정보가 누락되었습니다. 잠시 후 다시 시도해주세요.
+          </p>
+          <button 
+            className="brewery-error-button"
+            onClick={() => window.location.reload()}
+          >
+            새로고침
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // *** 컴포넌트 마운트 시 스크롤을 최상단으로 이동 ***
   useEffect(() => {
     // 여러 방법으로 스크롤 초기화 (브라우저 호환성 보장)
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
