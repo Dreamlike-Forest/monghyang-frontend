@@ -1,14 +1,10 @@
-// 커뮤니티 관련 타입 정의
-
-// ⭐ 이 부분만 ERD에 맞게 수정 (상품 리뷰 이미지)
 export interface PostImage {
   post_image_id: number;
   post_id: number;
-  image_key: string;  // ERD 필드: image_key
-  seq: number;        // ERD 필드: seq (이미지 순서)
+  image_key: string;  
+  seq: number;        
 }
 
-// 아래는 원본 그대로 유지
 export interface Post {
   post_id: number;
   title: string;
@@ -36,7 +32,7 @@ export interface PostFilter {
   subcategory: string;
   searchKeyword: string;
   sortBy: 'latest' | 'popular' | 'views' | 'likes';
-  hasImages?: boolean; // 이미지가 있는 게시글만 필터링
+  hasImages?: boolean; 
 }
 
 export interface WritePostData {
@@ -48,8 +44,8 @@ export interface WritePostData {
   brewery_name?: string;
   product_name?: string;
   tags: string[];
-  images: File[]; // 업로드할 이미지 파일들
-  imageDescriptions: string[]; // 각 이미지의 설명
+  images: File[]; 
+  imageDescriptions: string[]; 
 }
 
 export interface CategoryConfig {

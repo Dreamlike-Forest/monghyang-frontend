@@ -1,4 +1,3 @@
-// ==================== 기본 상품 타입 (ERD 기반) ====================
 export interface Product {
   product_id: number;
   user_id: number;

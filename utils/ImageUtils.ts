@@ -1,8 +1,3 @@
-/**
- * 이미지 관련 유틸리티 함수 모음
- * 이미지 유효성 검사, 로딩 상태 관리, Placeholder 생성 등
- */
-
 // 이미지 로딩 상태 타입
 export type ImageLoadingState = 'loading' | 'loaded' | 'error';
 
@@ -92,9 +87,6 @@ export const getPlaceholderText = (status: ImageLoadingState): string => {
   return texts[status];
 };
 
-/**
- * 이미지 배열에서 썸네일 URL 가져오기
- */
 export const getThumbnailUrl = (
   images: Array<{ key?: string; image_key?: string; url?: string }>,
   fallbackUrl?: string
@@ -113,9 +105,6 @@ export const getThumbnailUrl = (
   return fallbackUrl || null;
 };
 
-/**
- * React 컴포넌트에서 사용할 이미지 상태 관리 헬퍼
- */
 export interface ImageState {
   url: string | null;
   status: ImageLoadingState;
