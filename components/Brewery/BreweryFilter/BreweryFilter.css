@@ -240,7 +240,7 @@
   color: #7c4d34;
 }
 
-/* 반응형 디자인 - ProductFilter와 동일 */
+/* 반응형 디자인 */
 @media (max-width: 1024px) {
   .brewery-filter {
     width: 240px;

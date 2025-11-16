@@ -39,8 +39,7 @@ const BreweryCard: React.FC<BreweryCardProps> = ({ brewery, onClick }) => {
     url.searchParams.set('brewery', breweryId.toString());
     
     // URL 업데이트 및 페이지 이동
-    window.history.pushState({}, '', url.toString());
-    window.location.reload();
+    window.location.href = url.toString();
   };
 
   const handleImageLoad = () => {

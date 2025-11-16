@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import BreweryFilter from './BreweryFilter/BreweryFilter';
 import BreweryCard from './BreweryCard/BreweryCard';
@@ -30,15 +30,11 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
     searchKeyword: ''
   });
   const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [hasError, setHasError] = useState(false);
   const itemsPerPage = 10;
-
-  // 초기 데이터 로드
-  useEffect(() => {
-    loadBreweries();
-  }, []);
 
   // URL 파라미터 처리
   useEffect(() => {
@@ -80,16 +76,11 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
     setFilters(newFilters);
   }, [searchParams]);
 
-  // 필터 변경 시 데이터 다시 로드
-  useEffect(() => {
-    if (breweryData.length > 0 || isLoading) {
-      loadBreweries();
-    }
-  }, [filters, currentPage]);
-
-  // 양조장 데이터 로드 함수
-  const loadBreweries = async () => {
+  // 양조장 데이터 로드 함수 - useCallback으로 메모이제이션
+  const loadBreweries = useCallback(async () => {
+    console.log('🔄 loadBreweries 호출 - 현재 페이지:', currentPage);
     setIsLoading(true);
+    setHasError(false);
     
     try {
       const startOffset = (currentPage - 1) * itemsPerPage;
@@ -145,17 +136,30 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
       setBreweryData(result.breweries);
       setTotalCount(result.totalCount);
       setTotalPages(Math.ceil(result.totalCount / itemsPerPage));
+      setHasError(false);
       
     } catch (error) {
       console.error('❌ 양조장 데이터 로드 실패:', error);
-      alert('양조장 정보를 불러오는데 실패했습니다.');
+      setHasError(true);
       setBreweryData([]);
       setTotalCount(0);
       setTotalPages(0);
+      
+      // 에러 메시지 개선
+      if (error instanceof Error) {
+        alert(`양조장 정보를 불러오는데 실패했습니다.\n오류: ${error.message}`);
+      } else {
+        alert('양조장 정보를 불러오는데 실패했습니다.\n잠시 후 다시 시도해주세요.');
+      }
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentPage, filters]);
+
+  // 필터나 페이지 변경 시 데이터 로드
+  useEffect(() => {
+    loadBreweries();
+  }, [loadBreweries]);
 
   // 카운트 계산 (프론트엔드 필터링용)
   const breweryCount = useMemo(() => {
@@ -211,6 +215,7 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
 
   // 필터 변경 핸들러
   const handleFilterChange = (newFilters: Partial<BreweryFilterOptions>) => {
+    console.log('🔧 필터 변경:', newFilters);
     setFilters(prev => ({ ...prev, ...newFilters }));
     setCurrentPage(1);
   };
@@ -228,14 +233,12 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
 
   // 양조장 상세페이지로 이동
   const navigateToBreweryDetail = (breweryId: number) => {
-    const baseUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
-    const newUrl = new URL(baseUrl);
+    const url = new URL(window.location.href);
     
-    newUrl.searchParams.set('view', 'brewery-detail');
-    newUrl.searchParams.set('brewery', breweryId.toString());
+    url.searchParams.set('view', 'brewery-detail');
+    url.searchParams.set('brewery', breweryId.toString());
     
-    window.history.pushState({}, '', newUrl.toString());
-    window.location.reload();
+    window.location.href = url.toString();
   };
 
   // 페이지 변경 핸들러
@@ -261,6 +264,12 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
     }
     
     return activeFilters;
+  };
+
+  // 재시도 버튼
+  const handleRetry = () => {
+    setHasError(false);
+    loadBreweries();
   };
 
   return (
@@ -320,6 +329,40 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
             <div className="brewery-loading">
               <div className="brewery-loading-spinner"></div>
               양조장을 검색하고 있습니다...
+            </div>
+          ) : hasError ? (
+            <div className="brewery-empty">
+              <div className="brewery-empty-icon">⚠️</div>
+              <h3 className="brewery-empty-title">
+                양조장 정보를 불러오지 못했습니다
+              </h3>
+              <p className="brewery-empty-description">
+                서버와의 연결에 문제가 있습니다.<br />
+                잠시 후 다시 시도해주세요.
+              </p>
+              <button
+                onClick={handleRetry}
+                style={{
+                  marginTop: '20px',
+                  padding: '12px 24px',
+                  backgroundColor: '#8b5a3c',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#7c4d34';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#8b5a3c';
+                }}
+              >
+                다시 시도
+              </button>
             </div>
           ) : breweryData.length > 0 ? (
             <>

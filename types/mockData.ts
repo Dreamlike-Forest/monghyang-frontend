@@ -1,4 +1,3 @@
-// ==================== 양조장 관련 타입 ====================
 export interface Joy {
   joy_id: number;
   brewery_id: number;
@@ -52,8 +51,6 @@ export interface BreweryFilterOptions {
   searchKeyword: string;
 }
 
-// ==================== 상품 타입들은 shop.ts에서 import ====================
-// 상품 관련 타입은 types/shop.ts를 사용하세요
 export type {
   Product,
   ProductOption,
