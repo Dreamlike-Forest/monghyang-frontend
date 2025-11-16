@@ -68,7 +68,7 @@ const BreweryDetail: React.FC<BreweryDetailProps> = ({
         console.log('✅ 양조장 태그:', tags);
         
         // 3. 태그 데이터를 alcohol_types로 변환하여 병합
-        const breweryWithTags = {
+        const breweryWithTags: Brewery = {
           ...breweryData,
           alcohol_types: tags.map(tag => tag.tags_name)
         };
@@ -89,19 +89,23 @@ const BreweryDetail: React.FC<BreweryDetailProps> = ({
 
   // 컴포넌트 마운트 시 스크롤을 최상단으로 이동
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+    if (typeof window === 'undefined') return;
+
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
     
-    const scrollTimer = setTimeout(() => {
+    const scrollTimer = window.setTimeout(() => {
       window.scrollTo(0, 0);
     }, 0);
     
-    return () => clearTimeout(scrollTimer);
+    return () => window.clearTimeout(scrollTimer);
   }, [breweryId]);
 
   // 스크롤 위치에 따른 활성 섹션 감지
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const handleScroll = () => {
       const sections = [
         { id: 'images', ref: imagesRef },
@@ -128,7 +132,7 @@ const BreweryDetail: React.FC<BreweryDetailProps> = ({
           const sectionTop = section.ref.current.offsetTop;
           const sectionHeight = section.ref.current.offsetHeight;
           const sectionBottom = sectionTop + sectionHeight;
-          const sectionCenter = sectionTop + (sectionHeight / 2);
+          const sectionCenter = sectionTop + sectionHeight / 2;
           
           if (scrollPosition >= sectionTop - 100 && scrollPosition < sectionBottom - 50) {
             newActiveSection = section.id;
@@ -146,10 +150,12 @@ const BreweryDetail: React.FC<BreweryDetailProps> = ({
       }
     };
 
-    let timeoutId: NodeJS.Timeout;
+    // 브라우저 setTimeout 은 number 반환
+    let timeoutId: number;
+
     const debouncedHandleScroll = () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(handleScroll, 10);
+      window.clearTimeout(timeoutId);
+      timeoutId = window.setTimeout(handleScroll, 10);
     };
 
     window.addEventListener('scroll', debouncedHandleScroll, { passive: true });
@@ -157,7 +163,7 @@ const BreweryDetail: React.FC<BreweryDetailProps> = ({
 
     return () => {
       window.removeEventListener('scroll', debouncedHandleScroll);
-      clearTimeout(timeoutId);
+      window.clearTimeout(timeoutId);
     };
   }, [activeSection]);
 
@@ -174,7 +180,10 @@ const BreweryDetail: React.FC<BreweryDetailProps> = ({
       const elementTop = element.offsetTop;
       const targetPosition = elementTop - totalOffset;
       
-      window.scrollTo(0, Math.max(0, targetPosition));
+      window.scrollTo({
+        top: Math.max(0, targetPosition),
+        behavior: 'smooth'
+      });
     }
   };
 
@@ -203,22 +212,28 @@ const BreweryDetail: React.FC<BreweryDetailProps> = ({
   if (isLoading) {
     return (
       <div className="brewery-detail-container">
-        <div className="brewery-loading-state" style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '400px',
-          gap: '16px'
-        }}>
-          <div className="brewery-loading-spinner" style={{
-            width: '40px',
-            height: '40px',
-            border: '4px solid #f3f4f6',
-            borderTop: '4px solid #8b5a3c',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite'
-          }}></div>
+        <div
+          className="brewery-loading-state"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '400px',
+            gap: '16px',
+          }}
+        >
+          <div
+            className="brewery-loading-spinner"
+            style={{
+              width: '40px',
+              height: '40px',
+              border: '4px solid #f3f4f6',
+              borderTop: '4px solid #8b5a3c',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite',
+            }}
+          ></div>
           <p style={{ color: '#666', fontSize: '16px' }}>양조장 정보를 불러오는 중...</p>
         </div>
       </div>
@@ -229,23 +244,31 @@ const BreweryDetail: React.FC<BreweryDetailProps> = ({
   if (error || !brewery) {
     return (
       <div className="brewery-detail-container">
-        <div className="brewery-error-state" style={{
-          textAlign: 'center',
-          padding: '60px 20px',
-          minHeight: '400px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <div className="brewery-error-icon" style={{ fontSize: '64px', marginBottom: '16px' }}>⚠️</div>
-          <h2 className="brewery-error-title" style={{ fontSize: '24px', fontWeight: '700', color: '#333', marginBottom: '8px' }}>
+        <div
+          className="brewery-error-state"
+          style={{
+            textAlign: 'center',
+            padding: '60px 20px',
+            minHeight: '400px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <div className="brewery-error-icon" style={{ fontSize: '64px', marginBottom: '16px' }}>
+            ⚠️
+          </div>
+          <h2
+            className="brewery-error-title"
+            style={{ fontSize: '24px', fontWeight: '700', color: '#333', marginBottom: '8px' }}
+          >
             {error || '양조장 정보를 찾을 수 없습니다'}
           </h2>
           <p className="brewery-error-message" style={{ color: '#666', marginBottom: '24px' }}>
             잠시 후 다시 시도해주세요.
           </p>
-          <button 
+          <button
             className="brewery-error-button"
             onClick={() => window.location.reload()}
             style={{
@@ -256,7 +279,7 @@ const BreweryDetail: React.FC<BreweryDetailProps> = ({
               borderRadius: '8px',
               fontSize: '16px',
               fontWeight: '600',
-              cursor: 'pointer'
+              cursor: 'pointer',
             }}
           >
             새로고침
@@ -270,23 +293,31 @@ const BreweryDetail: React.FC<BreweryDetailProps> = ({
   if (!brewery.brewery_id || !brewery.brewery_name) {
     return (
       <div className="brewery-detail-container">
-        <div className="brewery-error-state" style={{
-          textAlign: 'center',
-          padding: '60px 20px',
-          minHeight: '400px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <div className="brewery-error-icon" style={{ fontSize: '64px', marginBottom: '16px' }}>⚠️</div>
-          <h2 className="brewery-error-title" style={{ fontSize: '24px', fontWeight: '700', color: '#333', marginBottom: '8px' }}>
+        <div
+          className="brewery-error-state"
+          style={{
+            textAlign: 'center',
+            padding: '60px 20px',
+            minHeight: '400px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <div className="brewery-error-icon" style={{ fontSize: '64px', marginBottom: '16px' }}>
+            ⚠️
+          </div>
+          <h2
+            className="brewery-error-title"
+            style={{ fontSize: '24px', fontWeight: '700', color: '#333', marginBottom: '8px' }}
+          >
             양조장 정보가 올바르지 않습니다
           </h2>
           <p className="brewery-error-message" style={{ color: '#666', marginBottom: '24px' }}>
             필수 정보가 누락되었습니다. 잠시 후 다시 시도해주세요.
           </p>
-          <button 
+          <button
             className="brewery-error-button"
             onClick={() => window.location.reload()}
             style={{
@@ -297,7 +328,7 @@ const BreweryDetail: React.FC<BreweryDetailProps> = ({
               borderRadius: '8px',
               fontSize: '16px',
               fontWeight: '600',
-              cursor: 'pointer'
+              cursor: 'pointer',
             }}
           >
             새로고침
@@ -323,27 +354,21 @@ const BreweryDetail: React.FC<BreweryDetailProps> = ({
           <BreweryHeader brewery={brewery} />
 
           {/* 이미지 갤러리 */}
-          <BreweryImageGallery 
-            brewery={brewery} 
-            forwardRef={imagesRef} 
-          />
+          <BreweryImageGallery brewery={brewery} forwardRef={imagesRef} />
 
           {/* 양조장 소개 */}
-          <BreweryIntro 
-            brewery={brewery} 
-            forwardRef={introRef} 
-          />
+          <BreweryIntro brewery={brewery} forwardRef={introRef} />
 
           {/* 체험 프로그램 */}
-          <BreweryExperiencePrograms 
-            brewery={brewery} 
+          <BreweryExperiencePrograms
+            brewery={brewery}
             forwardRef={experienceRef}
             onExperienceReservation={handleExperienceReservation}
           />
 
           {/* 판매 상품 */}
-          <BreweryProductGrid 
-            products={products} 
+          <BreweryProductGrid
+            products={products}
             forwardRef={productsRef}
             onAddToCart={handleAddToCart}
             onProductClick={handleProductClick}
@@ -352,8 +377,8 @@ const BreweryDetail: React.FC<BreweryDetailProps> = ({
           {/* 체험 리뷰 섹션 */}
           <div ref={reviewsRef} className="brewery-section-container" id="reviews">
             <h2 className="brewery-section-title">체험 리뷰</h2>
-            <BreweryReviewsSection 
-              breweryName={brewery.brewery_name} 
+            <BreweryReviewsSection
+              breweryName={brewery.brewery_name}
               breweryId={brewery.brewery_id}
               hideTitle={true}
             />

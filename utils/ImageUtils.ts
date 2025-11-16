@@ -3,165 +3,129 @@
 /**
  * 이미지 URL 변환 및 처리 유틸리티
  *
- * 이미지 키를 실제 URL로 변환하고 유효성을 검증하는 함수들을 제공합니다.
+ * 백엔드 Swagger:
+ *   GET /api/image/{imageFullName}
+ * imageFullName 에 확장자를 포함한 전체 파일 이름(예: 79b7f851-....png)이 들어온다고 가정.
  */
 
-// 이미지 서버 기본 URL (환경변수로 관리)
-const IMAGE_BASE_URL =
-  process.env.NEXT_PUBLIC_IMAGE_URL || 'http://16.184.16.198:61234';
-
-/**
- * 이미지 타입별 경로 매핑
- */
-const IMAGE_TYPE_PATHS: Record<string, string> = {
-  brewery: '/images/breweries',
-  product: '/images/products',
-  experience: '/images/experiences',
-  review: '/images/reviews',
-  user: '/images/users',
-};
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 /**
- * 이미지 키를 실제 URL로 변환
- * @param imageKey - 이미지 키 또는 URL
- * @param type - 이미지 타입 (brewery, product, experience 등)
- * @returns 변환된 이미지 URL
+ * /api/image/{imageFullName} 형식으로 URL을 만들어준다.
+ * - imageKey 가 이미 전체 URL이면 그대로 사용
+ * - imageKey 가 '/api/image/...' 로 시작하면 앞에 API_BASE_URL만 붙여준다.
+ * - 그 외에는 '/api/image/{imageKey}' 로 만든다.
  */
-export const getImageUrl = (
-  imageKey: string | undefined,
-  type: keyof typeof IMAGE_TYPE_PATHS = 'brewery',
-): string => {
+export const getImageUrl = (imageKey?: string): string => {
   if (!imageKey) return '';
 
-  // 이미 전체 URL인 경우 그대로 반환
-  if (
-    imageKey.startsWith('http://') ||
-    imageKey.startsWith('https://') ||
-    imageKey.startsWith('/')
-  ) {
+  // 이미 절대 URL이면 그대로 사용
+  if (imageKey.startsWith('http://') || imageKey.startsWith('https://')) {
     return imageKey;
   }
 
-  // 이미지 타입에 따라 경로 생성
-  const basePath = IMAGE_TYPE_PATHS[type] || IMAGE_TYPE_PATHS.brewery;
+  // 이미 /api/image 로 시작하는 상대 경로인 경우
+  if (imageKey.startsWith('/api/image')) {
+    return API_BASE_URL ? `${API_BASE_URL}${imageKey}` : imageKey;
+  }
 
-  // 이미지 키를 기반으로 전체 URL 생성
-  return `${IMAGE_BASE_URL}${basePath}/${imageKey}`;
+  // 그 외에는 스웨거에 맞게 /api/image/{imageFullName} 으로 만들기
+  const path = `/api/image/${imageKey}`;
+  return API_BASE_URL ? `${API_BASE_URL}${path}` : path;
 };
 
 /**
  * 유효한 이미지 URL인지 확인
- * @param imageUrl - 확인할 이미지 URL
- * @returns 유효 여부
  */
 export const isValidImageUrl = (imageUrl: string | undefined): boolean => {
   if (!imageUrl || imageUrl.trim() === '') return false;
 
-  // 플레이스홀더나 기본 이미지 패턴 제외
   const invalidPatterns = [
     '/api/placeholder',
     'placeholder',
     'default',
-    '/images/brewery-placeholder.jpg',
-    '/images/brewery-default.jpg',
-    '/images/product-placeholder.jpg',
-    '/images/product-default.jpg',
     'undefined',
     'null',
   ];
 
-  return !invalidPatterns.some(pattern =>
+  return !invalidPatterns.some((pattern) =>
     imageUrl.toLowerCase().includes(pattern.toLowerCase()),
   );
 };
 
+// --------------------- 양조장 / 상품 / 체험별 헬퍼 ---------------------
+
 /**
  * 양조장 이미지 배열 처리
- * @param brewery - 양조장 데이터
- * @param maxImages - 최대 이미지 개수 (기본값: 5)
- * @returns 처리된 이미지 URL 배열
+ * @param brewery - 양조장 데이터 (image_key, brewery_images 등을 가진다고 가정)
+ * @param maxImages - 최대 이미지 개수
  */
-export const getBreweryImages = (
-  brewery: any,
-  maxImages: number = 5,
-): string[] => {
+export const getBreweryImages = (brewery: any, maxImages: number = 5): string[] => {
   const allImages: string[] = [];
 
-  // 1. 메인 이미지 (image_key) 추가
+  // 1. 메인 이미지 (image_key)
   if (brewery?.image_key) {
-    const mainImageUrl = getImageUrl(brewery.image_key, 'brewery');
-    if (isValidImageUrl(mainImageUrl)) {
-      allImages.push(mainImageUrl);
+    const mainUrl = getImageUrl(brewery.image_key);
+    if (isValidImageUrl(mainUrl)) {
+      allImages.push(mainUrl);
     }
   }
 
-  // 2. 추가 이미지들 (brewery_images) 추가
+  // 2. 추가 이미지들 (brewery_images)
   if (brewery?.brewery_images && Array.isArray(brewery.brewery_images)) {
-    brewery.brewery_images.forEach((imageKey: string) => {
-      const imageUrl = getImageUrl(imageKey, 'brewery');
-      if (isValidImageUrl(imageUrl) && !allImages.includes(imageUrl)) {
-        allImages.push(imageUrl);
+    brewery.brewery_images.forEach((imgKey: string) => {
+      const url = getImageUrl(imgKey);
+      if (isValidImageUrl(url) && !allImages.includes(url)) {
+        allImages.push(url);
       }
     });
   }
 
-  // 3. 최대 개수만큼만 반환
   return allImages.slice(0, maxImages);
 };
 
 /**
- * 상품 이미지 URL 가져오기
- * @param product - 상품 데이터
- * @returns 이미지 URL
+ * 상품 이미지 URL
  */
 export const getProductImageUrl = (product: any): string => {
   if (!product) return '';
-
-  const imageUrl = getImageUrl(product.image_key, 'product');
-  return isValidImageUrl(imageUrl) ? imageUrl : '';
+  const url = getImageUrl(product.image_key);
+  return isValidImageUrl(url) ? url : '';
 };
 
 /**
- * 체험 프로그램 이미지 URL 가져오기
- * @param experience - 체험 프로그램 데이터
- * @returns 이미지 URL
+ * 체험 프로그램 이미지 URL
  */
 export const getExperienceImageUrl = (experience: any): string => {
   if (!experience) return '';
-
-  const imageUrl = getImageUrl(experience.image_key, 'experience');
-  return isValidImageUrl(imageUrl) ? imageUrl : '';
+  const url = getImageUrl(experience.image_key);
+  return isValidImageUrl(url) ? url : '';
 };
 
 /**
- * 리뷰 이미지 URL 가져오기
- * @param imageKey - 리뷰 이미지 키
- * @returns 이미지 URL
+ * 리뷰 이미지 URL
  */
 export const getReviewImageUrl = (imageKey: string): string => {
-  const imageUrl = getImageUrl(imageKey, 'review');
-  return isValidImageUrl(imageUrl) ? imageUrl : '';
+  const url = getImageUrl(imageKey);
+  return isValidImageUrl(url) ? url : '';
 };
 
 /**
- * 사용자 프로필 이미지 URL 가져오기
- * @param user - 사용자 데이터
- * @returns 이미지 URL
+ * 사용자 프로필 이미지 URL
  */
 export const getUserProfileImageUrl = (user: any): string => {
   if (!user) return '';
-
-  const imageUrl = getImageUrl(user.profile_image_key, 'user');
-  return isValidImageUrl(imageUrl) ? imageUrl : '';
+  const url = getImageUrl(user.profile_image_key);
+  return isValidImageUrl(url) ? url : '';
 };
 
 /**
- * 이미지 로딩 에러 처리
+ * 이미지 로딩 에러 처리 (공통)
  */
 export const handleImageError = (
   event: React.SyntheticEvent<HTMLImageElement, Event>,
 ) => {
-  // 필요하다면 공통 placeholder 로 변경
+  // 필요하면 공통 placeholder 로 변경
   event.currentTarget.src = '/placeholder.png';
 };
 
@@ -169,7 +133,7 @@ export const handleImageError = (
  * 이미지 미리 로딩
  */
 export const preloadImages = (urls: string[]): void => {
-  urls.forEach(url => {
+  urls.forEach((url) => {
     if (!isValidImageUrl(url)) return;
     const img = new Image();
     img.src = url;
@@ -177,21 +141,14 @@ export const preloadImages = (urls: string[]): void => {
 };
 
 // ==================================================================
-// --------------------- 추가: OptimizedImage 지원 -------------------
+// --------------------- OptimizedImage 관련 -------------------------
 // ==================================================================
 
-/** 이미지 로딩 상태 타입 */
 export type ImageLoadingState = 'loading' | 'loaded' | 'error';
 
 /** placeholder에 사용할 아이콘 반환 */
 export const getPlaceholderIcon = (
-  type:
-    | 'product'
-    | 'brewery'
-    | 'user'
-    | 'camera'
-    | 'image'
-    | 'default' = 'default',
+  type: 'product' | 'brewery' | 'user' | 'camera' | 'image' | 'default' = 'default',
 ): string => {
   switch (type) {
     case 'product':
@@ -224,7 +181,6 @@ export const getPlaceholderText = (
   }
 };
 
-// 기본 export 묶음
 export default {
   getImageUrl,
   isValidImageUrl,

@@ -76,21 +76,24 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
     setFilters(newFilters);
   }, [searchParams]);
 
-  // 양조장 데이터 로드 함수 - useCallback으로 메모이제이션
+  // 양조장 데이터 로드 함수
   const loadBreweries = useCallback(async () => {
     console.log('🔄 loadBreweries 호출 - 현재 페이지:', currentPage);
     setIsLoading(true);
     setHasError(false);
     
     try {
-      const startOffset = (currentPage - 1) * itemsPerPage;
+      // 👉 Swagger 상에서 {startOffset} 은 보통 페이지 번호(0,1,2...)로 쓰이므로
+      // 페이지 인덱스(0-based)로 넘겨줌
+      const startOffset = currentPage - 1;
       
-      // 필터가 있으면 검색 API, 없으면 최신 목록 API
-      const hasFilters = filters.searchKeyword || 
-                        filters.regions.length > 0 || 
-                        filters.alcoholTypes.length > 0 ||
-                        filters.priceRange.min !== '' ||
-                        filters.priceRange.max !== '';
+      const hasFilters = !!(
+        filters.searchKeyword || 
+        filters.regions.length > 0 || 
+        filters.alcoholTypes.length > 0 ||
+        filters.priceRange.min !== '' ||
+        filters.priceRange.max !== ''
+      );
 
       let result;
       
@@ -145,7 +148,6 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
       setTotalCount(0);
       setTotalPages(0);
       
-      // 에러 메시지 개선
       if (error instanceof Error) {
         alert(`양조장 정보를 불러오는데 실패했습니다.\n오류: ${error.message}`);
       } else {
@@ -154,7 +156,7 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, filters]);
+  }, [currentPage, filters, itemsPerPage]);
 
   // 필터나 페이지 변경 시 데이터 로드
   useEffect(() => {
@@ -166,7 +168,7 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
     const byRegion: Record<string, number> = {};
     const byAlcoholType: Record<string, number> = {};
     const byBadge: Record<string, number> = {};
-    let priceStats = { min: Number.MAX_SAFE_INTEGER, max: 0, withExperience: 0 };
+    const priceStats = { min: Number.MAX_SAFE_INTEGER, max: 0, withExperience: 0 };
 
     breweryData.forEach(brewery => {
       byRegion[brewery.region_name] = (byRegion[brewery.region_name] || 0) + 1;
