@@ -16,7 +16,7 @@ interface ProductListProps {
   totalCount: number;
   activeCategory?: string;
   onCategoryChange?: (category: string) => void;
-  onProductClick: (productId: number) => void; // 상품 클릭 핸들러 추가
+  onProductClick: (productId: number) => void;
   onAddToCart: (productId: number) => void;
   onToggleWishlist: (productId: number) => void;
 }
@@ -57,7 +57,7 @@ const ProductList: React.FC<ProductListProps> = ({
 
   return (
     <div className="product-list-container">
-      {/* 정렬 컨트롤만 유지 */}
+      {/* 정렬 컨트롤 */}
       <div className="product-list-header">
         <div className="sort-controls">
           <span className="sort-label">정렬:</span>
@@ -76,11 +76,9 @@ const ProductList: React.FC<ProductListProps> = ({
       </div>
 
       {/* 상품 수 표시 */}
-      {!isLoading && (
-        <div className="product-count">
-          총 <span className="product-count-number">{totalCount}</span>개의 상품
-        </div>
-      )}
+      <div className="product-count">
+        총 <span className="product-count-number">{totalCount}</span>개의 상품
+      </div>
 
       {/* 상품 그리드 또는 빈 상태 */}
       {products.length === 0 ? (
@@ -101,12 +99,12 @@ const ProductList: React.FC<ProductListProps> = ({
                 product={product}
                 onAddToCart={onAddToCart}
                 onToggleWishlist={onToggleWishlist}
-                onProductClick={onProductClick} // 상품 클릭 핸들러 전달
+                onProductClick={onProductClick}
               />
             ))}
           </div>
 
-          {/* 페이지네이션 */}
+          {/* 페이지네이션 - totalPages가 1보다 크면 표시 */}
           {totalPages > 1 && (
             <Pagination
               currentPage={currentPage}
