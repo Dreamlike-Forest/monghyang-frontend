@@ -1,0 +1,28 @@
+node_modules/
+
+# production
+dist/
+
+# environment variables
+.env
+.env.*
+
+# cache
+.vite/
+.cache/
+*.log
+
+# IDE settings
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# test coverage
+coverage/
+
+# misc
+.eslintcache
+*.tsbuildinfo

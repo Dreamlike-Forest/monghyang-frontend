@@ -1,0 +1,36 @@
+/* 양조장 헤더 컨테이너 */
+.brewery-header {
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* 양조장명 */
+.brewery-header-name {
+  font-size: 32px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0 0 8px 0;
+  line-height: 1.2;
+}
+
+/* 지역명 */
+.brewery-header-region {
+  font-size: 16px;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+  .brewery-header-name {
+    font-size: 24px;
+  }
+}
+
+/* 작은 모바일 반응형 */
+@media (max-width: 480px) {
+  .brewery-header-name {
+    font-size: 20px;
+  }
+}

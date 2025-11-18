@@ -3,191 +3,87 @@
 import Header from '../components/Header/Header';
 import Nav from '../components/Nav/Nav';
 import Footer from '../components/Footer/Footer';
-import Login from '../components/Login/Login';
-import Shop from '../components/shop/Shop';
-import Brewery from '../components/Brewery/Brewery';
-import BreweryDetail from '../components/BreweryDetail/BreweryDetail';
-import About from '../components/About/About'; 
-import Home from '../components/Home/Home';
-import Community from '../components/community/Community';
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
-import { Brewery as BreweryType, ProductWithDetails } from '../types/mockData';
-import { getBreweriesWithExperience, getProductsWithBrewery } from '../data/mockData';
 
-type View = 'home' | 'about' | 'brewery' | 'shop' | 'community' | 'login' | 'brewery-detail';
+// 클라이언트 전용 컴포넌트들을 동적으로 임포트
+const MainApp = dynamic(() => import('./MainApp'), {
+  ssr: false,
+  loading: () => (
+    <div style={{ 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center',
+      minHeight: 'calc(100vh - 110px)',
+      flexDirection: 'column',
+      gap: '16px'
+    }}>
+      <div style={{ 
+        width: '40px', 
+        height: '40px',
+        border: '4px solid #f3f3f3',
+        borderTop: '4px solid #8b5a3c',
+        borderRadius: '50%',
+        animation: 'spin 1s linear infinite'
+      }}></div>
+      <p style={{ color: '#666', fontSize: '16px' }}>페이지를 불러오는 중...</p>
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `
+      }} />
+    </div>
+  )
+});
 
 export default function HomePage() {
   const searchParams = useSearchParams();
-  const [currentView, setCurrentView] = useState<View>('home');
-  const [selectedBrewery, setSelectedBrewery] = useState<BreweryType | null>(null);
-  const [breweryProducts, setBreweryProducts] = useState<ProductWithDetails[]>([]);
+  const [isLoginPage, setIsLoginPage] = useState(false);
 
-  // URL 파라미터 처리
+  // 로그인 페이지 여부 확인
   useEffect(() => {
-    const view = searchParams.get('view') as View;
-    const breweryId = searchParams.get('brewery');
-
-    console.log('URL 파라미터:', { view, breweryId });
-
-    if (breweryId) {
-      // 양조장 상세 페이지 처리
-      const breweries = getBreweriesWithExperience();
-      const foundBrewery = breweries.find(b => b.brewery_id === parseInt(breweryId));
-      
-      console.log('찾은 양조장:', foundBrewery);
-      
-      if (foundBrewery) {
-        setSelectedBrewery(foundBrewery);
-        const products = getProductsWithBrewery().filter(p => p.brewery_id === foundBrewery.brewery_id);
-        setBreweryProducts(products);
-        setCurrentView('brewery-detail');
-        console.log('양조장 상세페이지로 설정:', foundBrewery.brewery_name);
-      } else {
-        console.log('양조장을 찾을 수 없음, brewery 목록으로 리다이렉트');
-        setCurrentView('brewery');
-      }
-    } else if (view && ['home', 'about', 'brewery', 'shop', 'community', 'login'].includes(view)) {
-      setCurrentView(view);
-      // 뷰가 변경되면 선택된 양조장 초기화
-      if (view !== 'brewery-detail') {
-        setSelectedBrewery(null);
-        setBreweryProducts([]);
-      }
-    } else {
-      setCurrentView('home');
-      setSelectedBrewery(null);
-      setBreweryProducts([]);
-    }
+    const view = searchParams.get('view');
+    setIsLoginPage(view === 'login');
   }, [searchParams]);
 
-  // 뷰 렌더링 함수
-  const renderView = () => {
-    console.log('현재 뷰 렌더링:', currentView);
-    
-    switch (currentView) {
-      case 'home':
-        return <Home />;
-
-      case 'about':
-        return <About />;
-
-      case 'shop':
-        return <Shop />;
-
-      case 'community':
-        return <Community />;
-
-      case 'brewery':
-        return <Brewery />;
-
-      case 'login':
-        return <Login />;
-
-      case 'brewery-detail':
-        if (selectedBrewery) {
-          console.log('양조장 상세페이지 렌더링:', selectedBrewery.brewery_name);
-          return (
-            <BreweryDetail 
-              brewery={selectedBrewery}
-              products={breweryProducts}
-            />
-          );
-        } else {
-          return (
-            <div style={{ 
-              padding: '40px', 
-              textAlign: 'center',
-              minHeight: 'calc(100vh - 110px)',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center'
-            }}>
-              <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏭</div>
-              <h2 style={{ color: '#333', marginBottom: '16px' }}>
-                양조장을 찾을 수 없습니다
-              </h2>
-              <p style={{ color: '#666', marginBottom: '24px' }}>
-                요청하신 양조장 정보를 찾을 수 없습니다.
-              </p>
-              <button
-                onClick={() => {
-                  const url = new URL(window.location.href);
-                  url.searchParams.delete('view');
-                  url.searchParams.delete('brewery');
-                  url.searchParams.set('view', 'brewery');
-                  window.history.pushState({}, '', url.toString());
-                  window.location.reload();
-                }}
-                style={{
-                  padding: '12px 24px',
-                  backgroundColor: '#8b5a3c',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#7c4d34';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#8b5a3c';
-                }}
-              >
-                양조장 목록으로 돌아가기
-              </button>
-            </div>
-          );
-        }
-
-      default:
-        return (
-          <div style={{
-            padding: '40px',
-            textAlign: 'center',
-            minHeight: 'calc(100vh - 110px)',
-            display: 'flex',
+  // 로그인 페이지일 때는 전체 화면으로 렌더링
+  if (isLoginPage) {
+    return (
+      <div style={{ 
+        minHeight: '100vh',
+        backgroundColor: '#fafbfc'
+      }}>
+        <Suspense fallback={
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center',
+            minHeight: '100vh',
             flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center'
+            gap: '16px'
           }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>❓</div>
-            <h2 style={{ color: '#333', marginBottom: '16px' }}>
-              페이지를 찾을 수 없습니다
-            </h2>
-            <p style={{ color: '#666', marginBottom: '24px' }}>
-              요청하신 페이지가 존재하지 않습니다.
-            </p>
-            <button
-              onClick={() => {
-                const url = new URL(window.location.href);
-                url.searchParams.delete('view');
-                url.searchParams.delete('brewery');
-                window.history.pushState({}, '', url.toString());
-                window.location.reload();
-              }}
-              style={{
-                padding: '12px 24px',
-                backgroundColor: '#8b5a3c',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '16px',
-                fontWeight: '600',
-                cursor: 'pointer'
-              }}
-            >
-              홈으로 돌아가기
-            </button>
+            <div style={{ 
+              width: '40px', 
+              height: '40px',
+              border: '4px solid #f3f3f3',
+              borderTop: '4px solid #8b5a3c',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite'
+            }}></div>
+            <p style={{ color: '#666', fontSize: '16px' }}>로딩 중...</p>
           </div>
-        );
-    }
-  };
+        }>
+          <MainApp />
+        </Suspense>
+      </div>
+    );
+  }
 
+  // 일반 페이지일 때는 Header, Nav, Footer 포함
   return (
     <div style={{ 
       minHeight: '100vh',
@@ -195,27 +91,42 @@ export default function HomePage() {
       display: 'flex',
       flexDirection: 'column'
     }}>
-      {/* 로그인 뷰에서는 헤더와 네비게이션을 숨김 */}
-      {currentView !== 'login' && (
-        <>
-          <Header />
-          <Nav />
-        </>
-      )}
+      <Header />
+      <Nav />
       
       <main style={{ 
-        paddingTop: currentView !== 'login' ? '120px' : '0',
+        paddingTop: '120px',
         flex: 1,
         display: 'flex',
         flexDirection: 'column'
       }}>
         <div style={{ flex: 1 }}>
-          {renderView()}
+          <Suspense fallback={
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center',
+              minHeight: 'calc(100vh - 110px)',
+              flexDirection: 'column',
+              gap: '16px'
+            }}>
+              <div style={{ 
+                width: '40px', 
+                height: '40px',
+                border: '4px solid #f3f3f3',
+                borderTop: '4px solid #8b5a3c',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite'
+              }}></div>
+              <p style={{ color: '#666', fontSize: '16px' }}>로딩 중...</p>
+            </div>
+          }>
+            <MainApp />
+          </Suspense>
         </div>
       </main>
       
-      {/* 로그인 뷰에서는 푸터를 숨김 */}
-      {currentView !== 'login' && <Footer />}
+      <Footer />
     </div>
   );
 }

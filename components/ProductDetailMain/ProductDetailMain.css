@@ -1,0 +1,117 @@
+/* 상품 상세페이지 컨테이너 */
+.productdetail-product-detail-container-full {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  min-height: calc(100vh - 110px);
+}
+
+/* 메인 콘텐츠 */
+.productdetail-product-main-content {
+  width: 100%;
+}
+
+/* 섹션 공통 컨테이너 */
+.productdetail-product-section-container {
+  margin-bottom: 80px;
+  scroll-margin-top: 120px;
+  padding-bottom: 20px;
+}
+
+.productdetail-product-section-container:last-child {
+  margin-bottom: 60px;
+}
+
+/* 섹션 제목 */
+.productdetail-product-section-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 40px;
+  padding-bottom: 20px;
+  border-bottom: 3px solid #8b5a3c;
+  text-align: center;
+}
+
+/* 페이지 스크롤 스무스 효과 */
+html {
+  scroll-behavior: smooth;
+}
+
+/* 태블릿 반응형 */
+@media (max-width: 1024px) {
+  .productdetail-product-detail-container-full {
+    padding: 32px 16px;
+  }
+  
+  .productdetail-product-section-title {
+    font-size: 28px;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+  }
+  
+  .productdetail-product-section-container {
+    margin-bottom: 60px;
+  }
+  
+  .productdetail-product-section-container:last-child {
+    margin-bottom: 40px;
+  }
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+  .productdetail-product-detail-container-full {
+    padding: 24px 12px;
+  }
+  
+  .productdetail-product-section-title {
+    font-size: 24px;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+  }
+  
+  .productdetail-product-section-container {
+    margin-bottom: 50px;
+  }
+  
+  .productdetail-product-section-container:last-child {
+    margin-bottom: 30px;
+  }
+}
+
+/* 작은 모바일 반응형 */
+@media (max-width: 480px) {
+  .productdetail-product-detail-container-full {
+    padding: 16px 8px;
+  }
+  
+  .productdetail-product-section-title {
+    font-size: 20px;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+  }
+  
+  .productdetail-product-section-container {
+    margin-bottom: 40px;
+  }
+  
+  .productdetail-product-section-container:last-child {
+    margin-bottom: 24px;
+  }
+}
+
+/* 접근성 */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+  .productdetail-product-section-title {
+    border-bottom-width: 4px;
+  }
+}

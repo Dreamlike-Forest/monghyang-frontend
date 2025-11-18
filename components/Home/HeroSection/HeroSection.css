@@ -1,0 +1,401 @@
+.hero-section {
+  background: linear-gradient(135deg, rgba(139, 90, 60, 0.9) 0%, rgba(124, 77, 52, 0.95) 100%),
+              url('/images/hero-bg.jpg') center/cover;
+  color: white;
+  text-align: center;
+  padding: 80px 20px;
+  position: relative;
+  overflow: hidden;
+  /* 브라우저 다크모드 강제 방지 */
+  color-scheme: light;
+  -webkit-color-scheme: light;
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(139, 90, 60, 0.8) 0%, rgba(124, 77, 52, 0.9) 100%);
+  z-index: 1;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.hero-title {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.hero-subtitle {
+  font-size: 1.25rem;
+  margin-bottom: 40px;
+  opacity: 0.95;
+  line-height: 1.6;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.hero-search {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.hero-search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: white !important;
+  border-radius: 50px;
+  padding: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  gap: 0;
+  color-scheme: light;
+  -webkit-color-scheme: light;
+}
+
+.hero-search-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+}
+
+/* 검색 타입 선택 버튼 */
+.hero-search-type-selector {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.hero-search-type-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px;
+  border: none;
+  border-radius: 50px;
+  background: #f8f9fa !important;
+  color: #333 !important;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  min-width: fit-content;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  color-scheme: light;
+  -webkit-color-scheme: light;
+}
+
+.hero-search-type-button:hover {
+  background: #e9ecef !important;
+}
+
+.hero-search-type-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(139, 90, 60, 0.3);
+}
+
+.hero-search-type-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.hero-search-type-chevron {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.hero-search-type-chevron.open {
+  transform: rotate(180deg);
+}
+
+/* 검색 타입 드롭다운 메뉴 */
+.hero-search-type-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white !important;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+  margin-top: 8px;
+  overflow: hidden;
+  animation: heroDropdownFadeIn 0.2s ease-out;
+  color-scheme: light;
+  -webkit-color-scheme: light;
+}
+
+@keyframes heroDropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-search-type-option {
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: white !important;
+  color: #333 !important;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  text-align: left;
+  color-scheme: light;
+  -webkit-color-scheme: light;
+}
+
+.hero-search-type-option:hover {
+  background: #f8f9fa !important;
+}
+
+.hero-search-type-option.active {
+  background: #f0f9ff !important;
+  color: #0369a1 !important;
+}
+
+.hero-search-type-option-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.hero-search-input {
+  flex: 1;
+  padding: 16px 24px;
+  border: none;
+  border-radius: 0;
+  font-size: 16px;
+  outline: none;
+  color: #333 !important;
+  background: transparent;
+  color-scheme: light;
+  -webkit-color-scheme: light;
+}
+
+.hero-search-input::placeholder {
+  color: #999 !important;
+}
+
+.hero-search-button {
+  background: #8b5a3c;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 16px 32px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 8px rgba(139, 90, 60, 0.3);
+  min-width: fit-content;
+  white-space: nowrap;
+}
+
+.hero-search-button:hover {
+  background: #7c4d34;
+  box-shadow: 0 4px 12px rgba(139, 90, 60, 0.4);
+}
+
+.hero-search-button:active {
+  background: #7c4d34;
+  box-shadow: 0 2px 8px rgba(139, 90, 60, 0.3);
+}
+
+.hero-search-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+/* 검색 안내 텍스트 */
+.hero-search-guide {
+  font-size: 14px;
+  margin-top: 16px;
+  opacity: 0.8;
+  color: #e2e8f0;
+  text-align: center;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .hero-section {
+    padding: 60px 20px;
+  }
+
+  .hero-title {
+    font-size: 2rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+
+  .hero-search-container {
+    flex-direction: column;
+    border-radius: 16px;
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .hero-search-type-button {
+    border-radius: 25px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .hero-search-input {
+    margin-bottom: 0;
+    border-radius: 12px;
+    text-align: center;
+    padding: 16px 24px;
+  }
+
+  .hero-search-button {
+    width: 100%;
+    border-radius: 12px;
+    height: 48px;
+    justify-content: center;
+  }
+
+  .hero-search-type-dropdown {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-radius: 16px 16px 0 0;
+    margin-top: 0;
+    max-height: 50vh;
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section {
+    padding: 40px 16px;
+  }
+
+  .hero-title {
+    font-size: 1.75rem;
+  }
+
+  .hero-search-type-button {
+    padding: 14px 16px;
+    font-size: 13px;
+  }
+
+  .hero-search-input {
+    padding: 14px 20px;
+    font-size: 15px;
+  }
+
+  .hero-search-button {
+    padding: 14px 24px;
+    font-size: 15px;
+  }
+}
+
+/* 접근성 개선 */
+@media (prefers-reduced-motion: reduce) {
+  .hero-search-container,
+  .hero-search-button,
+  .hero-search-type-dropdown {
+    transition: none;
+    animation: none;
+  }
+
+  .hero-search-type-chevron {
+    transition: none;
+  }
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+  .hero-search-container {
+    border: 2px solid #000;
+  }
+
+  .hero-search-type-dropdown {
+    border: 2px solid #000;
+  }
+
+  .hero-search-type-option {
+    border-bottom: 1px solid #ccc;
+  }
+
+  .hero-search-button {
+    border: 2px solid;
+  }
+}
+
+/* 다크 모드 강제 비활성화 */
+@media (prefers-color-scheme: dark) {
+  .hero-search-container {
+    background: white !important;
+    color: #333 !important;
+  }
+
+  .hero-search-type-button {
+    background: #f8f9fa !important;
+    color: #333 !important;
+  }
+
+  .hero-search-type-button:hover {
+    background: #e9ecef !important;
+  }
+
+  .hero-search-type-dropdown {
+    background: white !important;
+    border: 1px solid #e2e8f0 !important;
+  }
+
+  .hero-search-type-option {
+    background: white !important;
+    color: #333 !important;
+  }
+
+  .hero-search-type-option:hover {
+    background: #f8f9fa !important;
+  }
+
+  .hero-search-type-option.active {
+    background: #f0f9ff !important;
+    color: #0369a1 !important;
+  }
+
+  .hero-search-input {
+    background: transparent;
+    color: #333 !important;
+  }
+
+  .hero-search-input::placeholder {
+    color: #999 !important;
+  }
+}

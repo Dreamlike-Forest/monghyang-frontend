@@ -1,0 +1,184 @@
+/* 예약자 정보 폼 컨테이너 */
+.reservation-customer-info-form {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+/* 폼 그룹 간격 */
+.reservation-form-group {
+  margin-bottom: 20px;
+}
+
+.reservation-form-group:last-child {
+  margin-bottom: 0;
+}
+
+/* 폼 라벨 */
+.reservation-form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+/* 필수 항목 표시 */
+.reservation-form-required {
+  color: #dc2626;
+}
+
+/* 일반 입력 필드 */
+.reservation-form-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 16px;
+  color: #111827;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.reservation-form-input:focus {
+  outline: none;
+  border-color: #8b5a3c;
+  box-shadow: 0 0 0 3px rgba(139, 90, 60, 0.1);
+}
+
+.reservation-form-input::placeholder {
+  color: #9ca3af;
+}
+
+/* 인원수 입력 컨테이너 */
+.reservation-head-count-input {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: 140px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+}
+
+/* 인원수 증감 버튼 */
+.reservation-head-count-btn {
+  width: 40px;
+  height: 48px;
+  border: none;
+  background: #f9fafb;
+  color: #6b7280;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reservation-head-count-btn:hover:not(:disabled) {
+  background: #8b5a3c;
+  color: white;
+}
+
+.reservation-head-count-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 인원수 숫자 입력 */
+.reservation-head-count-number {
+  flex: 1;
+  border: none;
+  background: white;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  height: 48px;
+  -moz-appearance: textfield;
+}
+
+/* 숫자 입력 스핀 버튼 제거 */
+.reservation-head-count-number::-webkit-outer-spin-button,
+.reservation-head-count-number::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.reservation-head-count-number:focus {
+  outline: none;
+}
+
+/* 인원수 입력 포커스 스타일 */
+.reservation-head-count-input:focus-within {
+  box-shadow: 0 0 0 3px rgba(139, 90, 60, 0.1);
+}
+
+/* 인원수 안내 텍스트 */
+.reservation-head-count-note {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 6px;
+  margin-bottom: 0;
+}
+
+/* 에러 메시지 */
+.reservation-form-error {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  color: #dc2626;
+  font-size: 14px;
+}
+
+/* 작은 모바일 반응형 */
+@media (max-width: 480px) {
+  .reservation-customer-info-form {
+    padding: 16px;
+  }
+
+  .reservation-form-input {
+    font-size: 16px; /* iOS 줌 방지 */
+  }
+
+  .reservation-head-count-input {
+    width: 120px;
+  }
+
+  .reservation-head-count-btn {
+    width: 36px;
+    height: 44px;
+    font-size: 16px;
+  }
+
+  .reservation-head-count-number {
+    height: 44px;
+    font-size: 14px;
+  }
+}
+
+/* 접근성 - 모션 줄이기 */
+@media (prefers-reduced-motion: reduce) {
+  .reservation-form-input,
+  .reservation-head-count-btn {
+    transition: none;
+  }
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+  .reservation-form-input {
+    border-width: 2px;
+  }
+
+  .reservation-head-count-input {
+    border-width: 2px;
+  }
+}

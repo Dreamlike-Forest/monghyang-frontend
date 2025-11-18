@@ -1,0 +1,102 @@
+.address-search-btn {
+  padding: 14px 20px;
+  background-color: #f59e0b;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  min-width: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.address-search-btn:hover:not(.disabled) {
+  background-color: #d97706;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3);
+}
+
+.address-search-btn:active:not(.disabled) {
+  transform: translateY(0);
+}
+
+.address-search-btn.disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.address-search-btn:focus {
+  outline: 2px solid #f59e0b;
+  outline-offset: 2px;
+}
+
+/* 일반 사용자용 스타일 */
+.user-address-search {
+  background-color: #8b5a3c;
+}
+
+.user-address-search:hover:not(.disabled) {
+  background-color: #7c4d34;
+}
+
+.user-address-search:focus {
+  outline-color: #8b5a3c;
+}
+
+/* 판매자용 스타일 */
+.seller-address-search {
+  background-color: #8b5a3c;
+}
+
+.seller-address-search:hover:not(.disabled) {
+  background-color: #7c4d34;
+}
+
+.seller-address-search:focus {
+  outline-color: #8b5a3c;
+}
+
+/* 양조장용 스타일 */
+.brewery-address-search {
+  background-color: #8b5a3c;
+}
+
+.brewery-address-search:hover:not(.disabled) {
+  background-color: #7c4d34;
+}
+
+.brewery-address-search:focus {
+  outline-color: #8b5a3c;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .address-search-btn {
+    width: 100%;
+    min-width: auto;
+    margin-top: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .address-search-btn {
+    padding: 12px 16px;
+    font-size: 13px;
+  }
+}
+
+/* 접근성 개선 */
+@media (prefers-reduced-motion: reduce) {
+  .address-search-btn {
+    transition: none;
+    transform: none !important;
+  }
+}

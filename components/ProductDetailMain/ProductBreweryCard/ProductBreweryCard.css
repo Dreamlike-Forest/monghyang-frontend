@@ -1,0 +1,290 @@
+/* 양조장 섹션 컨테이너 */
+.productdetail-brewery-section-container {
+  margin-bottom: 80px;
+  scroll-margin-top: 120px;
+  padding-bottom: 20px;
+}
+
+/* 양조장 그리드 컨테이너 */
+.productdetail-brewery-grid-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+/* 양조장 카드 */
+.productdetail-brewery-card-simple {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  height: 280px;
+  position: relative; /* 추가: 상대 위치 설정 */
+}
+
+.productdetail-brewery-card-simple:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  border-color: #8b5a3c;
+}
+
+/* 이미지 영역 */
+.productdetail-brewery-image-section-simple {
+  position: relative;
+  width: 100%;
+  height: 160px;
+  overflow: hidden;
+  background-color: #f8f9fa;
+}
+
+.productdetail-brewery-image-simple {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+  position: relative; /* 추가 */
+  z-index: 1; /* 추가: 이미지가 오버레이 아래에 위치 */
+}
+
+.productdetail-brewery-card-simple:hover .productdetail-brewery-image-simple {
+  transform: scale(1.05);
+}
+
+/* 이미지 플레이스홀더 수정 */
+.productdetail-brewery-placeholder-simple {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  position: relative;
+  z-index: 1; /* 추가: 플레이스홀더가 오버레이 아래에 위치 */
+}
+
+.productdetail-brewery-placeholder-icon-simple {
+  font-size: 48px;
+  margin-bottom: 8px;
+  opacity: 0.5;
+  color: #9ca3af;
+}
+
+.productdetail-brewery-placeholder-text-simple {
+  font-size: 14px;
+  font-weight: 400;
+  text-align: center;
+  opacity: 0.8;
+  color: #9ca3af;
+  line-height: 1.3;
+}
+
+/* 호버 오버레이 수정 */
+.productdetail-brewery-overlay-simple {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(139, 90, 60, 0.85); /* 불투명도 증가 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 3; /* z-index 증가 */
+  pointer-events: none; /* 마우스 이벤트가 오버레이를 통과하도록 */
+}
+
+.productdetail-brewery-card-simple:hover .productdetail-brewery-overlay-simple {
+  opacity: 1;
+  pointer-events: auto; /* 호버 시에는 마우스 이벤트 허용 */
+}
+
+.productdetail-brewery-overlay-text-simple {
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); /* 텍스트 가독성 향상 */
+}
+
+/* 정보 영역 */
+.productdetail-brewery-info-simple {
+  padding: 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: #ffffff;
+  position: relative; /* 추가 */
+  z-index: 2; /* 추가: 정보 영역이 오버레이 아래에 위치 */
+}
+
+.productdetail-brewery-name-simple {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 12px 0;
+  line-height: 1.3;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.productdetail-brewery-button-simple {
+  background: #8b5a3c;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  text-align: center;
+}
+
+.productdetail-brewery-button-simple:hover {
+  background: #7c4d34;
+}
+
+/* 빈 상태 */
+.productdetail-brewery-empty-simple {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 20px;
+  color: #6b7280;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.productdetail-brewery-empty-icon-simple {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+
+.productdetail-brewery-empty-text-simple {
+  font-size: 16px;
+  margin: 0;
+}
+
+/* 태블릿 반응형 */
+@media (max-width: 1024px) {
+  .productdetail-brewery-grid-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  
+  .productdetail-brewery-card-simple {
+    height: 260px;
+  }
+  
+  .productdetail-brewery-image-section-simple {
+    height: 140px;
+  }
+  
+  .productdetail-brewery-name-simple {
+    font-size: 15px;
+  }
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+  .productdetail-brewery-grid-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  
+  .productdetail-brewery-card-simple {
+    height: 240px;
+  }
+  
+  .productdetail-brewery-image-section-simple {
+    height: 120px;
+  }
+  
+  .productdetail-brewery-info-simple {
+    padding: 12px;
+  }
+  
+  .productdetail-brewery-name-simple {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+  
+  .productdetail-brewery-button-simple {
+    padding: 6px 12px;
+    font-size: 11px;
+  }
+}
+
+/* 작은 모바일 반응형 */
+@media (max-width: 480px) {
+  .productdetail-brewery-grid-container {
+    justify-content: center;
+  }
+  
+  .productdetail-brewery-card-simple {
+    height: 220px;
+    width: 240px;
+  }
+  
+  .productdetail-brewery-image-section-simple {
+    height: 100px;
+  }
+  
+  .productdetail-brewery-name-simple {
+    font-size: 13px;
+  }
+}
+
+/* 접근성 */
+@media (prefers-reduced-motion: reduce) {
+  .productdetail-brewery-card-simple,
+  .productdetail-brewery-image-simple,
+  .productdetail-brewery-overlay-simple,
+  .productdetail-brewery-button-simple {
+    transition: none;
+  }
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+  .productdetail-brewery-card-simple {
+    border: 2px solid;
+  }
+  
+  .productdetail-brewery-overlay-simple {
+    background: rgba(0, 0, 0, 0.9);
+  }
+}
+
+/* 포커스 스타일 */
+.productdetail-brewery-card-simple:focus {
+  outline: 2px solid #8b5a3c;
+  outline-offset: 2px;
+}
+
+/* 터치 디바이스 최적화 */
+@media (hover: none) and (pointer: coarse) {
+  .productdetail-brewery-overlay-simple {
+    display: none; /* 터치 디바이스에서는 오버레이 숨김 */
+  }
+  
+  .productdetail-brewery-card-simple:active {
+    transform: scale(0.98);
+  }
+}

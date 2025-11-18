@@ -1,0 +1,320 @@
+/* 필터 컨테이너 전체 스타일 */
+.product-filter {
+  width: 260px;
+  flex-shrink: 0;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #f0f0f0;
+}
+
+/* 각 필터 섹션 스타일 */
+.filter-section {
+  margin-bottom: 24px;
+}
+
+.filter-section:last-child {
+  margin-bottom: 0;
+}
+
+/* 필터 제목 스타일 */
+.filter-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #333;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 각 필터 섹션 초기화 버튼 */
+.filter-reset {
+  font-size: 12px;
+  color: #8b5a3c;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: normal;
+  text-decoration: underline;
+}
+
+.filter-reset:hover {
+  color: #7c4d34;
+}
+
+/* 필터 옵션 리스트 컨테이너 */
+.filter-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 각 필터 옵션 아이템 스타일 */
+.filter-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px 0;
+  transition: color 0.2s ease;
+}
+
+.filter-option:hover {
+  color: #8b5a3c;
+}
+
+/* 체크박스 스타일 */
+.filter-checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: #8b5a3c;
+  cursor: pointer;
+}
+
+/* 필터 옵션 레이블 텍스트 */
+.filter-option-label {
+  flex: 1;
+  color: #555;
+  cursor: pointer;
+}
+
+/* 필터 옵션별 개수 표시 */
+.filter-option-count {
+  color: #999;
+  font-size: 12px;
+}
+
+/* 가격 범위 입력 컨테이너 */
+.price-range-inputs {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+/* 개별 가격 입력 필드 래퍼 */
+.price-input-wrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 가격 입력 필드 스타일 */
+.price-input {
+  width: 100%;
+  padding: 10px 8px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 12px;
+  outline: none;
+  background: white;
+  text-align: center;
+  min-width: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+}
+
+/* 숫자 입력 스핀 버튼 제거 */
+.price-input::-webkit-outer-spin-button,
+.price-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+  display: none;
+}
+
+.price-input[type=number] {
+  -moz-appearance: textfield;
+}
+
+.price-input:focus {
+  border-color: #8b5a3c;
+  box-shadow: 0 0 0 2px rgba(139, 90, 60, 0.1);
+}
+
+.price-input::placeholder {
+  color: #999;
+  font-size: 12px;
+}
+
+/* 가격 범위 구분자 (~) */
+.price-separator {
+  color: #999;
+  font-size: 14px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+/* 가격 적용 버튼 컨테이너 */
+.price-apply-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0;
+}
+
+/* 가격 적용 버튼 스타일 */
+.apply-button {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 20px;
+  background: #8b5a3c;
+  color: white;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  min-width: 60px;
+  box-shadow: 0 2px 4px rgba(139, 90, 60, 0.2);
+}
+
+.apply-button:hover {
+  background: #7c4d34;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(139, 90, 60, 0.3);
+}
+
+.apply-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(139, 90, 60, 0.2);
+}
+
+/* 선택된 필터 표시 영역 */
+.active-filters {
+  margin-bottom: 20px;
+}
+
+/* 선택된 필터 제목 */
+.active-filters-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+/* 활성 필터 태그 컨테이너 */
+.active-filter-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* 개별 필터 태그 스타일 */
+.active-filter-tag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: #fef3c7;
+  color: #d97706;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* 필터 제거 버튼 (X) */
+.remove-filter {
+  background: none;
+  border: none;
+  color: #d97706;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+}
+
+.remove-filter:hover {
+  color: #b45309;
+}
+
+/* 전체 필터 해제 버튼 */
+.clear-all-filters {
+  margin-top: 8px;
+  background: none;
+  border: none;
+  color: #8b5a3c;
+  cursor: pointer;
+  font-size: 12px;
+  text-decoration: underline;
+}
+
+.clear-all-filters:hover {
+  color: #7c4d34;
+}
+
+/* 태블릿 반응형 스타일 */
+@media (max-width: 1024px) {
+  .product-filter {
+    width: 240px;
+  }
+  
+  .price-input {
+    padding: 8px 6px;
+    font-size: 11px;
+  }
+  
+  .price-input::placeholder {
+    font-size: 11px;
+  }
+  
+  .price-separator {
+    font-size: 12px;
+  }
+  
+  .apply-button {
+    padding: 8px 20px;
+    font-size: 11px;
+  }
+}
+
+/* 모바일 반응형 스타일 */
+@media (max-width: 768px) {
+  .product-filter {
+    width: 100%;
+    margin-bottom: 20px;
+  }
+  
+  .price-range-inputs {
+    margin-bottom: 12px;
+    gap: 10px;
+  }
+  
+  .price-input {
+    padding: 8px 6px;
+    font-size: 11px;
+  }
+  
+  .price-input::placeholder {
+    font-size: 11px;
+  }
+  
+  .apply-button {
+    padding: 8px 20px;
+    font-size: 11px;
+  }
+}
+
+/* 작은 모바일 반응형 스타일 */
+@media (max-width: 480px) {
+  .price-range-inputs {
+    gap: 8px;
+  }
+  
+  .price-input {
+    padding: 8px 4px;
+    font-size: 10px;
+  }
+  
+  .price-input::placeholder {
+    font-size: 10px;
+  }
+  
+  .price-separator {
+    font-size: 12px;
+  }
+  
+  .apply-button {
+    padding: 8px 20px;
+    font-size: 10px;
+  }
+}

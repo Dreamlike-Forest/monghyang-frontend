@@ -1,0 +1,156 @@
+.shop-container {
+  display: flex;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  gap: 24px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  min-height: calc(100vh - 110px); /* Header(50px) + Nav(60px) 제외 */
+}
+
+.shop-content {
+  display: flex;
+  width: 100%;
+  gap: 24px;
+}
+
+.shop-filter-section {
+  flex-shrink: 0;
+}
+
+.shop-main-section {
+  flex: 1;
+  min-width: 0; /* flex item이 줄어들 수 있도록 */
+}
+
+/* 로딩 상태 */
+.shop-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  font-size: 16px;
+  color: #666;
+}
+
+.shop-loading-spinner {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #8b5a3c;
+  border-radius: 50%;
+  animation: shopSpin 1s linear infinite;
+  margin-right: 8px;
+}
+
+@keyframes shopSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 에러 상태 */
+.shop-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+  color: #ef4444;
+}
+
+.shop-error-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.shop-error-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.shop-error-description {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 16px;
+}
+
+.shop-retry-button {
+  padding: 10px 20px;
+  background-color: #8b5a3c;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.shop-retry-button:hover {
+  background-color: #7c4d34;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1024px) {
+  .shop-container {
+    max-width: 100%;
+    padding: 16px;
+    gap: 20px;
+  }
+  
+  .shop-content {
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .shop-container {
+    padding: 12px;
+    gap: 16px;
+  }
+  
+  .shop-content {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .shop-filter-section {
+    order: 2; /* 모바일에서는 필터가 아래로 */
+  }
+  
+  .shop-main-section {
+    order: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .shop-container {
+    padding: 8px;
+    gap: 12px;
+  }
+  
+  .shop-content {
+    gap: 12px;
+  }
+}
+
+/* 접근성 개선 */
+@media (prefers-reduced-motion: reduce) {
+  .shop-loading-spinner {
+    animation: none;
+  }
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+  .shop-container {
+    border: 1px solid;
+  }
+  
+  .shop-retry-button {
+    border: 2px solid;
+  }
+}

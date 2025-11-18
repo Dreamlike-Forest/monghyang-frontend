@@ -1,0 +1,242 @@
+/* 상세페이지 메인 컨테이너 */
+.brewery-detail-container {
+  display: flex;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  gap: 24px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  min-height: calc(100vh - 110px);
+}
+
+/* 상세페이지 전체 콘텐츠 레이아웃 */
+.brewery-detail-content {
+  display: flex;
+  width: 100%;
+  gap: 24px;
+}
+
+/* 우측 메인 콘텐츠 영역 */
+.brewery-main-section {
+  flex: 1;
+  min-width: 0;
+  order: 1;
+}
+
+/* 섹션 공통 컨테이너 */
+.brewery-section-container {
+  margin-bottom: 60px !important; 
+  scroll-margin-top: 120px; 
+  padding-bottom: 20px; 
+}
+
+/* 마지막 섹션도 하단 마진 유지 */
+.brewery-section-container:last-child {
+  margin-bottom: 40px !important; 
+}
+
+/* 개별 섹션들에 특별히 간격 적용 */
+#images {
+  margin-bottom: 60px !important;
+}
+
+#intro {
+  margin-bottom: 60px !important;
+}
+
+#experience {
+  margin-bottom: 60px !important;
+}
+
+#products {
+  margin-bottom: 60px !important;
+}
+
+#reviews {
+  margin-bottom: 40px !important;
+}
+
+/* 섹션 제목 스타일 */
+.brewery-section-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #8b5a3c;
+}
+
+/* 섹션 헤더 (제목+버튼) */
+.brewery-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.brewery-section-header .brewery-section-title {
+  margin-bottom: 0;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+/* 기본 버튼 스타일 */
+.brewery-primary-btn {
+  background: #8b5a3c;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(139, 90, 60, 0.2);
+}
+
+.brewery-primary-btn:hover {
+  background: #7c4d34;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(139, 90, 60, 0.3);
+}
+
+/* 예약 버튼 특수 스타일 */
+.brewery-reservation-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 스크롤 즉시 이동 - smooth 효과 제거 (높은 우선순위) */
+html.brewery-detail-page {
+  scroll-behavior: auto !important;
+}
+
+/* 전역 스크롤 동작 강제 설정 */
+* {
+  scroll-behavior: auto !important;
+}
+
+/* 커스텀 스크롤바 */
+.brewery-main-section::-webkit-scrollbar {
+  width: 6px;
+}
+
+.brewery-main-section::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.brewery-main-section::-webkit-scrollbar-thumb {
+  background: #8b5a3c;
+  border-radius: 3px;
+}
+
+.brewery-main-section::-webkit-scrollbar-thumb:hover {
+  background: #7c4d34;
+}
+
+/* 로딩 스켈레톤 효과 */
+.brewery-loading-skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: brewery-loading 1.5s infinite;
+}
+
+@keyframes brewery-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* 태블릿 반응형 */
+@media (max-width: 1024px) {
+  .brewery-detail-container {
+    padding: 16px;
+    gap: 20px;
+  }
+  
+  /* 태블릿에서 섹션 간격 조정 */
+  .brewery-section-container {
+    margin-bottom: 50px !important; 
+  }
+  
+  .brewery-section-container:last-child {
+    margin-bottom: 30px !important;
+  }
+}
+
+/* 모바일 반응형 - 세로 레이아웃 */
+@media (max-width: 768px) {
+  .brewery-detail-container {
+    flex-direction: column;
+    padding: 12px;
+  }
+  
+  .brewery-main-section {
+    order: 1;
+  }
+  
+  .brewery-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  /* 모바일에서 섹션 간격 조정 */
+  .brewery-section-container {
+    margin-bottom: 40px !important; 
+  }
+  
+  .brewery-section-container:last-child {
+    margin-bottom: 24px !important;
+  }
+}
+
+/* 작은 모바일 반응형 */
+@media (max-width: 480px) {
+  .brewery-detail-container {
+    padding: 8px;
+  }
+  
+  /* 작은 모바일에서 섹션 간격 조정 */
+  .brewery-section-container {
+    margin-bottom: 32px !important; 
+  }
+  
+  .brewery-section-container:last-child {
+    margin-bottom: 20px !important;
+  }
+  
+  .brewery-section-title {
+    font-size: 20px;
+  }
+}
+
+/* 접근성 - 모션 줄이기 */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    /* scroll-behavior: auto; 명시적으로 설정 */
+    scroll-behavior: auto;
+  }
+}
+
+/* 포커스 스타일 */
+.brewery-primary-btn:focus {
+  outline: 2px solid #8b5a3c;
+  outline-offset: 2px;
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+  .brewery-section-title {
+    border-bottom-width: 3px;
+  }
+  
+  .brewery-primary-btn {
+    border: 2px solid;
+  }
+}

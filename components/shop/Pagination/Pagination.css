@@ -1,0 +1,97 @@
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 40px;
+  padding: 20px 0;
+}
+
+.pagination-button {
+  min-width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+}
+
+.pagination-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.pagination-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.pagination-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.pagination-number {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.pagination-number:hover:not(:disabled) {
+  background: #e5e5e5;
+  color: #333;
+}
+
+.pagination-number.active {
+  background: #8b5a3c;
+  color: white;
+}
+
+.pagination-number.active:hover {
+  background: #7c4d34;
+}
+
+.pagination-arrow {
+  background: none;
+  color: #666;
+  padding: 8px;
+  font-size: 16px;
+}
+
+.pagination-arrow:hover:not(:disabled) {
+  color: #8b5a3c;
+  background: #f5f5f5;
+}
+
+.pagination-ellipsis {
+  color: #999;
+  font-size: 14px;
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 480px) {
+  .pagination-container {
+    gap: 4px;
+    margin-top: 30px;
+  }
+  
+  .pagination-button {
+    min-width: 28px;
+    height: 28px;
+    font-size: 13px;
+  }
+  
+  .pagination-arrow {
+    padding: 6px;
+    font-size: 14px;
+  }
+}
