@@ -19,14 +19,10 @@ interface ShopProps {
 const Shop: React.FC<ShopProps> = ({ className }) => {
   const searchParams = useSearchParams();
   
-  // 중앙화된 mock 데이터 사용
   const [allProducts] = useState<ProductWithDetails[]>(getProductsWithBrewery());
   const [allBreweries] = useState<Brewery[]>(getBreweriesWithExperience());
-  
-  // API에서 가져온 상품 목록
   const [filteredProducts, setFilteredProducts] = useState<ProductWithDetails[]>([]);
   
-  // 필터 상태
   const [activeFilters, setActiveFilters] = useState<ProductActiveFilters>({
     types: [],
     alcoholRange: '',
@@ -43,12 +39,10 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
 
-  // 상품 상세페이지 상태
   const [selectedProduct, setSelectedProduct] = useState<ProductWithDetails | null>(null);
   const [selectedProductBrewery, setSelectedProductBrewery] = useState<Brewery | null>(null);
   const [isProductDetailOpen, setIsProductDetailOpen] = useState(false);
 
-  // URL 파라미터 처리
   useEffect(() => {
     const search = searchParams.get('search');
     const searchType = searchParams.get('searchType');
@@ -86,7 +80,6 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
     }
   }, [searchParams, allProducts]);
 
-  // 필터 활성화 여부
   const hasActiveFilters = activeFilters.searchKeyword || 
                           activeFilters.types.length > 0 || 
                           activeFilters.alcoholRange ||
@@ -100,7 +93,6 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
       let response;
       
       if (hasActiveFilters) {
-        // 필터가 있으면 검색 API
         const params: ProductSearchParams = {
           startOffset: currentPage - 1,
         };
@@ -199,7 +191,6 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
     });
   };
 
-  // 상품 클릭 핸들러
   const handleProductClick = (productId: number) => {
     console.log('상품 클릭:', productId);
     
@@ -226,7 +217,6 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
     window.history.pushState({ productDetail: true }, '', url.toString());
   };
 
-  // 상품 상세페이지 닫기
   const handleCloseProductDetail = () => {
     setIsProductDetailOpen(false);
     setSelectedProduct(null);
@@ -245,7 +235,6 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
     });
   };
 
-  // 브라우저 뒤로가기 감지
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
       const url = new URL(window.location.href);

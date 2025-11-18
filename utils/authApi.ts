@@ -18,12 +18,6 @@ export interface UserData {
   role: string;
 }
 
-/**
- * 로그인 API
- * @param email 사용자 이메일
- * @param password 사용자 비밀번호
- * @returns 로그인 성공 여부와 사용자 정보
- */
 export const login = async (
   email: string,
   password: string
@@ -103,7 +97,6 @@ export const login = async (
   }
 };
 
-// 로그아웃 API
 export const logout = async (): Promise<boolean> => {
   try {
     await apiClient.post('/api/auth/logout');
@@ -130,11 +123,6 @@ export const logout = async (): Promise<boolean> => {
   }
 };
 
-/**
- * 이메일 중복 체크 API
- * @param email 체크할 이메일
- * @returns 사용 가능 여부
- */
 export const checkEmailAvailability = async (email: string): Promise<boolean> => {
   try {
     const response = await apiClient.get(`/api/auth/check-email/${email}`);
@@ -147,16 +135,14 @@ export const checkEmailAvailability = async (email: string): Promise<boolean> =>
   }
 };
 
-// 회원가입 관련 타입 정의
-
 export interface CommonSignupData {
   email: string;
   password: string;
   nickname: string;
   name: string;
   phone: string;
-  birth: string; // YYYY-MM-DD
-  gender: string; // 'man' | 'woman'
+  birth: string;
+  gender: string;
   address: string;
   address_detail: string;
   is_agreed: boolean;
@@ -179,8 +165,8 @@ export interface BrewerySignupData extends CommonSignupData {
   brewery_bank_name: string;
   introduction?: string;
   brewery_website?: string;
-  start_time: string; // HH:mm
-  end_time: string; // HH:mm
+  start_time: string;
+  end_time: string;
   region_type_id: number;
   is_regular_visit: boolean;
   is_agreed_brewery: boolean;
@@ -192,14 +178,10 @@ export interface SignupResponse {
   message?: string;
 }
 
-// ==================== 회원가입 API ====================
-
-// 일반 사용자 회원가입
 export const signupCommonUser = async (data: CommonSignupData): Promise<SignupResponse> => {
   try {
     const formData = new FormData();
     
-    // 모든 필드를 FormData에 추가
     Object.entries(data).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         formData.append(key, value.toString());
@@ -238,24 +220,21 @@ export const signupCommonUser = async (data: CommonSignupData): Promise<SignupRe
   }
 };
 
-// 판매자 회원가입
 export const signupSeller = async (data: SellerSignupData): Promise<SignupResponse> => {
   try {
     const formData = new FormData();
     
-    // 기본 필드 추가
     Object.entries(data).forEach(([key, value]) => {
-      if (key === 'images') return; // 이미지는 별도 처리
+      if (key === 'images') return;
       if (value !== undefined && value !== null) {
         formData.append(key, value.toString());
       }
     });
 
-    // 이미지 파일 추가
     if (data.images && data.images.length > 0) {
       data.images.forEach((file, index) => {
         formData.append(`images[${index}].image`, file);
-        formData.append(`images[${index}].seq`, (index + 1).toString()); // 1부터 시작
+        formData.append(`images[${index}].seq`, (index + 1).toString());
       });
     }
 
@@ -291,24 +270,21 @@ export const signupSeller = async (data: SellerSignupData): Promise<SignupRespon
   }
 };
 
-// 양조장 회원가입
 export const signupBrewery = async (data: BrewerySignupData): Promise<SignupResponse> => {
   try {
     const formData = new FormData();
     
-    // 기본 필드 추가
     Object.entries(data).forEach(([key, value]) => {
-      if (key === 'images') return; // 이미지는 별도 처리
+      if (key === 'images') return;
       if (value !== undefined && value !== null) {
         formData.append(key, value.toString());
       }
     });
 
-    // 이미지 파일 추가 (첫번째 이미지가 대표 이미지)
     if (data.images && data.images.length > 0) {
       data.images.forEach((file, index) => {
         formData.append(`images[${index}].image`, file);
-        formData.append(`images[${index}].seq`, (index + 1).toString()); // 1부터 시작
+        formData.append(`images[${index}].seq`, (index + 1).toString());
       });
     }
 

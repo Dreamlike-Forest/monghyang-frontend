@@ -30,6 +30,8 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
     introduction: ''
   });
 
+  const [images, setImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [emailChecked, setEmailChecked] = useState(false);
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
@@ -43,12 +45,10 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
       [name]: value
     }));
 
-    // 이메일이 변경되면 중복확인을 다시 해야 함
     if (name === 'email') {
       setEmailChecked(false);
     }
 
-    // 에러 초기화
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -57,7 +57,6 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
     }
   };
 
-  // 주소 검색 결과 처리
   const handleAddressSelect = (address: string, zonecode: string) => {
     setFormData(prev => ({
       ...prev,
@@ -65,7 +64,6 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
       seller_zonecode: zonecode
     }));
 
-    // 주소 관련 에러 초기화
     if (errors.seller_address) {
       setErrors(prev => ({
         ...prev,
@@ -114,10 +112,43 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
     }
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    
+    if (files.length === 0) return;
+    
+    if (files.length > 5) {
+      alert('이미지는 최대 5개까지 업로드 가능합니다.');
+      return;
+    }
+
+    const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+    const maxSize = 10 * 1024 * 1024;
+    
+    if (totalSize > maxSize) {
+      alert('총 파일 크기는 10MB를 초과할 수 없습니다.');
+      return;
+    }
+
+    setImages(files);
+
+    const previews = files.map(file => URL.createObjectURL(file));
+    setImagePreviews(previews);
+  };
+
+  const removeImage = (index: number) => {
+    const newImages = images.filter((_, i) => i !== index);
+    const newPreviews = imagePreviews.filter((_, i) => i !== index);
+    
+    URL.revokeObjectURL(imagePreviews[index]);
+    
+    setImages(newImages);
+    setImagePreviews(newPreviews);
+  };
+
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {};
 
-    // 판매자 정보 검증
     if (!formData.email) newErrors.email = '업무용 이메일을 입력해주세요.';
     if (!emailChecked) newErrors.email = '이메일 중복확인을 해주세요.';
     if (!formData.password) newErrors.password = '비밀번호를 입력해주세요.';
@@ -135,8 +166,6 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
     if (!formData.seller_account_number) newErrors.seller_account_number = '계좌번호를 입력해주세요.';
     if (!formData.seller_depositor) newErrors.seller_depositor = '예금주를 입력해주세요.';
     if (!formData.seller_bank_name) newErrors.seller_bank_name = '은행명을 입력해주세요.';
-
-    // 약관 동의 검증
     if (!is_agreed) newErrors.terms = '약관에 동의해주세요.';
 
     setErrors(newErrors);
@@ -150,10 +179,8 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
       return;
     }
 
-    // gender 필드 변환: male -> man, female -> woman
     const genderValue = formData.gender === 'male' ? 'man' : 'woman';
 
-    // 최종 제출 데이터 - 백엔드 필드명에 맞춤
     const submitData = {
       email: formData.email,
       password: formData.password,
@@ -162,18 +189,18 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
       phone: formData.phone,
       birth: formData.birth,
       gender: genderValue,
-      address: formData.seller_address, // seller_address -> address
-      address_detail: formData.seller_address_detail, // seller_address_detail -> address_detail
-      is_agreed: is_agreed,
+      address: formData.seller_address,
+      address_detail: formData.seller_address_detail,
       business_registration_number: formData.business_registration_number,
       seller_account_number: formData.seller_account_number,
       seller_depositor: formData.seller_depositor,
       seller_bank_name: formData.seller_bank_name,
-      introduction: formData.introduction || '',
-      is_agreed_seller: is_agreed, // 판매자 약관도 동의한 것으로 처리
-      images: [] as File[] // 이미지 업로드 기능이 구현되면 추가
+      introduction: formData.introduction,
+      is_agreed: is_agreed,
+      is_agreed_seller: is_agreed,
+      images: images
     };
-
+    
     console.log('판매자 회원가입 요청:', submitData);
     
     try {
@@ -181,7 +208,7 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
       
       if (response.success) {
         alert(response.message || '판매자 회원가입이 완료되었습니다!');
-        onBack(); // 로그인 페이지로 돌아가기
+        onBack();
       } else {
         alert(response.message || '판매자 회원가입에 실패했습니다.');
       }
@@ -203,10 +230,9 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
           ←
         </button>
         
-        <h1 className="seller-signup-title">술 판매자 회원가입</h1>
+        <h1 className="seller-signup-title">판매자 회원가입</h1>
         
         <form className="seller-signup-form" onSubmit={handleSubmit}>
-          {/* 업무용 이메일  */}
           <div className="seller-form-group">
             <label htmlFor="email" className="seller-form-label">업무용 이메일 (아이디) *</label>
             <div className="seller-email-input-group">
@@ -215,7 +241,7 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
                 id="email"
                 name="email"
                 className={`seller-form-input ${errors.email ? 'error' : ''} ${emailChecked ? 'success' : ''}`}
-                placeholder="business@company.com"
+                placeholder="example@company.com"
                 value={formData.email}
                 onChange={handleInputChange}
               />
@@ -232,7 +258,6 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
             {emailChecked && !errors.email && <span className="seller-success-message">사용 가능한 이메일입니다.</span>}
           </div>
 
-          {/* 비밀번호 */}
           <div className="seller-form-group">
             <label htmlFor="password" className="seller-form-label">비밀번호 *</label>
             <input
@@ -247,7 +272,6 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
             {errors.password && <span className="seller-error-message">{errors.password}</span>}
           </div>
 
-          {/* 비밀번호 확인 */}
           <div className="seller-form-group">
             <label htmlFor="passwordConfirm" className="seller-form-label">비밀번호 확인 *</label>
             <input
@@ -262,7 +286,34 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
             {errors.passwordConfirm && <span className="seller-error-message">{errors.passwordConfirm}</span>}
           </div>
 
-          {/* 업무용 전화번호 */}
+          <div className="seller-form-group">
+            <label htmlFor="nickname" className="seller-form-label">상호명 *</label>
+            <input
+              type="text"
+              id="nickname"
+              name="nickname"
+              className={`seller-form-input ${errors.nickname ? 'error' : ''}`}
+              placeholder="상호명을 입력하세요"
+              value={formData.nickname}
+              onChange={handleInputChange}
+            />
+            {errors.nickname && <span className="seller-error-message">{errors.nickname}</span>}
+          </div>
+
+          <div className="seller-form-group">
+            <label htmlFor="name" className="seller-form-label">대표자 명 *</label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              className={`seller-form-input ${errors.name ? 'error' : ''}`}
+              placeholder="대표자 이름을 입력하세요"
+              value={formData.name}
+              onChange={handleInputChange}
+            />
+            {errors.name && <span className="seller-error-message">{errors.name}</span>}
+          </div>
+
           <div className="seller-form-group">
             <label htmlFor="phone" className="seller-form-label">업무용 전화번호 *</label>
             <input
@@ -270,29 +321,26 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
               id="phone"
               name="phone"
               className={`seller-form-input ${errors.phone ? 'error' : ''}`}
-              placeholder="02-1234-5678"
+              placeholder="010-1234-5678"
               value={formData.phone}
               onChange={handleInputChange}
             />
             {errors.phone && <span className="seller-error-message">{errors.phone}</span>}
           </div>
 
-          {/* 판매자 상호명 */}
           <div className="seller-form-group">
-            <label htmlFor="nickname" className="seller-form-label">판매자 상호명 *</label>
+            <label htmlFor="birth" className="seller-form-label">생년월일 *</label>
             <input
-              type="text"
-              id="nickname"
-              name="nickname"
-              className={`seller-form-input ${errors.nickname ? 'error' : ''}`}
-              placeholder="판매자 상호명을 입력하세요"
-              value={formData.nickname}
+              type="date"
+              id="birth"
+              name="birth"
+              className={`seller-form-input ${errors.birth ? 'error' : ''}`}
+              value={formData.birth}
               onChange={handleInputChange}
             />
-            {errors.nickname && <span className="seller-error-message">{errors.nickname}</span>}
+            {errors.birth && <span className="seller-error-message">{errors.birth}</span>}
           </div>
 
-          {/* 성별  */}
           <div className="seller-form-group">
             <label htmlFor="gender" className="seller-form-label">성별 *</label>
             <select
@@ -309,38 +357,8 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
             {errors.gender && <span className="seller-error-message">{errors.gender}</span>}
           </div>
 
-          {/* 생년월일 */}
           <div className="seller-form-group">
-            <label htmlFor="birth" className="seller-form-label">생년월일 *</label>
-            <input
-              type="date"
-              id="birth"
-              name="birth"
-              className={`seller-form-input ${errors.birth ? 'error' : ''}`}
-              value={formData.birth}
-              onChange={handleInputChange}
-            />
-            {errors.birth && <span className="seller-error-message">{errors.birth}</span>}
-          </div>
-
-          {/* 대표자 명 */}
-          <div className="seller-form-group">
-            <label htmlFor="name" className="seller-form-label">대표자 명 *</label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              className={`seller-form-input ${errors.name ? 'error' : ''}`}
-              placeholder="대표자 명을 입력하세요"
-              value={formData.name}
-              onChange={handleInputChange}
-            />
-            {errors.name && <span className="seller-error-message">{errors.name}</span>}
-          </div>
-
-          {/* 사업장 위치 주소 - 주소 검색 기능 추가 */}
-          <div className="seller-form-group">
-            <label htmlFor="seller_address" className="seller-form-label">사업장 위치 주소 *</label>
+            <label htmlFor="seller_address" className="seller-form-label">사업장 위치 *</label>
             <div className="seller-address-input-group">
               <input
                 type="text"
@@ -359,22 +377,20 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
             {errors.seller_address && <span className="seller-error-message">{errors.seller_address}</span>}
           </div>
 
-          {/* 사업장 상세 주소 */}
           <div className="seller-form-group">
-            <label htmlFor="seller_address_detail" className="seller-form-label">사업장 상세 주소 *</label>
+            <label htmlFor="seller_address_detail" className="seller-form-label">상세 주소 *</label>
             <input
               type="text"
               id="seller_address_detail"
               name="seller_address_detail"
               className={`seller-form-input ${errors.seller_address_detail ? 'error' : ''}`}
-              placeholder="사업장 상세 주소를 입력하세요"
+              placeholder="상세 주소를 입력하세요"
               value={formData.seller_address_detail}
               onChange={handleInputChange}
             />
             {errors.seller_address_detail && <span className="seller-error-message">{errors.seller_address_detail}</span>}
           </div>
 
-          {/* 사업자 등록번호 */}
           <div className="seller-form-group">
             <label htmlFor="business_registration_number" className="seller-form-label">사업자 등록번호 *</label>
             <input
@@ -382,14 +398,27 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
               id="business_registration_number"
               name="business_registration_number"
               className={`seller-form-input ${errors.business_registration_number ? 'error' : ''}`}
-              placeholder="000-00-00000"
+              placeholder="123-45-67890"
               value={formData.business_registration_number}
               onChange={handleInputChange}
             />
             {errors.business_registration_number && <span className="seller-error-message">{errors.business_registration_number}</span>}
           </div>
 
-          {/* 계좌번호 */}
+          <div className="seller-form-group">
+            <label htmlFor="seller_bank_name" className="seller-form-label">은행명 *</label>
+            <input
+              type="text"
+              id="seller_bank_name"
+              name="seller_bank_name"
+              className={`seller-form-input ${errors.seller_bank_name ? 'error' : ''}`}
+              placeholder="예: 국민은행"
+              value={formData.seller_bank_name}
+              onChange={handleInputChange}
+            />
+            {errors.seller_bank_name && <span className="seller-error-message">{errors.seller_bank_name}</span>}
+          </div>
+
           <div className="seller-form-group">
             <label htmlFor="seller_account_number" className="seller-form-label">계좌번호 *</label>
             <input
@@ -397,14 +426,13 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
               id="seller_account_number"
               name="seller_account_number"
               className={`seller-form-input ${errors.seller_account_number ? 'error' : ''}`}
-              placeholder="계좌번호를 입력하세요"
+              placeholder="숫자만 입력"
               value={formData.seller_account_number}
               onChange={handleInputChange}
             />
             {errors.seller_account_number && <span className="seller-error-message">{errors.seller_account_number}</span>}
           </div>
 
-          {/* 예금주 */}
           <div className="seller-form-group">
             <label htmlFor="seller_depositor" className="seller-form-label">예금주 *</label>
             <input
@@ -412,54 +440,54 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
               id="seller_depositor"
               name="seller_depositor"
               className={`seller-form-input ${errors.seller_depositor ? 'error' : ''}`}
-              placeholder="예금주명을 입력하세요"
+              placeholder="예금주 이름"
               value={formData.seller_depositor}
               onChange={handleInputChange}
             />
             {errors.seller_depositor && <span className="seller-error-message">{errors.seller_depositor}</span>}
           </div>
 
-          {/* 은행명 */}
           <div className="seller-form-group">
-            <label htmlFor="seller_bank_name" className="seller-form-label">은행명 *</label>
-            <select
-              id="seller_bank_name"
-              name="seller_bank_name"
-              className={`seller-form-input ${errors.seller_bank_name ? 'error' : ''}`}
-              value={formData.seller_bank_name}
-              onChange={handleInputChange}
-            >
-              <option value="">은행을 선택하세요</option>
-              <option value="국민은행">국민은행</option>
-              <option value="신한은행">신한은행</option>
-              <option value="우리은행">우리은행</option>
-              <option value="하나은행">하나은행</option>
-              <option value="농협은행">농협은행</option>
-              <option value="기업은행">기업은행</option>
-              <option value="카카오뱅크">카카오뱅크</option>
-              <option value="토스뱅크">토스뱅크</option>
-              <option value="기타">기타</option>
-            </select>
-            {errors.seller_bank_name && <span className="seller-error-message">{errors.seller_bank_name}</span>}
-          </div>
-
-          {/* 소개 (선택사항) */}
-          <div className="seller-form-group">
-            <label htmlFor="introduction" className="seller-form-label">판매자 소개</label>
+            <label htmlFor="introduction" className="seller-form-label">소개글</label>
             <textarea
               id="introduction"
               name="introduction"
-              className={`seller-form-input ${errors.introduction ? 'error' : ''}`}
-              placeholder="판매자에 대한 소개를 입력하세요"
+              className="seller-form-textarea"
+              placeholder="사업장 소개를 입력하세요"
               value={formData.introduction}
               onChange={handleInputChange}
               rows={4}
-              style={{ resize: 'vertical', minHeight: '100px' }}
             />
-            {errors.introduction && <span className="seller-error-message">{errors.introduction}</span>}
           </div>
 
-          {/* 약관 동의 컴포넌트 */}
+          <div className="seller-form-group">
+            <label className="seller-form-label">상품 이미지 (최대 5개)</label>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleImageChange}
+              className="seller-image-input"
+            />
+            
+            {imagePreviews.length > 0 && (
+              <div className="seller-image-preview-container">
+                {imagePreviews.map((preview, index) => (
+                  <div key={index} className="seller-image-preview">
+                    <img src={preview} alt={`미리보기 ${index + 1}`} />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="seller-image-remove-btn"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <TermsAgreement
             isAgreed={is_agreed}
             onAgreementChange={handleAgreementChange}
