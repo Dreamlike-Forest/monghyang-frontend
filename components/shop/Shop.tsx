@@ -10,6 +10,12 @@ import { ProductWithDetails, ProductActiveFilters, Brewery } from '../../types/m
 import { getProductsWithBrewery, mockFilterOptions, getBreweriesWithExperience } from '../../data/mockData';
 import { searchProducts, getLatestProducts, convertToProductWithDetails } from '../../utils/shopApi';
 import { ProductSearchParams } from '../../types/product';
+import { 
+  hasActiveFilters as checkActiveFilters,
+  buildSearchParams,
+  getInitialFilters,
+  updateFilters as mergeFilters
+} from '../../utils/filterUtils';
 import './Shop.css';
 
 interface ShopProps {
@@ -19,30 +25,27 @@ interface ShopProps {
 const Shop: React.FC<ShopProps> = ({ className }) => {
   const searchParams = useSearchParams();
   
+  // 중앙화된 mock 데이터 사용
   const [allProducts] = useState<ProductWithDetails[]>(getProductsWithBrewery());
   const [allBreweries] = useState<Brewery[]>(getBreweriesWithExperience());
+  
+  // API에서 가져온 상품 목록
   const [filteredProducts, setFilteredProducts] = useState<ProductWithDetails[]>([]);
   
-  const [activeFilters, setActiveFilters] = useState<ProductActiveFilters>({
-    types: [],
-    alcoholRange: '',
-    regions: [],
-    priceMin: 0,
-    priceMax: 999999,
-    certifications: [],
-    searchKeyword: '',
-    sortBy: 'latest'
-  });
+  // 필터 상태
+  const [activeFilters, setActiveFilters] = useState<ProductActiveFilters>(getInitialFilters());
   
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
 
+  // 상품 상세페이지 상태
   const [selectedProduct, setSelectedProduct] = useState<ProductWithDetails | null>(null);
   const [selectedProductBrewery, setSelectedProductBrewery] = useState<Brewery | null>(null);
   const [isProductDetailOpen, setIsProductDetailOpen] = useState(false);
 
+  // URL 파라미터 처리
   useEffect(() => {
     const search = searchParams.get('search');
     const searchType = searchParams.get('searchType');
@@ -80,11 +83,8 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
     }
   }, [searchParams, allProducts]);
 
-  const hasActiveFilters = activeFilters.searchKeyword || 
-                          activeFilters.types.length > 0 || 
-                          activeFilters.alcoholRange ||
-                          activeFilters.priceMin > 0 ||
-                          activeFilters.priceMax < 999999;
+  // 필터 활성화 여부
+  const hasActiveFilters = checkActiveFilters(activeFilters);
 
   const fetchProducts = useCallback(async () => {
     setIsLoading(true);
@@ -93,40 +93,7 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
       let response;
       
       if (hasActiveFilters) {
-        const params: ProductSearchParams = {
-          startOffset: currentPage - 1,
-        };
-
-        if (activeFilters.searchKeyword) {
-          params.keyword = activeFilters.searchKeyword;
-        }
-        if (activeFilters.priceMin > 0) {
-          params.min_price = activeFilters.priceMin;
-        }
-        if (activeFilters.priceMax < 999999) {
-          params.max_price = activeFilters.priceMax;
-        }
-        if (activeFilters.alcoholRange) {
-          switch (activeFilters.alcoholRange) {
-            case 'low':
-              params.min_alcohol = 0;
-              params.max_alcohol = 6;
-              break;
-            case 'medium':
-              params.min_alcohol = 7;
-              params.max_alcohol = 15;
-              break;
-            case 'high1':
-              params.min_alcohol = 16;
-              params.max_alcohol = 25;
-              break;
-            case 'high2':
-              params.min_alcohol = 25;
-              params.max_alcohol = 100;
-              break;
-          }
-        }
-
+        const params = buildSearchParams(activeFilters, currentPage);
         console.log('필터 검색 API:', params);
         response = await searchProducts(params);
       } else {
@@ -170,7 +137,7 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
 
   const handleFilterChange = (newFilters: Partial<ProductActiveFilters>) => {
     console.log('필터 변경:', newFilters);
-    setActiveFilters(prev => ({ ...prev, ...newFilters }));
+    setActiveFilters(prev => mergeFilters(prev, newFilters));
     setCurrentPage(1);
   };
 
@@ -191,6 +158,7 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
     });
   };
 
+  // 상품 클릭 핸들러
   const handleProductClick = (productId: number) => {
     console.log('상품 클릭:', productId);
     
@@ -217,6 +185,7 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
     window.history.pushState({ productDetail: true }, '', url.toString());
   };
 
+  // 상품 상세페이지 닫기
   const handleCloseProductDetail = () => {
     setIsProductDetailOpen(false);
     setSelectedProduct(null);
@@ -235,6 +204,7 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
     });
   };
 
+  // 브라우저 뒤로가기 감지
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
       const url = new URL(window.location.href);

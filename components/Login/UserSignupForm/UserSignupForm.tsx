@@ -12,6 +12,7 @@ interface UserSignupFormProps {
 
 const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
   const [formData, setFormData] = useState({
+    // 회원 테이블 필드
     email: '',
     password: '',
     passwordConfirm: '',
@@ -22,7 +23,7 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
     gender: '',
     address: '',
     address_detail: '',
-    zonecode: '',
+    zonecode: '', // 우편번호 추가
     is_agreed: false
   });
 
@@ -40,10 +41,12 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
       [name]: type === 'checkbox' ? checked : value
     }));
 
+    // 이메일이 변경되면 중복확인을 다시 해야 함
     if (name === 'email') {
       setEmailChecked(false);
     }
 
+    // 에러 초기화
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -52,6 +55,7 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
     }
   };
 
+  // 주소 검색 결과 처리
   const handleAddressSelect = (address: string, zonecode: string) => {
     setFormData(prev => ({
       ...prev,
@@ -59,6 +63,7 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
       zonecode: zonecode
     }));
 
+    // 주소 관련 에러 초기화
     if (errors.address) {
       setErrors(prev => ({
         ...prev,
@@ -100,6 +105,7 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
     }
   };
 
+  // 약관 동의 핸들러 
   const handleAgreementChange = (agreed: boolean) => {
     setIsAgreed(agreed);
     if (agreed && errors.terms) {
@@ -110,6 +116,7 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {};
 
+    // 회원 필드 검증
     if (!formData.email) newErrors.email = '이메일을 입력해주세요.';
     if (!emailChecked) newErrors.email = '이메일 중복확인을 해주세요.';
     if (!formData.password) newErrors.password = '비밀번호를 입력해주세요.';
@@ -123,6 +130,8 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
     if (!formData.gender) newErrors.gender = '성별을 선택해주세요.';
     if (!formData.address) newErrors.address = '주소를 입력해주세요.';
     if (!formData.address_detail) newErrors.address_detail = '상세 주소를 입력해주세요.';
+    
+    // 약관 동의 검증
     if (!is_agreed) newErrors.terms = '약관에 동의해주세요.';
 
     setErrors(newErrors);
@@ -136,8 +145,10 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
       return;
     }
 
+    // gender 필드 변환: male -> man, female -> woman
     const genderValue = formData.gender === 'male' ? 'man' : 'woman';
 
+    // 최종 제출 데이터
     const submitData = {
       email: formData.email,
       password: formData.password,
@@ -158,7 +169,7 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
       
       if (response.success) {
         alert(response.message || '회원가입이 완료되었습니다!');
-        onBack();
+        onBack(); // 로그인 페이지로 돌아가기
       } else {
         alert(response.message || '회원가입에 실패했습니다.');
       }
@@ -183,6 +194,7 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
         <h1 className="user-signup-title">일반 사용자 회원가입</h1>
         
         <form className="user-signup-form" onSubmit={handleSubmit}>
+          {/* 이메일 */}
           <div className="user-form-group">
             <label htmlFor="email" className="user-form-label">이메일 (아이디) *</label>
             <div className="user-email-input-group">
@@ -208,6 +220,7 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
             {emailChecked && !errors.email && <span className="user-success-message">사용 가능한 이메일입니다.</span>}
           </div>
 
+          {/* 비밀번호 */}
           <div className="user-form-group">
             <label htmlFor="password" className="user-form-label">비밀번호 *</label>
             <input
@@ -222,6 +235,7 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
             {errors.password && <span className="user-error-message">{errors.password}</span>}
           </div>
 
+          {/* 비밀번호 확인 */}
           <div className="user-form-group">
             <label htmlFor="passwordConfirm" className="user-form-label">비밀번호 확인 *</label>
             <input
@@ -236,6 +250,7 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
             {errors.passwordConfirm && <span className="user-error-message">{errors.passwordConfirm}</span>}
           </div>
 
+          {/* 닉네임 */}
           <div className="user-form-group">
             <label htmlFor="nickname" className="user-form-label">닉네임 *</label>
             <input
@@ -250,6 +265,7 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
             {errors.nickname && <span className="user-error-message">{errors.nickname}</span>}
           </div>
 
+          {/* 실명 */}
           <div className="user-form-group">
             <label htmlFor="name" className="user-form-label">실명 *</label>
             <input
@@ -264,6 +280,7 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
             {errors.name && <span className="user-error-message">{errors.name}</span>}
           </div>
 
+          {/* 전화번호 */}
           <div className="user-form-group">
             <label htmlFor="phone" className="user-form-label">전화번호 *</label>
             <input
@@ -278,6 +295,7 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
             {errors.phone && <span className="user-error-message">{errors.phone}</span>}
           </div>
 
+          {/* 생년월일 */}
           <div className="user-form-group">
             <label htmlFor="birth" className="user-form-label">생년월일 *</label>
             <input
@@ -291,6 +309,7 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
             {errors.birth && <span className="user-error-message">{errors.birth}</span>}
           </div>
 
+          {/* 성별 */}
           <div className="user-form-group">
             <label htmlFor="gender" className="user-form-label">성별 *</label>
             <select
@@ -307,6 +326,7 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
             {errors.gender && <span className="user-error-message">{errors.gender}</span>}
           </div>
 
+          {/* 주소 - 주소 검색 기능 추가 */}
           <div className="user-form-group">
             <label htmlFor="address" className="user-form-label">주소 *</label>
             <div className="user-address-input-group">
@@ -327,6 +347,7 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
             {errors.address && <span className="user-error-message">{errors.address}</span>}
           </div>
 
+          {/* 상세 주소 */}
           <div className="user-form-group">
             <label htmlFor="address_detail" className="user-form-label">상세 주소 *</label>
             <input
@@ -341,6 +362,7 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
             {errors.address_detail && <span className="user-error-message">{errors.address_detail}</span>}
           </div>
 
+          {/* 약관 동의 컴포넌트 추가 */}
           <TermsAgreement
             isAgreed={is_agreed}
             onAgreementChange={handleAgreementChange}
