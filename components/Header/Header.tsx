@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { getCartItemCount, subscribeToCart } from '../Cart/CartStore';
+import { getCartItemCount, subscribeToCart, clearCart } from '../Cart/CartStore';
 import { checkAuthAndPrompt, isLoggedIn } from '../../utils/authUtils'; 
 import './Header.css';
 
@@ -236,7 +236,7 @@ const Header: React.FC = () => {
     setIsProfileDropdownOpen(!isProfileDropdownOpen);
   };
 
-  // 로그아웃 핸들러 - URL 완전 초기화
+  // 로그아웃 핸들러 - URL 완전 초기화 + 장바구니 비우기
   const handleLogout = () => {
     if (typeof window === 'undefined') {
       console.warn('브라우저 환경이 아닙니다.');
@@ -244,6 +244,14 @@ const Header: React.FC = () => {
     }
     
     try {
+      // ✅ 로그아웃 시 장바구니 초기화
+      try {
+        clearCart();
+        console.log('로그아웃 시 장바구니 초기화 완료');
+      } catch (cartError) {
+        console.error('로그아웃 시 장바구니 초기화 오류:', cartError);
+      }
+
       // 로컬 스토리지 정리
       localStorage.removeItem('isLoggedIn');
       localStorage.removeItem('userData');
