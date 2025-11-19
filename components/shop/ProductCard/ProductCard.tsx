@@ -1,10 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { ProductWithDetails } from '../../../types/shop';
+import { ProductWithDetails } from '../../../types/mockData';
 import { addToCart } from '../../Cart/CartStore';
-import { checkAuthAndPrompt } from '../../../utils/authUtils';
-import OptimizedImage from '../../OptimizedImage/OptimizedImage';
+import { checkAuthAndPrompt } from '../../../utils/authUtils'; 
 import './ProductCard.css';
 
 interface ProductCardProps {
@@ -21,8 +20,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
   onProductClick
 }) => {
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const [imageStatus, setImageStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
 
-  // 토스트 메시지 표시 함수
+  // 토스트 메시지 표시 함수 - CSS 클래스 사용
   const showToastMessage = (message: string) => {
     const toast = document.createElement('div');
     toast.textContent = message;
@@ -30,10 +30,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
     document.body.appendChild(toast);
     
+    // 애니메이션 트리거
     setTimeout(() => {
       toast.classList.add('show');
     }, 10);
 
+    // 3초 후 제거
     setTimeout(() => {
       toast.classList.remove('show');
       toast.classList.add('hide');
@@ -41,12 +43,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
     }, 3000);
   };
 
-  // 장바구니 담기 핸들러
+  // 장바구니 담기 핸들러 - 로그인 확인 추가
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
     
     console.log('장바구니 담기 버튼 클릭 - 로그인 상태 확인');
     
+    // 로그인 확인 및 유도
     const canProceed = checkAuthAndPrompt(
       '장바구니 기능',
       () => {
@@ -58,19 +61,23 @@ const ProductCard: React.FC<ProductCardProps> = ({
     );
 
     if (!canProceed) {
-      return;
+      return; // 로그인하지 않았거나 사용자가 취소한 경우
     }
 
+    // 로그인된 사용자만 여기에 도달
     try {
+      // CartStore에서 직접 장바구니에 추가
       const success = addToCart(product);
       
       if (success) {
+        // 성공 메시지 표시
         showToastMessage(`${product.name}이(가) 장바구니에 추가되었습니다.`);
         
         if (onAddToCart) {
           onAddToCart(product.product_id);
         }
       } else {
+        // 실패 시 알림 (최대 수량 초과 등)
         alert('더 이상 담을 수 없습니다. 장바구니를 확인해주세요.');
       }
     } catch (error) {
@@ -79,12 +86,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
     }
   };
 
-  // 위시리스트 핸들러
+  // 위시리스트 핸들러 - 로그인 확인 추가
   const handleToggleWishlist = (e: React.MouseEvent) => {
     e.stopPropagation();
     
     console.log('위시리스트 버튼 클릭 - 로그인 상태 확인');
     
+    // 로그인 확인 및 유도
     const canProceed = checkAuthAndPrompt(
       '위시리스트 기능',
       () => {
@@ -96,9 +104,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
     );
 
     if (!canProceed) {
-      return;
+      return; // 로그인하지 않았거나 사용자가 취소한 경우
     }
 
+    // 로그인된 사용자만 여기에 도달
     setIsWishlisted(!isWishlisted);
     if (onToggleWishlist) {
       onToggleWishlist(product.product_id);
@@ -121,28 +130,65 @@ const ProductCard: React.FC<ProductCardProps> = ({
     }
   };
 
+  const handleImageLoad = () => {
+    setImageStatus('loaded');
+  };
+
+  const handleImageError = () => {
+    setImageStatus('error');
+  };
+
   // 할인율 계산
   const discountRate = product.originalPrice && product.minPrice
     ? Math.round(((product.originalPrice - product.minPrice) / product.originalPrice) * 100)
     : product.discountRate || 0;
 
-  // 가격 표시
+  // 이미지가 있는지 확인
+  const hasValidImage = product.image_key && 
+    !product.image_key.includes('/api/placeholder') && 
+    product.image_key !== '' &&
+    !product.image_key.includes('placeholder');
+
+  // 가격 표시 함수
   const formatPrice = (price: number): string => {
     return price.toLocaleString();
   };
 
+  // 가격 범위 표시 여부 확인
   const hasPriceRange = product.minPrice !== product.maxPrice;
 
   return (
     <div className="product-card" onClick={handleProductClick}>
       <div className="product-image-container">
-        {/* OptimizedImage 컴포넌트 사용 - 기존 이미지 관련 코드 모두 제거 */}
-        <OptimizedImage
-          src={product.image_key}
-          alt={product.name}
-          placeholderType="product"
-          className="product-image"
-        />
+        {hasValidImage ? (
+          <>
+            {imageStatus === 'loading' && (
+              <div className="product-image-placeholder">
+                <div className="placeholder-icon">📷</div>
+                <div className="placeholder-text">이미지 로딩 중...</div>
+              </div>
+            )}
+            <img
+              src={product.image_key}
+              alt={product.name}
+              className={`product-image ${imageStatus === 'loading' ? 'image-loading' : ''} ${imageStatus === 'error' ? 'image-error' : ''}`}
+              onLoad={handleImageLoad}
+              onError={handleImageError}
+              style={{ display: imageStatus === 'error' ? 'none' : 'block' }}
+            />
+            {imageStatus === 'error' && (
+              <div className="product-image-placeholder">
+                <div className="placeholder-icon">🍶</div>
+                <div className="placeholder-text">이미지를 불러올 수<br />없습니다</div>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="product-image-placeholder">
+            <div className="placeholder-icon">🍶</div>
+            <div className="placeholder-text">상품 이미지<br />준비 중</div>
+          </div>
+        )}
         
         {/* 상품 배지들 */}
         <div className="product-badges">
@@ -159,13 +205,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
           <span className="badge-discount">{discountRate}%</span>
         )}
 
-        {/* 위시리스트 버튼 */}
+        {/* 위시리스트 버튼 - 로그인 확인 포함 */}
         <button
           className={`wishlist-button ${isWishlisted ? 'active' : ''}`}
           onClick={handleToggleWishlist}
           title="위시리스트에 추가"
-          aria-label={isWishlisted ? "위시리스트에서 제거" : "위시리스트에 추가"}
-          aria-pressed={isWishlisted}
         >
           {isWishlisted ? '♥' : '♡'}
         </button>
@@ -193,7 +237,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
               <span className="discount-rate-badge">{discountRate}%</span>
             )}
             
-            {/* 정가 */}
+            {/* 정가 (할인이 있을 때만 표시) */}
             {product.originalPrice && product.originalPrice > product.minPrice && (
               <span className="original-price">
                 {formatPrice(product.originalPrice)}원
@@ -210,11 +254,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         </div>
         
-        {/* 장바구니 담기 버튼 */}
+        {/* 장바구니 담기 버튼 - 로그인 확인 포함 */}
         <button 
           className="add-to-cart-button"
           onClick={handleAddToCart}
-          aria-label={`${product.name} 장바구니에 담기`}
         >
           장바구니 담기
         </button>

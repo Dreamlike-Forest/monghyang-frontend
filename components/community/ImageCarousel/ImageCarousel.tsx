@@ -105,7 +105,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
   };
 
   const handleImageError = (index: number) => {
-    console.error(`이미지 로드 실패: ${images[index]?.image_key}`);
+    console.error(`이미지 로드 실패: ${images[index]?.image_url}`);
     if (index === 0) {
       setIsLoading(false);
     }
@@ -180,10 +180,10 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
           }}
         >
           {images.map((image, index) => (
-            <div key={image.post_image_id || index} className="carousel-slide">
+            <div key={image.image_id || index} className="carousel-slide">
               <img
-                src={image.image_key}
-                alt={`이미지 ${index + 1}`}
+                src={image.image_url}
+                alt={image.alt_text || `이미지 ${index + 1}`}
                 className={`carousel-image ${objectFit === 'contain' ? 'contain' : ''}`}
                 loading={index === 0 ? 'eager' : 'lazy'}
                 onLoad={() => handleImageLoad(index)}

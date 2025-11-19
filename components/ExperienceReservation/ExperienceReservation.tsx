@@ -51,13 +51,13 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
   const experienceRef = useRef<HTMLElement>(null);
   const customerInfoRef = useRef<HTMLElement>(null);
 
-  // 선택된 체험 프로그램 정보
-  const selectedExperience = brewery.experience_programs?.find(
+  // [수정] experience_programs -> joy, id -> joy_id
+  const selectedExperience = brewery.joy?.find(
     exp => exp.joy_id === selectedExperienceId
   ) || null;
 
-  // 총 금액 계산
-  const totalAmount = selectedExperience ? selectedExperience.price * customerInfo.headCount : 0;
+  // [수정] 총 금액 계산: price -> joy_final_price
+  const totalAmount = selectedExperience ? selectedExperience.joy_final_price * customerInfo.headCount : 0;
 
   // 에러 메시지 자동 제거
   useEffect(() => {
@@ -72,11 +72,9 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
   // 모달 열릴 때 body 스크롤 방지 (가벼운 버전)
   useEffect(() => {
     if (showSuccessModal || showReservationModal) {
-      // 현재 스크롤 위치 저장
       const scrollY = window.scrollY;
       const body = document.body;
       
-      // 가벼운 스크롤 방지
       body.style.position = 'fixed';
       body.style.top = `-${scrollY}px`;
       body.style.width = '100%';
@@ -85,7 +83,6 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
       body.classList.add('reservation-modal-open');
       
     } else {
-      // 모달 닫을 때 원래 스크롤 위치로 복원
       const body = document.body;
       const scrollY = body.style.top;
       
@@ -101,15 +98,12 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
       }
     }
 
-    // 컴포넌트 언마운트 시 정리
     return () => {
       const body = document.body;
-      
       body.style.position = '';
       body.style.top = '';
       body.style.width = '';
       body.style.overflow = '';
-      
       body.classList.remove('reservation-modal-open');
     };
   }, [showSuccessModal, showReservationModal]);
@@ -173,7 +167,6 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
   };
 
   const scrollToFirstError = (errors: ValidationErrors) => {
-    // 첫 번째 에러가 있는 섹션으로 스크롤
     if (errors.date || errors.time) {
       dateRef.current?.scrollIntoView({ 
         behavior: 'smooth', 
@@ -196,19 +189,17 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
     const validationErrors = validateForm();
     
     if (!validationErrors) {
-      // 유효성 검사 실패 시 첫 번째 에러 섹션으로 스크롤
       scrollToFirstError(errors);
       return;
     }
 
-    // 예약하기 버튼을 누르는 즉시 현재 예약 모달 숨기고 성공 모달 표시
     setShowReservationModal(false);
     setShowSuccessModal(true);
     
     console.log('체험 예약 완료:', {
       brewery: brewery.brewery_name,
       date: selectedDate,
-      experience: selectedExperience?.name,
+      experience: selectedExperience?.joy_name, // [수정] name -> joy_name
       customer: customerInfo,
       totalAmount
     });
@@ -216,7 +207,6 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
 
   const handleSuccessModalClose = () => {
     setShowSuccessModal(false);
-    // 성공 모달이 닫히면 전체 예약 프로세스 종료
     onClose();
   };
 
@@ -225,14 +215,12 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
     onClose();
   };
 
-  // 예약 모달이 숨겨져 있으면 아무것도 렌더링하지 않음
   if (!showReservationModal && !showSuccessModal) {
     return null;
   }
 
   return (
     <>
-      {/* 예약 모달 - showReservationModal이 true일 때만 표시 */}
       {showReservationModal && (
         <div className="reservation-experience-reservation">
           <div className="reservation-header">
@@ -247,7 +235,6 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
 
           <div className="reservation-content">
             <div className="reservation-main">
-              {/* 1. 날짜 및 시간 선택 */}
               <section ref={dateRef} className="reservation-section reservation-scroll-target">
                 <h2 className="reservation-section-title">1. 날짜 및 시간 선택</h2>
                 <ReservationCalendar
@@ -259,18 +246,17 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
                 />
               </section>
 
-              {/* 2. 체험 선택 */}
               <section ref={experienceRef} className="reservation-section reservation-scroll-target">
                 <h2 className="reservation-section-title">2. 체험 선택</h2>
                 <ExperienceSelector
-                  experiences={brewery.experience_programs || []}
+                  // [수정] experience_programs -> joy
+                  experiences={brewery.joy || []}
                   selectedExperience={selectedExperienceId}
                   onExperienceSelect={handleExperienceSelect}
                   error={errors.experience}
                 />
               </section>
 
-              {/* 3. 예약자 정보 */}
               <section ref={customerInfoRef} className="reservation-section reservation-scroll-target">
                 <h2 className="reservation-section-title">3. 예약자 정보</h2>
                 <CustomerInfoForm
@@ -281,7 +267,6 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
               </section>
             </div>
 
-            {/* 4. 총 금액 및 예약하기 */}
             <aside className="reservation-sidebar">
               <div className="reservation-sidebar-sticky">
                 <ReservationSummary
@@ -298,7 +283,6 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
         </div>
       )}
 
-      {/* 예약 완료 모달 - showSuccessModal이 true일 때만 표시 */}
       {showSuccessModal && (
         <ReservationSuccessModal
           isOpen={showSuccessModal}
@@ -306,7 +290,8 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
           reservationInfo={{
             date: selectedDate || '',
             time: selectedTime || '',
-            experienceName: selectedExperience?.name || '',
+            // [수정] name -> joy_name
+            experienceName: selectedExperience?.joy_name || '',
             customerName: customerInfo.name,
             headCount: customerInfo.headCount,
             totalAmount: totalAmount

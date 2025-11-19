@@ -12,74 +12,81 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Brewery as BreweryType, ProductWithDetails } from '../types/mockData';
 import { getProductsWithBrewery } from '../data/mockData';
+import { getBreweryById, convertBreweryDetailToType } from '../utils/brewery';
 
 type View = 'home' | 'about' | 'brewery' | 'shop' | 'community' | 'login' | 'brewery-detail' | 'product-detail' | 'cart';
 
 export default function MainApp() {
   const searchParams = useSearchParams();
   const [currentView, setCurrentView] = useState<View>('home');
-  const [selectedBreweryId, setSelectedBreweryId] = useState<number | null>(null);
+  const [selectedBrewery, setSelectedBrewery] = useState<BreweryType | null>(null);
   const [breweryProducts, setBreweryProducts] = useState<ProductWithDetails[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // URL 파라미터 처리
+  // URL 파라미터 처리 개선 - 검색 파라미터 지원 추가
   useEffect(() => {
     const handleURLParams = async () => {
       setIsLoading(true);
       
       try {
         const view = searchParams.get('view') as View;
-        const breweryIdParam = searchParams.get('brewery');
+        const breweryId = searchParams.get('brewery');
         const productId = searchParams.get('product');
         
         // 검색 관련 파라미터들
         const searchKeyword = searchParams.get('search');
         const searchType = searchParams.get('searchType');
 
-        console.log('URL 파라미터:', { view, breweryId: breweryIdParam, productId, searchKeyword, searchType });
+        console.log('URL 파라미터:', { view, breweryId, productId, searchKeyword, searchType });
 
         // 상품 상세페이지 처리 - shop 뷰로 처리
         if (productId) {
           console.log('상품 상세페이지 요청:', productId);
+          // Shop 컴포넌트에서 처리하도록 shop view로 설정
           setCurrentView('shop');
-          setSelectedBreweryId(null);
+          setSelectedBrewery(null);
           setBreweryProducts([]);
-          setIsLoading(false);
           return;
         }
 
-        // 양조장 상세페이지 처리 - breweryId만 저장
-        if (breweryIdParam) {
-          const breweryId = parseInt(breweryIdParam);
+        // 양조장 상세페이지 처리
+        if (breweryId) {
+          console.log('🏭 양조장 상세 페이지 요청:', breweryId);
           
-          console.log('🏭 양조장 상세페이지 요청:', breweryId);
-          
-          // breweryId만 저장 - BreweryDetail 컴포넌트에서 자체적으로 데이터 로드
-          setSelectedBreweryId(breweryId);
-          
-          // 해당 양조장의 상품 목록 가져오기 (임시로 mock 데이터 사용)
-          // TODO: API로 교체 필요
-          const products = getProductsWithBrewery().filter(
-            p => p.brewery_id === breweryId
-          );
-          setBreweryProducts(products);
-          
-          setCurrentView('brewery-detail');
-          console.log('✅ 양조장 상세페이지로 설정 - ID:', breweryId);
-          
-          // 양조장 상세페이지 진입 시 스크롤 초기화
-          setTimeout(() => {
-            window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
-            document.documentElement.scrollTop = 0;
-            document.body.scrollTop = 0;
-          }, 0);
-        } else if (view && ['home', 'about', 'brewery', 'shop', 'community', 'login', 'cart'].includes(view)) {
+          try {
+            // API로 양조장 상세 정보 가져오기
+            const breweryDetail = await getBreweryById(parseInt(breweryId));
+            
+            if (breweryDetail) {
+              const convertedBrewery = convertBreweryDetailToType(breweryDetail);
+              setSelectedBrewery(convertedBrewery);
+              
+              // 해당 양조장의 상품 가져오기 (mockData - 추후 API로 변경 필요)
+              const products = getProductsWithBrewery().filter(p => p.brewery_id === convertedBrewery.id);
+              
+              setBreweryProducts(products);
+              setCurrentView('brewery-detail');
+              console.log('✅ 양조장 상세페이지 로드 완료:', convertedBrewery.brewery_name);
+            } else {
+              console.log('❌ 양조장을 찾을 수 없음, brewery 목록으로 리다이렉트');
+              setCurrentView('brewery');
+              setSelectedBrewery(null);
+              setBreweryProducts([]);
+            }
+          } catch (error) {
+            console.error('❌ 양조장 상세 정보 로드 실패:', error);
+            setCurrentView('brewery');
+            setSelectedBrewery(null);
+            setBreweryProducts([]);
+          }
+        } else if (view && ['home', 'about', 'brewery', 'shop', 'community', 'login', 'cart'].includes(view)) { 
           // 일반 뷰 처리
           setCurrentView(view);
-          setSelectedBreweryId(null);
+          // 뷰가 변경되면 선택된 양조장 초기화
+          setSelectedBrewery(null);
           setBreweryProducts([]);
 
-          // 검색 파라미터가 있는 경우 로그 출력 (실제 검색은 각 컴포넌트에서 처리)
+          // 검색 파라미터가 있는 경우 로그 출력
           if (searchKeyword && searchType) {
             console.log(`${searchType} 검색 요청: "${searchKeyword}"`);
             if (searchType === 'brewery' && view !== 'brewery') {
@@ -91,13 +98,13 @@ export default function MainApp() {
         } else {
           // view 파라미터가 없거나 유효하지 않으면 home으로 설정
           setCurrentView('home');
-          setSelectedBreweryId(null);
+          setSelectedBrewery(null);
           setBreweryProducts([]);
         }
       } catch (error) {
         console.error('URL 파라미터 처리 중 오류:', error);
         setCurrentView('home');
-        setSelectedBreweryId(null);
+        setSelectedBrewery(null);
         setBreweryProducts([]);
       } finally {
         setIsLoading(false);
@@ -120,7 +127,7 @@ export default function MainApp() {
     };
   }, []);
 
-  // 뷰 전환 함수 개선 - Nav 컴포넌트와 호환
+  // 뷰 전환 함수 개선
   const navigateToView = (view: View, params?: Record<string, string>) => {
     console.log('네비게이션 요청:', view, params);
     
@@ -143,7 +150,6 @@ export default function MainApp() {
       });
     }
     
-    // URL 업데이트 - Nav 컴포넌트와 일관성 유지
     window.location.href = url.toString();
   };
 
@@ -201,15 +207,15 @@ export default function MainApp() {
       case 'login':
         return <Login />;
 
-      case 'cart':
+      case 'cart': 
         return <Cart />;
 
       case 'brewery-detail':
-        if (selectedBreweryId) {
-          console.log('양조장 상세페이지 렌더링 - ID:', selectedBreweryId);
+        if (selectedBrewery) {
+          console.log('양조장 상세페이지 렌더링:', selectedBrewery.brewery_name);
           return (
             <BreweryDetail 
-              breweryId={selectedBreweryId}
+              brewery={selectedBrewery}
               products={breweryProducts}
             />
           );
@@ -295,11 +301,9 @@ export default function MainApp() {
     }
   };
 
-  // 로그인 페이지일 때는 전체 레이아웃 변경
   if (currentView === 'login') {
     return <Login />;
   }
 
-  // 일반 페이지일 때는 컨텐츠만 렌더링 (Header, Nav, Footer는 page.tsx에서 처리)
   return renderView();
 }

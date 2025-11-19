@@ -4,36 +4,25 @@ import React, { useState } from 'react';
 import TermsAgreement from '../TermsAgreement/TermsAgreement';
 import AddressSearch from '../AddressSearch/AddressSearch';
 import ImageUpload from '../../community/ImageUpload/ImageUpload';
-import { signup, checkEmailAvailability } from '../../../utils/authUtils'; 
+import { checkEmailAvailability, signupBrewery } from '../../../utils/authApi';
 import './BrewerySignupForm.css';
 
 interface BrewerySignupFormProps {
   onBack: () => void;
-  onBackToLogin: () => void; 
 }
 
-const regionTypeIdMap: Record<string, number> = {
-  '서울/경기': 1,
-  '강원도': 2,
-  '충청도': 3,
-  '전라도': 4,
-  '경상도': 5,
-  '제주도': 6
-};
-const regionOptions = Object.keys(regionTypeIdMap);
-
-const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack, onBackToLogin }) => { 
+const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
   const [formData, setFormData] = useState({
     // 양조장 정보들
     email: '',
     password: '',
     passwordConfirm: '',
     phone: '',
-    nickname: '', 
+    nickname: '',
     gender: '',
     birth: '',
-    name: '', 
-    brewery_address: '', 
+    name: '',
+    brewery_address: '',
     brewery_address_detail: '',
     brewery_zonecode: '', 
     business_registration_number: '',
@@ -42,38 +31,50 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack, onBackToL
     brewery_bank_name: '',
     brewery_website: '',
     introduction: '',
-    start_time: '', 
-    end_time: '', 
-    region_type_id: '', 
-    is_regular_visit: false 
+    image_key: '',
+    start_time: '09:00',
+    end_time: '18:00',
+    region_type_id: '1',
+    is_regular_visit: 'false'
   });
 
   const [emailChecked, setEmailChecked] = useState(false);
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
-  const [is_agreed, setIsAgreed] = useState(false); 
+  const [is_agreed, setIsAgreed] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imageDescriptions, setImageDescriptions] = useState<string[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isImageUploading, setIsImageUploading] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
-    const checked = (e.target as HTMLInputElement).checked;
+    const { name, value } = e.target;
+    
+
+    let formattedValue = value;
+    if (name === 'phone') {
+
+      const numbers = value.replace(/[^0-9]/g, '');
+      
+      if (numbers.length <= 3) {
+        formattedValue = numbers;
+      } else if (numbers.length <= 7) {
+        formattedValue = `${numbers.slice(0, 3)}-${numbers.slice(3)}`;
+      } else if (numbers.length <= 11) {
+        formattedValue = `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7)}`;
+      } else {
+        formattedValue = `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7, 11)}`;
+      }
+    }
     
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: formattedValue
     }));
 
-    // 이메일이 변경되면 중복확인을 다시 해야 함
     if (name === 'email') {
       setEmailChecked(false);
-      if (errors.email) {
-         setErrors(prev => ({ ...prev, email: '' }));
-      }
     }
 
-    // 에러 초기화
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -82,7 +83,18 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack, onBackToL
     }
   };
 
-  // 주소 검색 결과 처리
+  const uploadImage = async (file: File): Promise<string> => {
+    setIsImageUploading(true);
+    
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const mockImageKey = `brewery_${Date.now()}_${file.name.replace(/\s+/g, '_').toLowerCase()}`;
+        setIsImageUploading(false);
+        resolve(mockImageKey);
+      }, 1500);
+    });
+  };
+
   const handleAddressSelect = (address: string, zonecode: string) => {
     setFormData(prev => ({
       ...prev,
@@ -90,7 +102,6 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack, onBackToL
       brewery_zonecode: zonecode
     }));
 
-    // 주소 관련 에러 초기화
     if (errors.brewery_address) {
       setErrors(prev => ({
         ...prev,
@@ -99,7 +110,6 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack, onBackToL
     }
   };
 
-  // 이메일 중복확인 
   const handleEmailCheck = async () => {
     if (!formData.email) {
       setErrors(prev => ({ ...prev, email: '업무용 이메일을 입력해주세요.' }));
@@ -113,20 +123,21 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack, onBackToL
     }
 
     setIsCheckingEmail(true);
-    setErrors(prev => ({ ...prev, email: '' }));
-
+    
     try {
-      const result = await checkEmailAvailability(formData.email);
-      if (result.available) {
+      const isAvailable = await checkEmailAvailability(formData.email);
+      
+      if (isAvailable) {
         setEmailChecked(true);
-        alert(result.message || '사용 가능한 이메일입니다.');
+        setErrors(prev => ({ ...prev, email: '' }));
       } else {
+        setErrors(prev => ({ ...prev, email: '이미 사용 중인 이메일입니다.' }));
         setEmailChecked(false);
-        setErrors(prev => ({ ...prev, email: result.message || '이미 사용 중인 이메일입니다.' }));
       }
-    } catch (error: any) {
+    } catch (error) {
+      console.error('이메일 중복 확인 오류:', error);
+      setErrors(prev => ({ ...prev, email: '이메일 확인 중 오류가 발생했습니다.' }));
       setEmailChecked(false);
-      setErrors(prev => ({ ...prev, email: error.message || '이메일 확인 중 오류 발생' }));
     } finally {
       setIsCheckingEmail(false);
     }
@@ -142,7 +153,6 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack, onBackToL
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {};
 
-    // 양조장 정보 검증
     if (!formData.email) newErrors.email = '업무용 이메일을 입력해주세요.';
     if (!emailChecked) newErrors.email = '이메일 중복확인을 해주세요.';
     if (!formData.password) newErrors.password = '비밀번호를 입력해주세요.';
@@ -150,6 +160,12 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack, onBackToL
     if (!formData.passwordConfirm) newErrors.passwordConfirm = '비밀번호 확인을 입력해주세요.';
     if (formData.password !== formData.passwordConfirm) newErrors.passwordConfirm = '비밀번호가 일치하지 않습니다.';
     if (!formData.phone) newErrors.phone = '업무용 전화번호를 입력해주세요.';
+    else {
+      const phoneRegex = /^010-\d{4}-\d{4}$/;
+      if (!phoneRegex.test(formData.phone)) {
+        newErrors.phone = '올바른 전화번호 형식을 입력해주세요. (010-0000-0000)';
+      }
+    }
     if (!formData.nickname) newErrors.nickname = '상호명을 입력해주세요.';
     if (!formData.gender) newErrors.gender = '성별을 선택해주세요.';
     if (!formData.birth) newErrors.birth = '생년월일을 입력해주세요.';
@@ -161,12 +177,10 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack, onBackToL
     if (!formData.brewery_depositor) newErrors.brewery_depositor = '예금주를 입력해주세요.';
     if (!formData.brewery_bank_name) newErrors.brewery_bank_name = '은행명을 입력해주세요.';
     
-    // 스웨거 추가 필드 검증
-    if (!formData.start_time) newErrors.start_time = '영업 시작 시간을 입력해주세요.';
-    if (!formData.end_time) newErrors.end_time = '영업 종료 시간을 입력해주세요.';
-    if (!formData.region_type_id) newErrors.region_type_id = '지역을 선택해주세요.';
+    if (imageFiles.length === 0) {
+      newErrors.image_key = '양조장 대표 이미지를 업로드해주세요.';
+    }
     
-    // 웹사이트 URL 검증 (선택사항이므로 값이 있을 때만)
     if (formData.brewery_website && !isValidUrl(formData.brewery_website)) {
       newErrors.brewery_website = '올바른 URL 형식을 입력해주세요.';
     }
@@ -187,55 +201,56 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack, onBackToL
     }
   };
 
-  // 폼 제출 핸들러 (API 연동)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) {
-      alert('필수 입력 항목을 확인해주세요.');
       return;
     }
 
-    setIsSubmitting(true);
-
-    // API 스웨거에 맞게 데이터 재구성
-    const submitData = {
-      email: formData.email,
-      password: formData.password,
-      nickname: formData.nickname,
-      name: formData.name,
-      phone: formData.phone,
-      birth: formData.birth,
-      gender: formData.gender,
-      address: formData.brewery_address, // 키 이름 변경
-      address_detail: formData.brewery_address_detail, // 키 이름 변경
-      business_registration_number: formData.business_registration_number,
-      brewery_depositor: formData.brewery_depositor,
-      brewery_account_number: formData.brewery_account_number,
-      brewery_bank_name: formData.brewery_bank_name,
-      introduction: formData.introduction,
-      brewery_website: formData.brewery_website,
-      // --- 스웨거 추가 필드 ---
-      start_time: formData.start_time,
-      end_time: formData.end_time,
-      region_type_id: Number(formData.region_type_id),
-      is_regular_visit: formData.is_regular_visit,
-      // --- 약관 및 이미지 ---
-      is_agreed_brewery: is_agreed, // 키 이름 변경
-      images: imageFiles // 이미지 파일 배열
-    };
-
     try {
-      const result = await signup(submitData, 'brewery');
-      if (result.success) {
-        onBackToLogin(); // [오류 수정] 성공 시 로그인 페이지로
+
+      const genderValue = formData.gender === 'male' ? 'man' : 'woman';
+
+      const submitData = {
+        email: formData.email,
+        password: formData.password,
+        nickname: formData.nickname,
+        name: formData.name,
+        phone: formData.phone,
+        birth: formData.birth,
+        gender: genderValue,
+        address: formData.brewery_address,
+        address_detail: formData.brewery_address_detail,
+        is_agreed: is_agreed,
+        business_registration_number: formData.business_registration_number,
+        brewery_depositor: formData.brewery_depositor,
+        brewery_account_number: formData.brewery_account_number,
+        brewery_bank_name: formData.brewery_bank_name,
+        introduction: formData.introduction || '',
+        brewery_website: formData.brewery_website || '',
+        start_time: formData.start_time,
+        end_time: formData.end_time,
+        region_type_id: parseInt(formData.region_type_id),
+        is_regular_visit: formData.is_regular_visit === 'true',
+        is_agreed_brewery: is_agreed,
+        images: imageFiles
+      };
+
+      console.log('양조장 관리자 회원가입 요청:', submitData);
+      
+      const response = await signupBrewery(submitData);
+      
+      if (response.success) {
+        alert(response.message || '양조장 회원가입이 완료되었습니다!');
+        onBack(); // 로그인 페이지로 돌아가기
       } else {
-        setErrors(prev => ({ ...prev, submit: result.message }));
+        alert(response.message || '양조장 회원가입에 실패했습니다.');
       }
-    } catch (error: any) {
-      setErrors(prev => ({ ...prev, submit: error.message || '알 수 없는 오류가 발생했습니다.' }));
-    } finally {
-      setIsSubmitting(false);
+      
+    } catch (error) {
+      console.error('회원가입 처리 중 오류:', error);
+      alert('회원가입 중 오류가 발생했습니다. 다시 시도해주세요.');
     }
   };
 
@@ -266,7 +281,6 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack, onBackToL
                 placeholder="brewery@company.com"
                 value={formData.email}
                 onChange={handleInputChange}
-                disabled={isCheckingEmail}
               />
               <button
                 type="button"
@@ -388,40 +402,20 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack, onBackToL
           </div>
 
 
-          {/* 양조장 대표 이미지 업로드 (스웨거: images, optional) */}
+          {/* 양조장 대표 이미지 업로드 */}
           <div className="brewery-form-group">
-            <label className="brewery-form-label">양조장 대표 이미지 (선택)</label>
+            <label className="brewery-form-label">양조장 대표 이미지 *</label>
             <ImageUpload
               images={imageFiles}
-              maxImages={5} // 스웨거에 array로 되어있어 5개로 설정
+              maxImages={1}
               onImagesChange={(files) => setImageFiles(files)}
               onDescriptionsChange={(descriptions) => setImageDescriptions(descriptions)}
               descriptions={imageDescriptions}
-              disabled={isSubmitting}
+              disabled={isImageUploading}
               accept="image/jpeg,image/jpg,image/png,image/webp"
               maxFileSize={5}
             />
-            {/* 스웨거상 optional이므로 필수 에러 메시지 제거 */}
-          </div>
-
-          {/* 지역 구분 (region_type_id) */}
-          <div className="brewery-form-group">
-            <label htmlFor="region_type_id" className="brewery-form-label">지역 *</label>
-            <select
-              id="region_type_id"
-              name="region_type_id"
-              className={`brewery-form-input ${errors.region_type_id ? 'error' : ''}`}
-              value={formData.region_type_id}
-              onChange={handleInputChange}
-            >
-              <option value="">지역을 선택하세요</option>
-              {regionOptions.map(regionName => (
-                <option key={regionTypeIdMap[regionName]} value={regionTypeIdMap[regionName]}>
-                  {regionName}
-                </option>
-              ))}
-            </select>
-            {errors.region_type_id && <span className="brewery-error-message">{errors.region_type_id}</span>}
+            {errors.image_key && <span className="brewery-error-message">{errors.image_key}</span>}
           </div>
 
           {/* 양조장 주소 - 주소 검색 기능 추가 */}
@@ -529,47 +523,6 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack, onBackToL
             {errors.brewery_bank_name && <span className="brewery-error-message">{errors.brewery_bank_name}</span>}
           </div>
 
-          {/* 영업 시간 */}
-          <div className="brewery-form-group">
-            <label className="brewery-form-label">영업 시간 *</label>
-            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-              <input
-                type="time"
-                id="start_time"
-                name="start_time"
-                className={`brewery-form-input ${errors.start_time ? 'error' : ''}`}
-                value={formData.start_time}
-                onChange={handleInputChange}
-              />
-              <span>~</span>
-              <input
-                type="time"
-                id="end_time"
-                name="end_time"
-                className={`brewery-form-input ${errors.end_time ? 'error' : ''}`}
-                value={formData.end_time}
-                onChange={handleInputChange}
-              />
-            </div>
-            {errors.start_time && <span className="brewery-error-message">{errors.start_time}</span>}
-            {errors.end_time && <span className="brewery-error-message">{errors.end_time}</span>}
-          </div>
-
-          {/* 정기 방문 여부 */}
-          <div className="brewery-form-group">
-            <label className="brewery-form-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <input
-                type="checkbox"
-                id="is_regular_visit"
-                name="is_regular_visit"
-                checked={formData.is_regular_visit}
-                onChange={handleInputChange}
-                style={{ width: '18px', height: '18px' }}
-              />
-              정기 방문 가능 여부 (체크 시 '가능')
-            </label>
-          </div>
-
           {/* 웹사이트 URL (선택사항) */}
           <div className="brewery-form-group">
             <label htmlFor="brewery_website" className="brewery-form-label">웹사이트 URL</label>
@@ -619,9 +572,9 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack, onBackToL
           <button 
             type="submit" 
             className="brewery-submit-button"
-            disabled={isSubmitting}
+            disabled={isImageUploading}
           >
-            {isSubmitting ? '회원가입 중...' : '회원가입 완료'}
+            {isImageUploading ? '이미지 업로드 중...' : '회원가입 완료'}
           </button>
         </form>
       </div>

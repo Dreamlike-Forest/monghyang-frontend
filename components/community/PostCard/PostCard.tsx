@@ -131,8 +131,8 @@ const PostCard: React.FC<PostCardProps> = ({
       return (
         <>
           <img
-            src={firstImage.image_key}
-            alt={`${post.title} 이미지`}
+            src={firstImage.image_url}
+            alt={firstImage.alt_text || `${post.title} 이미지`}
             className="post-thumbnail-image"
             onError={handleImageError}
             loading="lazy"

@@ -1,8 +1,7 @@
 export interface Product {
   product_id: number;
   user_id: number;
-  brewery_id: number;
-  image_key: string;  // ERD의 메인 이미지
+  image_key: string;
   name: string;
   alcohol: number;
   is_sell: boolean;
@@ -11,7 +10,6 @@ export interface Product {
   is_delete: boolean;
 }
 
-// ==================== 상품 옵션 ====================
 export interface ProductOption {
   product_option_id: number;
   product_id: number;
@@ -19,25 +17,12 @@ export interface ProductOption {
   price: number;
 }
 
-// ==================== 상품 상세 정보 ====================
 export interface ProductInfo {
   product_info_id: number;
   product_id: number;
   description: string | null;
 }
 
-// ==================== 상품 이미지 (ERD 기반) ====================
-export interface ProductImage {
-  product_image_id: number;
-  product_id: number;
-  key: string;        // ERD의 key 필드 (이미지 키)
-  seq: number;        // ERD의 seq 필드 (이미지 순서)
-  // 하위 호환성을 위한 옵션 필드
-  image_key?: string; // key의 별칭
-  url?: string;       // 프론트엔드에서 사용할 수 있는 URL (선택적)
-}
-
-// 상품 정보 이미지 (별도 관리)
 export interface ProductInfoImage {
   product_info_image_id: number;
   product_info_id: number;
@@ -45,37 +30,33 @@ export interface ProductInfoImage {
   image_seq: number;
 }
 
-// ==================== 상품 리뷰 ====================
 export interface ProductReview {
   product_review_id: number;
   product_id: number;
-  user_id: number;
   content: string;
   rating: number;
   created_at: string;
   is_delete: boolean;
 }
 
-// ==================== 상품 태그 ====================
+export interface ProductTag {
+  product_tag_id: number;
+  product_tag_type_id: number;
+  product_id: number;
+}
+
 export interface ProductTagType {
   product_tag_type_id: number;
   name: string;
 }
 
-export interface ProductTag {
-  product_tag_id: number;
-  product_tag_type_id: number;
-  product_id: number;
-  tagType: ProductTagType;
-}
-
-// ==================== 통합 상품 타입 (프론트엔드용) ====================
+// 프론트엔드에서 사용할 통합 상품 타입
 export interface ProductWithDetails extends Product {
   options: ProductOption[];
   info?: ProductInfo;
-  images: ProductImage[];
+  images: ProductInfoImage[];
   reviews: ProductReview[];
-  tags: ProductTag[];
+  tags: (ProductTag & { tagType: ProductTagType })[];
   averageRating: number;
   reviewCount: number;
   minPrice: number;
@@ -84,10 +65,10 @@ export interface ProductWithDetails extends Product {
   discountRate?: number;
   isNew?: boolean;
   isBest?: boolean;
-  brewery: string; // 양조장 이름
+  brewery: string;
 }
 
-// ==================== 필터 옵션 ====================
+// 필터 옵션 타입
 export interface FilterOption {
   id: string;
   name: string;
@@ -101,7 +82,6 @@ export interface FilterOptions {
   certifications: FilterOption[];
 }
 
-// ==================== 활성 필터 ====================
 export interface ActiveFilters {
   types: string[];
   alcoholRange: string;
@@ -113,7 +93,7 @@ export interface ActiveFilters {
   sortBy: string;
 }
 
-// ==================== API 응답 타입 ====================
+// API 응답 타입
 export interface ProductListResponse {
   products: ProductWithDetails[];
   totalCount: number;
@@ -121,7 +101,7 @@ export interface ProductListResponse {
   totalPages: number;
 }
 
-// ==================== 컴포넌트 Props 타입들 ====================
+// 컴포넌트 Props 타입들
 export interface ShopProps {
   className?: string;
 }
@@ -130,6 +110,7 @@ export interface ProductFilterProps {
   filterOptions: FilterOptions;
   activeFilters: ActiveFilters;
   onFilterChange: (filters: Partial<ActiveFilters>) => void;
+  onPriceRangeChange: (min: number, max: number) => void;
 }
 
 export interface ProductListProps {

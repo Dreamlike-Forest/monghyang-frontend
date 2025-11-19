@@ -3,15 +3,14 @@
 import React, { useState } from 'react';
 import TermsAgreement from '../TermsAgreement/TermsAgreement';
 import AddressSearch from '../AddressSearch/AddressSearch';
-import { signup, checkEmailAvailability } from '../../../utils/authUtils'; 
+import { checkEmailAvailability, signupCommonUser } from '../../../utils/authApi';
 import './UserSignupForm.css';
 
 interface UserSignupFormProps {
   onBack: () => void;
-  onBackToLogin: () => void; 
 }
 
-const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack, onBackToLogin }) => { 
+const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
   const [formData, setFormData] = useState({
     // 회원 테이블 필드
     email: '',
@@ -24,29 +23,27 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack, onBackToLogin }
     gender: '',
     address: '',
     address_detail: '',
-    zonecode: '',
+    zonecode: '', // 우편번호 추가
+    is_agreed: false
   });
 
   const [emailChecked, setEmailChecked] = useState(false);
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [is_agreed, setIsAgreed] = useState(false); 
-  const [isSubmitting, setIsSubmitting] = useState(false); // 제출 중 상태 추가
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
     
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     }));
 
     // 이메일이 변경되면 중복확인을 다시 해야 함
     if (name === 'email') {
       setEmailChecked(false);
-      if (errors.email) {
-         setErrors(prev => ({ ...prev, email: '' }));
-      }
     }
 
     // 에러 초기화
@@ -75,7 +72,6 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack, onBackToLogin }
     }
   };
 
-  // 이메일 중복확인 (API 연동)
   const handleEmailCheck = async () => {
     if (!formData.email) {
       setErrors(prev => ({ ...prev, email: '이메일을 입력해주세요.' }));
@@ -89,20 +85,21 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack, onBackToLogin }
     }
 
     setIsCheckingEmail(true);
-    setErrors(prev => ({ ...prev, email: '' }));
     
     try {
-      const result = await checkEmailAvailability(formData.email);
-      if (result.available) {
+      const isAvailable = await checkEmailAvailability(formData.email);
+      
+      if (isAvailable) {
         setEmailChecked(true);
-        alert(result.message || '사용 가능한 이메일입니다.');
+        setErrors(prev => ({ ...prev, email: '' }));
       } else {
+        setErrors(prev => ({ ...prev, email: '이미 사용 중인 이메일입니다.' }));
         setEmailChecked(false);
-        setErrors(prev => ({ ...prev, email: result.message || '이미 사용 중인 이메일입니다.' }));
       }
-    } catch (error: any) {
+    } catch (error) {
+      console.error('이메일 중복 확인 오류:', error);
+      setErrors(prev => ({ ...prev, email: '이메일 확인 중 오류가 발생했습니다.' }));
       setEmailChecked(false);
-      setErrors(prev => ({ ...prev, email: error.message || '이메일 확인 중 오류 발생' }));
     } finally {
       setIsCheckingEmail(false);
     }
@@ -141,7 +138,6 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack, onBackToLogin }
     return Object.keys(newErrors).length === 0;
   };
 
-  // 폼 제출 핸들러 (API 연동)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -149,8 +145,10 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack, onBackToLogin }
       return;
     }
 
-    setIsSubmitting(true);
+    // gender 필드 변환: male -> man, female -> woman
+    const genderValue = formData.gender === 'male' ? 'man' : 'woman';
 
+    // 최종 제출 데이터
     const submitData = {
       email: formData.email,
       password: formData.password,
@@ -158,30 +156,27 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack, onBackToLogin }
       name: formData.name,
       phone: formData.phone,
       birth: formData.birth,
-      gender: formData.gender,
+      gender: genderValue,
       address: formData.address,
       address_detail: formData.address_detail,
       is_agreed: is_agreed
     };
     
+    console.log('일반 사용자 회원가입 요청:', submitData);
+    
     try {
-      const result = await signup(submitData, 'user');
-      if (result.success) {
-        // 회원가입 성공 시 로그인 화면으로
-        onBackToLogin(); 
+      const response = await signupCommonUser(submitData);
+      
+      if (response.success) {
+        alert(response.message || '회원가입이 완료되었습니다!');
+        onBack(); // 로그인 페이지로 돌아가기
       } else {
-        // API 서버에서 받은 에러 메시지 표시
-        setErrors(prev => ({ ...prev, submit: result.message }));
+        alert(response.message || '회원가입에 실패했습니다.');
       }
-    } catch (error: any) {
-      setErrors(prev => ({ ...prev, submit: error.message || '알 수 없는 오류가 발생했습니다.' }));
-    } finally {
-      setIsSubmitting(false);
+    } catch (error) {
+      console.error('회원가입 오류:', error);
+      alert('회원가입 중 오류가 발생했습니다. 다시 시도해주세요.');
     }
-  };
-  
-  const handleBack = () => {
-    onBack(); // SignupContainer로 돌아가기
   };
 
   return (
@@ -189,7 +184,7 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack, onBackToLogin }
       <div className="user-signup-content">
         <button
           type="button"
-          onClick={handleBack} 
+          onClick={onBack}
           className="user-back-button"
           title="뒤로가기"
         >
@@ -211,7 +206,6 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack, onBackToLogin }
                 placeholder="example@email.com"
                 value={formData.email}
                 onChange={handleInputChange}
-                disabled={isCheckingEmail}
               />
               <button
                 type="button"
@@ -376,19 +370,8 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack, onBackToLogin }
             error={errors.terms}
           />
 
-          {/* 제출 에러 메시지 */}
-          {errors.submit && (
-            <div className="user-error-message" style={{ marginBottom: '16px', textAlign: 'center' }}>
-              {errors.submit}
-            </div>
-          )}
-
-          <button 
-            type="submit" 
-            className="user-submit-button"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? '회원가입 중...' : '회원가입 완료'}
+          <button type="submit" className="user-submit-button">
+            회원가입 완료
           </button>
         </form>
       </div>

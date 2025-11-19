@@ -132,7 +132,7 @@ const BreweryFilter: React.FC<BreweryFilterProps> = ({ filters, onFilterChange, 
     }
   };
 
-  // 모든 필터 초기화
+  // 모든 필터 초기화 (타입 오류 수정)
   const clearAllFilters = () => {
     const emptyFilters: BreweryFilterOptions = { 
       regions: [], 

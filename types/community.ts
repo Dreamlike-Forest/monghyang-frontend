@@ -1,8 +1,11 @@
+// 커뮤니티 관련 타입 정의
 export interface PostImage {
-  post_image_id: number;
-  post_id: number;
-  image_key: string;  
-  seq: number;        
+  image_id: number;
+  image_url: string;
+  image_order: number;
+  alt_text?: string;
+  width?: number;
+  height?: number;
 }
 
 export interface Post {
@@ -32,7 +35,7 @@ export interface PostFilter {
   subcategory: string;
   searchKeyword: string;
   sortBy: 'latest' | 'popular' | 'views' | 'likes';
-  hasImages?: boolean; 
+  hasImages?: boolean; // 이미지가 있는 게시글만 필터링
 }
 
 export interface WritePostData {
@@ -44,8 +47,8 @@ export interface WritePostData {
   brewery_name?: string;
   product_name?: string;
   tags: string[];
-  images: File[]; 
-  imageDescriptions: string[]; 
+  images: File[]; // 업로드할 이미지 파일들
+  imageDescriptions: string[]; // 각 이미지의 설명
 }
 
 export interface CategoryConfig {

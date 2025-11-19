@@ -48,7 +48,6 @@ const SignupContainer: React.FC<SignupContainerProps> = ({ onBackToLogin }) => {
         return (
           <UserSignupForm 
             onBack={handleBackToTypeSelector}
-            onBackToLogin={onBackToLogin} 
           />
         );
       
@@ -56,7 +55,6 @@ const SignupContainer: React.FC<SignupContainerProps> = ({ onBackToLogin }) => {
         return (
           <SellerSignupForm 
             onBack={handleBackToTypeSelector}
-            onBackToLogin={onBackToLogin} 
           />
         );
       
@@ -64,7 +62,6 @@ const SignupContainer: React.FC<SignupContainerProps> = ({ onBackToLogin }) => {
         return (
           <BrewerySignupForm 
             onBack={handleBackToTypeSelector}
-            onBackToLogin={onBackToLogin} 
           />
         );
       

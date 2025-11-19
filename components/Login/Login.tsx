@@ -3,17 +3,17 @@
 import { useState } from 'react';
 import './Login.css';
 import SignupContainer from './SignupContainer/SignupContainer';
-import { login } from '../../utils/authUtils';
+import { login as loginApi } from '../../utils/authApi';
 
 const Login: React.FC = () => {
   const [showSignup, setShowSignup] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string>('');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     rememberMe: false
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string>('');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -21,94 +21,50 @@ const Login: React.FC = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
-    
-    // 입력 시 에러 메시지 제거
-    if (error) {
-      setError('');
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // 유효성 검사
-    if (!formData.email) {
-      setError('이메일을 입력해주세요.');
-      return;
-    }
-    
-    if (!formData.password) {
-      setError('비밀번호를 입력해주세요.');
-      return;
-    }
-
-    // 이메일 형식 검증
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      setError('올바른 이메일 형식을 입력해주세요.');
-      return;
-    }
-
-    setIsLoading(true);
     setError('');
+    setIsLoading(true);
 
     try {
-      console.log('로그인 시도:', { email: formData.email });
-      
-      // authUtils의 login 함수 사용 (실제 API 호출)
-      const result = await login(formData.email, formData.password);
-      
-      if (result.success) {
-        console.log('로그인 성공, 리다이렉트 준비');
+      // 로그인 API 호출
+      const result = await loginApi(formData.email, formData.password);
+
+      if (result.success && result.data) {
+        console.log('로그인 성공:', result.data);
         
-        // "로그인 상태 유지" 옵션 처리 (선택적)
-        if (formData.rememberMe && typeof window !== 'undefined') {
-          localStorage.setItem('rememberMe', 'true');
-        }
+        // 로그인 성공 메시지
+        alert(`환영합니다, ${result.data.nickname}님!`);
         
-        // 로그인 성공 시 리다이렉트
+        // 메인 페이지로 이동 (URL에서 view 파라미터 제거)
         if (typeof window !== 'undefined') {
-          // 저장된 리턴 URL 확인
-          const returnUrl = sessionStorage.getItem('returnUrl');
-          const returnProduct = sessionStorage.getItem('returnToProduct');
-          
-          // 세션 스토리지 정리
-          sessionStorage.removeItem('returnUrl');
-          sessionStorage.removeItem('returnToProduct');
-          
-          // 리다이렉트
-          if (returnUrl) {
-            console.log('저장된 URL로 리다이렉트:', returnUrl);
-            window.location.href = returnUrl;
-          } else if (returnProduct) {
-            console.log('상품 페이지로 리다이렉트:', returnProduct);
-            window.location.href = `/?view=shop&product=${returnProduct}`;
-          } else {
-            console.log('홈으로 리다이렉트');
-            window.location.href = '/';
-          }
+          const url = new URL(window.location.href);
+          url.searchParams.delete('view');
+          url.searchParams.delete('brewery');
+          window.location.href = url.toString();
         }
       } else {
         // 로그인 실패
-        console.error('로그인 실패:', result.message);
-        setError(result.message || '로그인에 실패했습니다.');
-        setIsLoading(false);
+        setError(result.error || '로그인에 실패했습니다.');
       }
-    } catch (error) {
-      console.error('로그인 처리 중 예외 발생:', error);
-      setError('로그인 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+    } catch (err) {
+      console.error('로그인 오류:', err);
+      setError('로그인 중 오류가 발생했습니다. 다시 시도해주세요.');
+    } finally {
       setIsLoading(false);
     }
   };
 
   const handleSocialLogin = (provider: string) => {
     console.log(`${provider} 로그인 시도`);
-    alert(`${provider} 로그인 기능은 준비 중입니다.`);
+    // 소셜 로그인 로직 구현
   };
 
   const handleForgotPassword = () => {
     console.log('비밀번호 찾기');
-    alert('비밀번호 찾기 기능은 준비 중입니다.');
+    // 비밀번호 찾기 로직 구현
   };
 
   const handleSignupClick = () => {
@@ -121,9 +77,10 @@ const Login: React.FC = () => {
 
   const handleBackToHome = () => {
     if (typeof window !== 'undefined') {
-      // URL 파라미터 완전 제거하고 홈으로 이동
-      const baseUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
-      window.location.href = baseUrl;
+      const url = new URL(window.location.href);
+      url.searchParams.delete('view');
+      url.searchParams.delete('brewery');
+      window.location.href = url.toString();
     }
   };
 
@@ -152,7 +109,6 @@ const Login: React.FC = () => {
             padding: '8px'
           }}
           title="뒤로가기"
-          disabled={isLoading}
         >
           ←
         </button>
@@ -162,11 +118,11 @@ const Login: React.FC = () => {
         {/* 에러 메시지 표시 */}
         {error && (
           <div style={{
-            padding: '12px 16px',
-            marginBottom: '20px',
-            backgroundColor: '#fef2f2',
-            border: '1px solid #fecaca',
+            backgroundColor: '#fee2e2',
+            border: '1px solid #fca5a5',
             borderRadius: '8px',
+            padding: '12px',
+            marginBottom: '16px',
             color: '#dc2626',
             fontSize: '14px',
             textAlign: 'center'
@@ -187,8 +143,6 @@ const Login: React.FC = () => {
             value={formData.email}
             onChange={handleInputChange}
             required
-            disabled={isLoading}
-            autoComplete="email"
           />
         </div>
 
@@ -204,8 +158,6 @@ const Login: React.FC = () => {
             value={formData.password}
             onChange={handleInputChange}
             required
-            disabled={isLoading}
-            autoComplete="current-password"
           />
         </div>
 
@@ -219,7 +171,6 @@ const Login: React.FC = () => {
               className="remember-checkbox"
               checked={formData.rememberMe}
               onChange={handleInputChange}
-              disabled={isLoading}
             />
             <label htmlFor="rememberMe" className="remember-label">
               로그인 상태 유지
@@ -229,7 +180,6 @@ const Login: React.FC = () => {
             type="button"
             className="forgot-password"
             onClick={handleForgotPassword}
-            disabled={isLoading}
           >
             비밀번호 찾기
           </button>
@@ -245,37 +195,8 @@ const Login: React.FC = () => {
             cursor: isLoading ? 'not-allowed' : 'pointer'
           }}
         >
-          {isLoading ? (
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              gap: '8px'
-            }}>
-              <div style={{
-                width: '16px',
-                height: '16px',
-                border: '2px solid rgba(255, 255, 255, 0.3)',
-                borderTop: '2px solid white',
-                borderRadius: '50%',
-                animation: 'spin 1s linear infinite'
-              }}></div>
-              로그인 중...
-            </div>
-          ) : (
-            '로그인'
-          )}
+          {isLoading ? '로그인 중...' : '로그인'}
         </button>
-
-        {/* 로딩 애니메이션 CSS */}
-        <style dangerouslySetInnerHTML={{
-          __html: `
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
-          `
-        }} />
 
         {/* 구분선 */}
         <div className="divider">
@@ -284,17 +205,16 @@ const Login: React.FC = () => {
 
         {/* 소셜 로그인 */}
         <div className="social-login">
+          {/* 구글 로그인 - SVG 아이콘 사용 */}
           <button
             type="button"
             className="social-button google-login"
-            onClick={() => handleSocialLogin('Google')}
-            disabled={isLoading}
+            onClick={() => handleSocialLogin('google')}
           >
             <img 
               src="/logo/Google_logo.svg" 
               alt="Google"
               className="google-icon"
-              style={{ width: '18px', height: '18px' }}
             />
             Google로 계속하기
           </button>
@@ -302,14 +222,7 @@ const Login: React.FC = () => {
 
         {/* 회원가입 링크 */}
         <div className="signup-link">
-          아직 계정이 없으신가요? 
-          <button 
-            type="button" 
-            onClick={handleSignupClick}
-            disabled={isLoading}
-          >
-            회원가입
-          </button>
+          아직 계정이 없으신가요? <button type="button" onClick={handleSignupClick}>회원가입</button>
         </div>
       </form>
     </div>

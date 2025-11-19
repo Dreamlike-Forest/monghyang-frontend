@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import BreweryFilter from './BreweryFilter/BreweryFilter';
 import BreweryCard from './BreweryCard/BreweryCard';
@@ -8,10 +8,10 @@ import Pagination from '../shop/Pagination/Pagination';
 import { Brewery, BreweryFilterOptions } from '../../types/mockData';
 import { 
   searchBreweries, 
-  getLatestBreweries,
-  convertRegionNamesToIds,
-  convertAlcoholTypesToIds
-} from '../../utils/breweryUtils';
+  getLatestBreweries, 
+  convertToBreweryType,
+  BrewerySearchParams 
+} from '../../utils/brewery';
 import './Brewery.css';
 
 interface BreweryProps {
@@ -22,6 +22,8 @@ interface BreweryProps {
 const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className }) => {
   const searchParams = useSearchParams();
   const [breweryData, setBreweryData] = useState<Brewery[]>([]);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   const [filters, setFilters] = useState<BreweryFilterOptions>({
     regions: [],
     priceRange: { min: '', max: '' },
@@ -31,24 +33,17 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const [totalCount, setTotalCount] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [hasError, setHasError] = useState(false);
-  const itemsPerPage = 10;
+  const [apiError, setApiError] = useState<string | null>(null);
+  
+  // [수정] 페이지당 아이템 개수 설정 (6개)
+  const itemsPerPage = 6; 
 
-  // URL 파라미터 처리
   useEffect(() => {
     const search = searchParams.get('search');
     const searchType = searchParams.get('searchType');
     const view = searchParams.get('view');
-    
     const filterRegion = searchParams.get('filterRegion');
     const filterAlcoholType = searchParams.get('filterAlcoholType');
-    
-    console.log('Brewery URL 파라미터:', { 
-      search, searchType, view, 
-      filterRegion, filterAlcoholType
-    });
     
     const newFilters: BreweryFilterOptions = {
       regions: [],
@@ -58,125 +53,93 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
       searchKeyword: ''
     };
 
-    // 검색어 처리
     if (search && searchType && view === 'brewery' && searchType === 'brewery') {
       newFilters.searchKeyword = search;
     }
-
-    // 지역 필터
-    if (filterRegion) {
-      newFilters.regions = [filterRegion];
-    }
-
-    // 주종 필터
-    if (filterAlcoholType) {
-      newFilters.alcoholTypes = [filterAlcoholType];
-    }
+    if (filterRegion) newFilters.regions = [filterRegion];
+    if (filterAlcoholType) newFilters.alcoholTypes = [filterAlcoholType];
 
     setFilters(newFilters);
   }, [searchParams]);
 
-  // 양조장 데이터 로드 함수
-  const loadBreweries = useCallback(async () => {
-    console.log('🔄 loadBreweries 호출 - 현재 페이지:', currentPage);
+  // API 호출 함수
+  const fetchBreweries = async () => {
     setIsLoading(true);
-    setHasError(false);
-    
-    try {
-      // 👉 Swagger 상에서 {startOffset} 은 보통 페이지 번호(0,1,2...)로 쓰이므로
-      // 페이지 인덱스(0-based)로 넘겨줌
-      const startOffset = currentPage - 1;
-      
-      const hasFilters = !!(
-        filters.searchKeyword || 
-        filters.regions.length > 0 || 
-        filters.alcoholTypes.length > 0 ||
-        filters.priceRange.min !== '' ||
-        filters.priceRange.max !== ''
-      );
+    setApiError(null);
 
-      let result;
-      
+    try {
+      console.log('🔍 양조장 데이터 로드 시작 - Page:', currentPage);
+
+      // startOffset: 0부터 시작하는 페이지 번호
+      const startOffset = currentPage - 1;
+
+      const hasFilters = filters.searchKeyword || 
+                        filters.regions.length > 0 || 
+                        filters.alcoholTypes.length > 0 ||
+                        filters.priceRange.min !== '' ||
+                        filters.priceRange.max !== '';
+
+      let response;
+
       if (hasFilters) {
-        // 검색 API 호출
-        const searchApiParams: any = {
+        const params: BrewerySearchParams = {
           startOffset,
+          size: itemsPerPage, // [수정] 페이지당 개수 전달
+          keyword: filters.searchKeyword || undefined,
+          min_price: filters.priceRange.min !== '' ? Number(filters.priceRange.min) : undefined,
+          max_price: filters.priceRange.max !== '' ? Number(filters.priceRange.max) : undefined,
         };
 
-        // 검색어
-        if (filters.searchKeyword) {
-          searchApiParams.keyword = filters.searchKeyword;
-        }
-
-        // 가격 범위
-        if (filters.priceRange.min !== '') {
-          searchApiParams.min_price = Number(filters.priceRange.min);
-        }
-        if (filters.priceRange.max !== '') {
-          searchApiParams.max_price = Number(filters.priceRange.max);
-        }
-
-        // 지역 ID 변환
-        if (filters.regions.length > 0) {
-          searchApiParams.region_id_list = convertRegionNamesToIds(filters.regions);
-        }
-
-        // 주종 태그 ID 변환
-        if (filters.alcoholTypes.length > 0) {
-          searchApiParams.tag_id_list = convertAlcoholTypesToIds(filters.alcoholTypes);
-        }
-
-        console.log('🔍 검색 파라미터:', searchApiParams);
-        result = await searchBreweries(searchApiParams);
+        console.log('📋 검색 API 호출:', params);
+        response = await searchBreweries(params);
       } else {
-        // 최신 목록 API 호출
-        console.log('🆕 최신 양조장 목록 조회');
-        result = await getLatestBreweries(startOffset);
+        console.log('📋 최신 양조장 API 호출');
+        // [수정] 페이지당 개수(itemsPerPage) 전달
+        response = await getLatestBreweries(startOffset, itemsPerPage);
       }
 
-      console.log('✅ API 응답:', result);
+      console.log('✅ API 응답:', {
+        contentLength: response.content?.length,
+        totalElements: response.totalElements,
+        totalPages: response.totalPages
+      });
+
+      const convertedData = response.content.map(convertToBreweryType);
       
-      setBreweryData(result.breweries);
-      setTotalCount(result.totalCount);
-      setTotalPages(Math.ceil(result.totalCount / itemsPerPage));
-      setHasError(false);
+      setBreweryData(convertedData);
+      setTotalPages(response.totalPages);
+      setTotalElements(response.totalElements);
       
     } catch (error) {
       console.error('❌ 양조장 데이터 로드 실패:', error);
-      setHasError(true);
+      setApiError('양조장 데이터를 불러오는데 실패했습니다.');
       setBreweryData([]);
-      setTotalCount(0);
       setTotalPages(0);
-      
-      if (error instanceof Error) {
-        alert(`양조장 정보를 불러오는데 실패했습니다.\n오류: ${error.message}`);
-      } else {
-        alert('양조장 정보를 불러오는데 실패했습니다.\n잠시 후 다시 시도해주세요.');
-      }
+      setTotalElements(0);
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, filters, itemsPerPage]);
+  };
 
-  // 필터나 페이지 변경 시 데이터 로드
   useEffect(() => {
-    loadBreweries();
-  }, [loadBreweries]);
+    fetchBreweries();
+  }, [currentPage, filters]);
 
-  // 카운트 계산 (프론트엔드 필터링용)
+  // breweryCount 통계 계산
   const breweryCount = useMemo(() => {
     const byRegion: Record<string, number> = {};
     const byAlcoholType: Record<string, number> = {};
     const byBadge: Record<string, number> = {};
-    const priceStats = { min: Number.MAX_SAFE_INTEGER, max: 0, withExperience: 0 };
+    let priceStats = { min: Number.MAX_SAFE_INTEGER, max: 0, withExperience: 0 };
 
     breweryData.forEach(brewery => {
-      byRegion[brewery.region_name] = (byRegion[brewery.region_name] || 0) + 1;
+      const regionName = brewery.region_type_name || '기타';
+      byRegion[regionName] = (byRegion[regionName] || 0) + 1;
       
-      brewery.alcohol_types.forEach(type => {
+      (brewery.alcohol_types || brewery.tag_name || []).forEach((type: string) => {
         byAlcoholType[type] = (byAlcoholType[type] || 0) + 1;
       });
-
+      
       if (brewery.badges?.length) {
         brewery.badges.forEach(badge => {
           byBadge[badge.content] = (byBadge[badge.content] || 0) + 1;
@@ -184,48 +147,44 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
       } else {
         byBadge['기본'] = (byBadge['기본'] || 0) + 1;
       }
-
-      if (brewery.experience_programs?.length) {
-        priceStats.withExperience++;
-        brewery.experience_programs.forEach(program => {
-          priceStats.min = Math.min(priceStats.min, program.price);
-          priceStats.max = Math.max(priceStats.max, program.price);
-        });
+      
+      if (brewery.brewery_joy_count && brewery.brewery_joy_count > 0) {
+        priceStats.withExperience += brewery.brewery_joy_count;
+        if (brewery.brewery_joy_min_price !== undefined) {
+             priceStats.min = Math.min(priceStats.min, brewery.brewery_joy_min_price);
+             priceStats.max = Math.max(priceStats.max, brewery.brewery_joy_min_price);
+        }
       }
     });
-
+    
     if (priceStats.withExperience === 0) {
-      priceStats.min = 0;
+      priceStats.min = 0; 
       priceStats.max = 0;
+    } else if (priceStats.min === Number.MAX_SAFE_INTEGER) {
+        priceStats.min = 0;
     }
-
-    return {
-      total: totalCount,
-      byRegion,
-      byAlcoholType,
-      byBadge,
-      priceStats
+    
+    return { 
+      total: totalElements, 
+      byRegion, 
+      byAlcoholType, 
+      byBadge, 
+      priceStats 
     };
-  }, [breweryData, totalCount]);
+  }, [breweryData, totalElements]);
 
-  // 페이지 정보 계산
   const pageInfo = {
     currentStart: (currentPage - 1) * itemsPerPage + 1,
-    currentEnd: Math.min(currentPage * itemsPerPage, totalCount),
-    total: totalCount
+    currentEnd: Math.min(currentPage * itemsPerPage, totalElements),
+    total: totalElements
   };
 
-  // 필터 변경 핸들러
   const handleFilterChange = (newFilters: Partial<BreweryFilterOptions>) => {
-    console.log('🔧 필터 변경:', newFilters);
     setFilters(prev => ({ ...prev, ...newFilters }));
-    setCurrentPage(1);
+    setCurrentPage(1); 
   };
 
-  // 양조장 클릭 핸들러
   const handleBreweryClick = (brewery: Brewery) => {
-    console.log('양조장 클릭:', brewery.brewery_name);
-    
     if (onBreweryClick) {
       onBreweryClick(brewery.brewery_id);
     } else {
@@ -233,51 +192,31 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
     }
   };
 
-  // 양조장 상세페이지로 이동
   const navigateToBreweryDetail = (breweryId: number) => {
-    const url = new URL(window.location.href);
-    
-    url.searchParams.set('view', 'brewery-detail');
-    url.searchParams.set('brewery', breweryId.toString());
-    
-    window.location.href = url.toString();
+    const baseUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
+    const newUrl = new URL(baseUrl);
+    newUrl.searchParams.set('view', 'brewery-detail');
+    newUrl.searchParams.set('brewery', breweryId.toString());
+    window.history.pushState({}, '', newUrl.toString());
+    window.location.reload();
   };
 
-  // 페이지 변경 핸들러
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // 활성 필터 표시
   const getActiveFiltersDisplay = () => {
     const activeFilters = [];
-    
-    if (filters.regions.length > 0) {
-      activeFilters.push(`지역: ${filters.regions.join(', ')}`);
-    }
-    
-    if (filters.alcoholTypes.length > 0) {
-      activeFilters.push(`주종: ${filters.alcoholTypes.join(', ')}`);
-    }
-    
-    if (searchParams.get('filterExperience') === 'true') {
-      activeFilters.push('체험 프로그램 포함');
-    }
-    
+    if (filters.regions.length > 0) activeFilters.push(`지역: ${filters.regions.join(', ')}`);
+    if (filters.alcoholTypes.length > 0) activeFilters.push(`주종: ${filters.alcoholTypes.join(', ')}`);
+    if (searchParams.get('filterExperience') === 'true') activeFilters.push('체험 프로그램 포함');
     return activeFilters;
-  };
-
-  // 재시도 버튼
-  const handleRetry = () => {
-    setHasError(false);
-    loadBreweries();
   };
 
   return (
     <div className={`brewery-container ${className || ''}`}>
       <div className="brewery-content">
-        {/* 사이드바 필터 */}
         <div className="brewery-filter-section">
           <BreweryFilter
             filters={filters}
@@ -285,10 +224,7 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
             breweryCount={breweryCount}
           />
         </div>
-
-        {/* 메인 콘텐츠 */}
         <div className="brewery-main-section">
-          {/* 헤더 */}
           <div className="brewery-header">
             <h1>전국 양조장 찾기</h1>
             <p className="brewery-header-subtitle">
@@ -305,105 +241,62 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
               )}
             </p>
             <div className="brewery-stats">
-              <div className="brewery-stat">
-                <span className="brewery-stat-icon">🏭</span>
-                <span>총 {breweryCount.total}개 양조장</span>
-              </div>
-              <div className="brewery-stat">
-                <span className="brewery-stat-icon">🎯</span>
-                <span>{totalCount}개 검색 결과</span>
-              </div>
-              <div className="brewery-stat">
-                <span className="brewery-stat-icon">🎪</span>
-                <span>{breweryCount.priceStats.withExperience}개 체험 프로그램</span>
-              </div>
-              {totalCount > 0 && (
-                <div className="brewery-stat">
-                  <span className="brewery-stat-icon">📄</span>
-                  <span>{pageInfo.currentStart}-{pageInfo.currentEnd} / {pageInfo.total}개 표시</span>
-                </div>
+              <div className="brewery-stat"><span className="brewery-stat-icon">🏭</span><span>총 {breweryCount.total}개 양조장</span></div>
+              <div className="brewery-stat"><span className="brewery-stat-icon">🎯</span><span>{totalElements}개 검색 결과</span></div>
+              <div className="brewery-stat"><span className="brewery-stat-icon">🎪</span><span>{breweryCount.priceStats.withExperience}개 체험 프로그램</span></div>
+              {breweryData.length > 0 && (
+                <div className="brewery-stat"><span className="brewery-stat-icon">📄</span><span>{pageInfo.currentStart}-{pageInfo.currentEnd} / {pageInfo.total}개 표시</span></div>
               )}
             </div>
           </div>
 
-          {/* 양조장 그리드 */}
-          {isLoading ? (
-            <div className="brewery-loading">
-              <div className="brewery-loading-spinner"></div>
-              양조장을 검색하고 있습니다...
-            </div>
-          ) : hasError ? (
-            <div className="brewery-empty">
-              <div className="brewery-empty-icon">⚠️</div>
-              <h3 className="brewery-empty-title">
-                양조장 정보를 불러오지 못했습니다
-              </h3>
-              <p className="brewery-empty-description">
-                서버와의 연결에 문제가 있습니다.<br />
-                잠시 후 다시 시도해주세요.
-              </p>
+          {apiError && (
+            <div style={{
+              background: '#fee2e2',
+              border: '1px solid #ef4444',
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '20px',
+              color: '#991b1b'
+            }}>
+              <strong>⚠️ {apiError}</strong>
               <button
-                onClick={handleRetry}
+                onClick={() => fetchBreweries()}
                 style={{
-                  marginTop: '20px',
-                  padding: '12px 24px',
-                  backgroundColor: '#8b5a3c',
+                  marginLeft: '12px',
+                  padding: '6px 12px',
+                  background: '#ef4444',
                   color: 'white',
                   border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#7c4d34';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#8b5a3c';
+                  borderRadius: '4px',
+                  cursor: 'pointer'
                 }}
               >
                 다시 시도
               </button>
             </div>
+          )}
+
+          {isLoading ? (
+            <div className="brewery-loading"><div className="brewery-loading-spinner"></div>양조장을 검색하고 있습니다...</div>
           ) : breweryData.length > 0 ? (
             <>
               <div className="brewery-grid">
                 {breweryData.map((brewery) => (
-                  <BreweryCard
-                    key={brewery.brewery_id}
-                    brewery={brewery}
-                    onClick={handleBreweryClick}
-                  />
+                  <BreweryCard key={brewery.brewery_id} brewery={brewery} onClick={handleBreweryClick} />
                 ))}
               </div>
-
-              {/* 페이지네이션 */}
               {totalPages > 1 && (
                 <div className="brewery-pagination">
-                  <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={handlePageChange}
-                  />
+                  <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
                 </div>
               )}
             </>
           ) : (
             <div className="brewery-empty">
               <div className="brewery-empty-icon">🔍</div>
-              <h3 className="brewery-empty-title">
-                {filters.searchKeyword 
-                  ? `"${filters.searchKeyword}"에 대한 검색 결과가 없습니다`
-                  : '검색 결과가 없습니다'
-                }
-              </h3>
-              <p className="brewery-empty-description">
-                {filters.searchKeyword 
-                  ? '다른 검색어를 시도해보시거나 필터 조건을 변경해보세요'
-                  : '다른 검색 조건을 시도해보세요'
-                }
-              </p>
+              <h3 className="brewery-empty-title">{filters.searchKeyword ? `"${filters.searchKeyword}"에 대한 검색 결과가 없습니다` : '검색 결과가 없습니다'}</h3>
+              <p className="brewery-empty-description">{filters.searchKeyword ? '다른 검색어를 시도해보시거나 필터 조건을 변경해보세요' : '다른 검색 조건을 시도해보세요'}</p>
             </div>
           )}
         </div>

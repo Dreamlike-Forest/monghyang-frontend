@@ -32,22 +32,22 @@ let globalMockPosts: Post[] = [
     tags: ['전주', '양조장투어', '전통주'],
     images: [
       {
-        post_image_id: 1,
-        post_id: 1,
-        image_key: 'https://images.unsplash.com/photo-1571613316887-6f8d5cbf7ef7?w=400&h=300&fit=crop',
-        seq: 1,
+        image_id: 1,
+        image_url: 'https://images.unsplash.com/photo-1571613316887-6f8d5cbf7ef7?w=400&h=300&fit=crop',
+        image_order: 1,
+        alt_text: '전주 양조장 외부 전경'
       },
       {
-        post_image_id: 2,
-        post_id: 1,
-        image_key: 'https://images.unsplash.com/photo-1582106245687-a2a4c81d5a65?w=400&h=300&fit=crop',
-        seq: 2,
+        image_id: 2,
+        image_url: 'https://images.unsplash.com/photo-1582106245687-a2a4c81d5a65?w=400&h=300&fit=crop',
+        image_order: 2,
+        alt_text: '전통주 시음 모습'
       },
       {
-        post_image_id: 3,
-        post_id: 1,
-        image_key: 'https://images.unsplash.com/photo-1534354871393-df4a6e8a2ec3?w=400&h=300&fit=crop',
-        seq: 3,
+        image_id: 3,
+        image_url: 'https://images.unsplash.com/photo-1534354871393-df4a6e8a2ec3?w=400&h=300&fit=crop',
+        image_order: 3,
+        alt_text: '누룩 만들기 체험'
       }
     ]
   },
@@ -67,16 +67,16 @@ let globalMockPosts: Post[] = [
     tags: ['청주', '극찬', '리뷰'],
     images: [
       {
-        post_image_id: 4,
-        post_id: 2,
-        image_key: 'https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=400&h=300&fit=crop',
-        seq: 1,
+        image_id: 4,
+        image_url: 'https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=400&h=300&fit=crop',
+        image_order: 1,
+        alt_text: '극찬 청명 병과 잔'
       },
       {
-        post_image_id: 5,
-        post_id: 2,
-        image_key: 'https://images.unsplash.com/photo-1596556345922-67b7c4b6d5ce?w=400&h=300&fit=crop',
-        seq: 2,
+        image_id: 5,
+        image_url: 'https://images.unsplash.com/photo-1596556345922-67b7c4b6d5ce?w=400&h=300&fit=crop',
+        image_order: 2,
+        alt_text: '청명 따르는 모습'
       }
     ]
   },
@@ -125,10 +125,10 @@ let globalMockPosts: Post[] = [
     tags: ['안성', '체험프로그램', '양조장'],
     images: [
       {
-        post_image_id: 6,
-        post_id: 5,
-        image_key: 'https://images.unsplash.com/photo-1544024994-f6e9e3f1b536?w=400&h=300&fit=crop',
-        seq: 1,
+        image_id: 6,
+        image_url: 'https://images.unsplash.com/photo-1544024994-f6e9e3f1b536?w=400&h=300&fit=crop',
+        image_order: 1,
+        alt_text: '안성 양조장 체험 프로그램'
       }
     ]
   },
@@ -146,16 +146,16 @@ let globalMockPosts: Post[] = [
     tags: ['복분자', '막걸리', '홈메이드', 'DIY'],
     images: [
       {
-        post_image_id: 7,
-        post_id: 6,
-        image_key: 'https://images.unsplash.com/photo-1567696911980-2eed69a46042?w=400&h=300&fit=crop',
-        seq: 1,
+        image_id: 7,
+        image_url: 'https://images.unsplash.com/photo-1567696911980-2eed69a46042?w=400&h=300&fit=crop',
+        image_order: 1,
+        alt_text: '복분자 막걸리 만들기 과정'
       },
       {
-        post_image_id: 8,
-        post_id: 6,
-        image_key: 'https://images.unsplash.com/photo-1551218808-94e220e084d2?w=400&h=300&fit=crop',
-        seq: 2,
+        image_id: 8,
+        image_url: 'https://images.unsplash.com/photo-1551218808-94e220e084d2?w=400&h=300&fit=crop',
+        image_order: 2,
+        alt_text: '완성된 복분자 막걸리'
       }
     ]
   },
@@ -176,10 +176,10 @@ let globalMockPosts: Post[] = [
     tags: ['복분자', '페어링', '안주', '생선회'],
     images: [
       {
-        post_image_id: 9,
-        post_id: 8,
-        image_key: 'https://images.unsplash.com/photo-1551218808-94e220e084d2?w=400&h=300&fit=crop',
-        seq: 1,
+        image_id: 9,
+        image_url: 'https://images.unsplash.com/photo-1551218808-94e220e084d2?w=400&h=300&fit=crop',
+        image_order: 1,
+        alt_text: '복분자 막걸리 생선회 페어링'
       }
     ]
   },
@@ -279,9 +279,8 @@ export const getProductReviews = (productName: string): Post[] => {
 
 // 전역 함수: 새 리뷰 추가
 export const addCommunityReview = (reviewData: WritePostData): Post => {
-  const newPostId = Date.now();
   const newPost: Post = {
-    post_id: newPostId,
+    post_id: Date.now(),
     title: reviewData.title,
     content: reviewData.content,
     author: '현재사용자', // 실제로는 로그인한 사용자 정보
@@ -296,10 +295,10 @@ export const addCommunityReview = (reviewData: WritePostData): Post => {
     product_name: reviewData.product_name,
     tags: reviewData.tags,
     images: reviewData.images.map((file, index) => ({
-      post_image_id: Date.now() + index,
-      post_id: newPostId,
-      image_key: URL.createObjectURL(file), // 실제로는 서버 업로드 후 URL
-      seq: index + 1,
+      image_id: Date.now() + index,
+      image_url: URL.createObjectURL(file), // 실제로는 서버 업로드 후 URL
+      image_order: index + 1,
+      alt_text: reviewData.imageDescriptions[index] || `${reviewData.title} 이미지 ${index + 1}`
     }))
   };
 
