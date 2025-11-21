@@ -1,7 +1,7 @@
 /* 체험 프로그램 그리드 */
 .brewery-experience-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 20px;
 }
 
@@ -256,7 +256,8 @@
 /* 태블릿 반응형 */
 @media (max-width: 1024px) {
   .brewery-experience-grid {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    /* [수정] 태블릿에서도 2열 비율을 유지하도록 repeat(2, 1fr)로 설정 */
+    grid-template-columns: repeat(2, 1fr);
     gap: 16px;
   }
 
@@ -272,6 +273,7 @@
 /* 모바일 반응형 - 1열로 변경 */
 @media (max-width: 768px) {
   .brewery-experience-grid {
+    /* 모바일에서는 1열로 꽉 차게 표시 */
     grid-template-columns: 1fr;
     gap: 16px;
   }

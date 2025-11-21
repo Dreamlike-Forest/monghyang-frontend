@@ -22,7 +22,7 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
       return imageKey;
     }
     
-    // 이미지 키를 기반으로 실제 URL 생성 (실제 구현 시 서버 설정에 따라 수정)
+    // 이미지 키를 기반으로 실제 URL 생성
     return `/images/breweries/${imageKey}`;
   };
 
@@ -30,7 +30,6 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
   const isValidImageUrl = (url: string): boolean => {
     if (!url || url.trim() === '') return false;
     
-    // 플레이스홀더나 기본 이미지 제외
     const invalidPatterns = [
       '/api/placeholder',
       'placeholder',
@@ -46,7 +45,7 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
   const getBreweryImages = (): string[] => {
     const allImages: string[] = [];
     
-    // 1. 메인 이미지 (image_key) 추가
+    // 1. 메인 이미지 (image_key) 추가 - 리스트 API 등에서 옴
     if (brewery.image_key) {
       const mainImageUrl = getImageUrl(brewery.image_key);
       if (isValidImageUrl(mainImageUrl)) {
@@ -54,10 +53,15 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
       }
     }
     
-    // 2. 추가 이미지들 (brewery_images) 추가
-    if (brewery.brewery_images && brewery.brewery_images.length > 0) {
-      brewery.brewery_images.forEach(imageKey => {
+    // 2. 추가 이미지들 (API 필드: brewery_image_image_key) 추가
+    // [수정] brewery_images -> brewery_image_image_key, 객체 구조 접근
+    if (brewery.brewery_image_image_key && brewery.brewery_image_image_key.length > 0) {
+      brewery.brewery_image_image_key.forEach(imageObj => {
+        // API 구조: { brewery_image_image_key: string, brewery_image_seq: number }
+        const imageKey = imageObj.brewery_image_image_key;
         const imageUrl = getImageUrl(imageKey);
+        
+        // 중복 제외하고 추가
         if (isValidImageUrl(imageUrl) && !allImages.includes(imageUrl)) {
           allImages.push(imageUrl);
         }
@@ -86,7 +90,6 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
   const handleImageError = (index: number) => {
     setImageLoadErrors(prev => new Set(prev).add(index));
     
-    // 현재 이미지가 로드 실패하면 다음 유효한 이미지로 이동
     if (index === currentImageIndex) {
       const nextValidIndex = findNextValidImage(index);
       if (nextValidIndex !== -1) {
@@ -95,7 +98,6 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
     }
   };
 
-  // 다음 유효한 이미지 인덱스 찾기
   const findNextValidImage = (startIndex: number): number => {
     for (let i = 0; i < breweryImages.length; i++) {
       const index = (startIndex + i + 1) % breweryImages.length;
@@ -103,10 +105,9 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
         return index;
       }
     }
-    return -1; // 모든 이미지가 실패한 경우
+    return -1;
   };
 
-  // 이전 유효한 이미지 인덱스 찾기
   const findPrevValidImage = (startIndex: number): number => {
     for (let i = 0; i < breweryImages.length; i++) {
       const index = (startIndex - i - 1 + breweryImages.length) % breweryImages.length;
@@ -114,10 +115,9 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
         return index;
       }
     }
-    return -1; // 모든 이미지가 실패한 경우
+    return -1;
   };
 
-  // 다음 이미지로 이동
   const nextImage = () => {
     if (!hasMultipleImages) return;
     
@@ -127,7 +127,6 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
     }
   };
 
-  // 이전 이미지로 이동
   const prevImage = () => {
     if (!hasMultipleImages) return;
     
@@ -137,13 +136,11 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
     }
   };
 
-  // 특정 이미지로 직접 이동
   const goToImage = (index: number) => {
-    if (imageLoadErrors.has(index)) return; // 로드 실패한 이미지는 선택 불가
+    if (imageLoadErrors.has(index)) return;
     setCurrentImageIndex(index);
   };
 
-  // 키보드 네비게이션
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!hasMultipleImages) return;
@@ -172,7 +169,6 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [hasMultipleImages, currentImageIndex, breweryImages.length]);
 
-  // 자동 슬라이드 기능 (선택사항)
   const [isAutoPlay, setIsAutoPlay] = useState(false);
 
   useEffect(() => {
@@ -180,16 +176,13 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
 
     const interval = setInterval(() => {
       nextImage();
-    }, 4000); // 4초마다 자동 전환
+    }, 4000); 
 
     return () => clearInterval(interval);
   }, [isAutoPlay, hasMultipleImages, currentImageIndex]);
 
-  // 현재 이미지가 유효한지 확인
   const currentImageFailed = imageLoadErrors.has(currentImageIndex);
   const allImagesFailed = breweryImages.every((_, index) => imageLoadErrors.has(index));
-
-  // 유효한 이미지 개수 계산
   const validImageCount = breweryImages.length - imageLoadErrors.size;
 
   return (
@@ -197,7 +190,6 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
       <div className="brewery-main-image-container">
         {hasImages && !allImagesFailed ? (
           <>
-            {/* 메인 이미지 표시 */}
             {!currentImageFailed ? (
               <img 
                 src={breweryImages[currentImageIndex]} 
@@ -215,7 +207,6 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
               </div>
             )}
             
-            {/* 네비게이션 버튼 - 2개 이상일 때만 표시 */}
             {hasMultipleImages && validImageCount > 1 && (
               <>
                 <button 
@@ -243,7 +234,6 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
               </>
             )}
             
-            {/* 이미지 인디케이터 - 2개 이상일 때만 표시 */}
             {hasMultipleImages && validImageCount > 1 && (
               <div className="brewery-image-indicators">
                 {breweryImages.map((_, index) => (
@@ -262,7 +252,6 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
               </div>
             )}
             
-            {/* 이미지 카운터 - 2개 이상일 때만 표시 */}
             {hasMultipleImages && (
               <div className="brewery-image-counter">
                 {currentImageIndex + 1} / {breweryImages.length}
@@ -272,7 +261,6 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
               </div>
             )}
 
-            {/* 자동재생 토글 버튼 - 3개 이상일 때만 표시 */}
             {breweryImages.length >= 3 && validImageCount >= 3 && (
               <button
                 className={`brewery-autoplay-btn ${isAutoPlay ? 'active' : ''}`}
@@ -286,7 +274,6 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
             )}
           </>
         ) : (
-          /* 이미지가 없거나 모두 실패했을 때 */
           <div className="brewery-image-placeholder">
             <div className="brewery-gallery-placeholder-icon">🏭</div>
             <div className="brewery-gallery-placeholder-text">
@@ -306,7 +293,6 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
         )}
       </div>
 
-      {/* 이미지 정보 표시 */}
       {hasImages && (
         <div className="brewery-image-info">
           <p>

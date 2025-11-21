@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import TermsAgreement from '../TermsAgreement/TermsAgreement';
 import AddressSearch from '../AddressSearch/AddressSearch';
 import ImageUpload from '../../community/ImageUpload/ImageUpload';
+import { checkEmailAvailability, signupBrewery } from '../../../utils/authApi';
 import './BrewerySignupForm.css';
 
 interface BrewerySignupFormProps {
@@ -30,7 +31,11 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
     brewery_bank_name: '',
     brewery_website: '',
     introduction: '',
-    image_key: ''
+    image_key: '',
+    start_time: '09:00',
+    end_time: '18:00',
+    region_type_id: '1',
+    is_regular_visit: 'false'
   });
 
   const [emailChecked, setEmailChecked] = useState(false);
@@ -44,17 +49,32 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     
+
+    let formattedValue = value;
+    if (name === 'phone') {
+
+      const numbers = value.replace(/[^0-9]/g, '');
+      
+      if (numbers.length <= 3) {
+        formattedValue = numbers;
+      } else if (numbers.length <= 7) {
+        formattedValue = `${numbers.slice(0, 3)}-${numbers.slice(3)}`;
+      } else if (numbers.length <= 11) {
+        formattedValue = `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7)}`;
+      } else {
+        formattedValue = `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7, 11)}`;
+      }
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: formattedValue
     }));
 
-    // 이메일이 변경되면 중복확인을 다시 해야 함
     if (name === 'email') {
       setEmailChecked(false);
     }
 
-    // 에러 초기화
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -63,13 +83,11 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
     }
   };
 
-  // 이미지 업로드 시뮬레이션 (실제 구현 시 서버 API 호출)
   const uploadImage = async (file: File): Promise<string> => {
     setIsImageUploading(true);
     
     return new Promise((resolve) => {
       setTimeout(() => {
-        // 실제 구현 시에는 서버에 파일을 업로드하고 이미지 키를 받아옴
         const mockImageKey = `brewery_${Date.now()}_${file.name.replace(/\s+/g, '_').toLowerCase()}`;
         setIsImageUploading(false);
         resolve(mockImageKey);
@@ -77,7 +95,6 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
     });
   };
 
-  // 주소 검색 결과 처리
   const handleAddressSelect = (address: string, zonecode: string) => {
     setFormData(prev => ({
       ...prev,
@@ -85,7 +102,6 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
       brewery_zonecode: zonecode
     }));
 
-    // 주소 관련 에러 초기화
     if (errors.brewery_address) {
       setErrors(prev => ({
         ...prev,
@@ -108,12 +124,23 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
 
     setIsCheckingEmail(true);
     
-    // 실제 API 호출 시뮬레이션
-    setTimeout(() => {
-      setEmailChecked(true);
+    try {
+      const isAvailable = await checkEmailAvailability(formData.email);
+      
+      if (isAvailable) {
+        setEmailChecked(true);
+        setErrors(prev => ({ ...prev, email: '' }));
+      } else {
+        setErrors(prev => ({ ...prev, email: '이미 사용 중인 이메일입니다.' }));
+        setEmailChecked(false);
+      }
+    } catch (error) {
+      console.error('이메일 중복 확인 오류:', error);
+      setErrors(prev => ({ ...prev, email: '이메일 확인 중 오류가 발생했습니다.' }));
+      setEmailChecked(false);
+    } finally {
       setIsCheckingEmail(false);
-      setErrors(prev => ({ ...prev, email: '' }));
-    }, 1000);
+    }
   };
 
   const handleAgreementChange = (agreed: boolean) => {
@@ -126,7 +153,6 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {};
 
-    // 양조장 정보 검증
     if (!formData.email) newErrors.email = '업무용 이메일을 입력해주세요.';
     if (!emailChecked) newErrors.email = '이메일 중복확인을 해주세요.';
     if (!formData.password) newErrors.password = '비밀번호를 입력해주세요.';
@@ -134,6 +160,12 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
     if (!formData.passwordConfirm) newErrors.passwordConfirm = '비밀번호 확인을 입력해주세요.';
     if (formData.password !== formData.passwordConfirm) newErrors.passwordConfirm = '비밀번호가 일치하지 않습니다.';
     if (!formData.phone) newErrors.phone = '업무용 전화번호를 입력해주세요.';
+    else {
+      const phoneRegex = /^010-\d{4}-\d{4}$/;
+      if (!phoneRegex.test(formData.phone)) {
+        newErrors.phone = '올바른 전화번호 형식을 입력해주세요. (010-0000-0000)';
+      }
+    }
     if (!formData.nickname) newErrors.nickname = '상호명을 입력해주세요.';
     if (!formData.gender) newErrors.gender = '성별을 선택해주세요.';
     if (!formData.birth) newErrors.birth = '생년월일을 입력해주세요.';
@@ -145,12 +177,10 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
     if (!formData.brewery_depositor) newErrors.brewery_depositor = '예금주를 입력해주세요.';
     if (!formData.brewery_bank_name) newErrors.brewery_bank_name = '은행명을 입력해주세요.';
     
-    // 양조장 이미지 필수 검증
     if (imageFiles.length === 0) {
       newErrors.image_key = '양조장 대표 이미지를 업로드해주세요.';
     }
     
-    // 웹사이트 URL 검증 (선택사항이므로 값이 있을 때만)
     if (formData.brewery_website && !isValidUrl(formData.brewery_website)) {
       newErrors.brewery_website = '올바른 URL 형식을 입력해주세요.';
     }
@@ -179,28 +209,48 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
     }
 
     try {
-      let finalImageKey = formData.image_key;
 
-      // 이미지 파일이 있으면 업로드
-      if (imageFiles.length > 0) {
-        finalImageKey = await uploadImage(imageFiles[0]);
-      }
+      const genderValue = formData.gender === 'male' ? 'man' : 'woman';
 
       const submitData = {
-        ...formData,
-        image_key: finalImageKey,
-        is_agreed
+        email: formData.email,
+        password: formData.password,
+        nickname: formData.nickname,
+        name: formData.name,
+        phone: formData.phone,
+        birth: formData.birth,
+        gender: genderValue,
+        address: formData.brewery_address,
+        address_detail: formData.brewery_address_detail,
+        is_agreed: is_agreed,
+        business_registration_number: formData.business_registration_number,
+        brewery_depositor: formData.brewery_depositor,
+        brewery_account_number: formData.brewery_account_number,
+        brewery_bank_name: formData.brewery_bank_name,
+        introduction: formData.introduction || '',
+        brewery_website: formData.brewery_website || '',
+        start_time: formData.start_time,
+        end_time: formData.end_time,
+        region_type_id: parseInt(formData.region_type_id),
+        is_regular_visit: formData.is_regular_visit === 'true',
+        is_agreed_brewery: is_agreed,
+        images: imageFiles
       };
 
-      console.log('양조장 관리자 회원가입:', submitData);
-      // 실제 회원가입 API 호출
+      console.log('양조장 관리자 회원가입 요청:', submitData);
+      
+      const response = await signupBrewery(submitData);
+      
+      if (response.success) {
+        alert(response.message || '양조장 회원가입이 완료되었습니다!');
+        onBack(); // 로그인 페이지로 돌아가기
+      } else {
+        alert(response.message || '양조장 회원가입에 실패했습니다.');
+      }
       
     } catch (error) {
       console.error('회원가입 처리 중 오류:', error);
-      setErrors(prev => ({ 
-        ...prev, 
-        submit: '회원가입 처리 중 오류가 발생했습니다. 다시 시도해주세요.' 
-      }));
+      alert('회원가입 중 오류가 발생했습니다. 다시 시도해주세요.');
     }
   };
 

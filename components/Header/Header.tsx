@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { getCartItemCount, subscribeToCart } from '../Cart/CartStore';
-import { checkAuthAndPrompt, isLoggedIn } from '../../utils/authUtils'; 
+import { getCartItemCount, subscribeToCart, clearCart } from '../Cart/CartStore';
+import { checkAuthAndPrompt } from '../../utils/authUtils'; 
 import './Header.css';
 
 interface Language {
@@ -57,7 +57,7 @@ const CartIcon: React.FC<{ onClick: () => void }> = ({ onClick }) => {
 const Header: React.FC = () => {
   const [currentLanguage, setCurrentLanguage] = useState<Language>(languages[0]);
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
-  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false); // 로그인 상태명 변경으로 충돌 방지
+  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   
@@ -94,7 +94,6 @@ const Header: React.FC = () => {
 
     checkAuthStatus();
 
-    // storage 이벤트 리스너 (다른 탭에서 로그인/로그아웃 시 감지)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'isLoggedIn' || e.key === 'userData') {
         checkAuthStatus();
@@ -140,19 +139,13 @@ const Header: React.FC = () => {
     console.log('언어 변경:', language);
   };
 
-  // 로그인 핸들러 - URL 완전 초기화
+  // 로그인 핸들러
   const handleLogin = () => {
-    if (typeof window === 'undefined') {
-      console.warn('브라우저 환경이 아닙니다.');
-      return;
-    }
+    if (typeof window === 'undefined') return;
     
     try {
-      // 현재 상품 페이지에 있다면 상품 ID 저장
       const currentHref = window.location.href;
-      if (!currentHref) {
-        throw new Error('현재 URL을 가져올 수 없습니다.');
-      }
+      if (!currentHref) throw new Error('현재 URL을 가져올 수 없습니다.');
 
       const currentUrl = new URL(currentHref);
       const productId = currentUrl.searchParams.get('product');
@@ -162,33 +155,24 @@ const Header: React.FC = () => {
         console.log('상품 ID 저장됨:', productId);
       }
       
-      // 로그인 페이지로 이동 - URL 완전 초기화
       const baseUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
       const newUrl = new URL(baseUrl);
-      
-      // 로그인 view 설정
       newUrl.searchParams.set('view', 'login');
-      
-      const urlString = newUrl.toString();
-      window.location.href = urlString;
-      
+      window.location.href = newUrl.toString();
     } catch (error) {
       console.error('로그인 페이지 이동 중 오류:', error);
-      // 오류 발생 시 기본 로그인 페이지로 이동
       try {
         window.location.href = '/?view=login';
-      } catch (fallbackError) {
-        console.error('기본 페이지 이동도 실패:', fallbackError);
+      } catch {
         window.location.reload();
       }
     }
   };
 
-  // 장바구니 핸들러 - 로그인 확인 추가
+  // 장바구니 이동 (로그인 확인)
   const handleCart = () => {
     console.log('장바구니 버튼 클릭 - 로그인 상태 확인');
     
-    // 로그인 확인 및 유도
     const canProceed = checkAuthAndPrompt(
       '장바구니 기능',
       () => {
@@ -199,78 +183,61 @@ const Header: React.FC = () => {
       }
     );
 
-    if (!canProceed) {
-      return; // 로그인하지 않았거나 사용자가 취소한 경우
-    }
+    if (!canProceed) return;
 
-    // 로그인된 사용자만 여기에 도달
-    if (typeof window === 'undefined') {
-      console.warn('브라우저 환경이 아닙니다.');
-      return;
-    }
+    if (typeof window === 'undefined') return;
     
     try {
-      // URL 완전 초기화
       const baseUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
       const newUrl = new URL(baseUrl);
-      
-      // cart view 설정
       newUrl.searchParams.set('view', 'cart');
-      
-      const urlString = newUrl.toString();
-      window.location.href = urlString;
-      
+      window.location.href = newUrl.toString();
     } catch (error) {
       console.error('장바구니 페이지 이동 중 오류:', error);
       try {
         window.location.href = '/?view=cart';
-      } catch (fallbackError) {
-        console.error('기본 장바구니 페이지 이동도 실패:', fallbackError);
+      } catch {
         window.location.reload();
       }
     }
   };
 
   const handleProfile = () => {
-    console.log('내 정보 페이지로 이동');
     setIsProfileDropdownOpen(!isProfileDropdownOpen);
   };
 
-  // 로그아웃 핸들러 - URL 완전 초기화
+  // 로그아웃 + 장바구니 초기화
   const handleLogout = () => {
-    if (typeof window === 'undefined') {
-      console.warn('브라우저 환경이 아닙니다.');
-      return;
-    }
+    if (typeof window === 'undefined') return;
     
     try {
-      // 로컬 스토리지 정리
+      // 장바구니 초기화
+      try {
+        clearCart();
+        console.log('로그아웃 시 장바구니 초기화 완료');
+      } catch (cartError) {
+        console.error('장바구니 초기화 오류:', cartError);
+      }
+
       localStorage.removeItem('isLoggedIn');
       localStorage.removeItem('userData');
-      sessionStorage.removeItem('returnToProduct'); // 저장된 상품 정보도 삭제
-      sessionStorage.removeItem('returnUrl'); // 저장된 리턴 URL도 삭제
+      sessionStorage.removeItem('returnToProduct');
+      sessionStorage.removeItem('returnUrl');
       
-      // 상태 초기화
       setIsUserLoggedIn(false);
       setUser(null);
       setIsProfileDropdownOpen(false);
       
       console.log('로그아웃 완료');
       
-      // 홈으로 이동 - URL 완전 초기화
       const baseUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
       const newUrl = new URL(baseUrl);
-      
-      const urlString = newUrl.toString();
-      window.location.href = urlString;
-      
+      window.location.href = newUrl.toString();
     } catch (error) {
       console.error('로그아웃 중 오류:', error);
-      // 오류 발생 시 강제로 홈으로 이동
       try {
         window.location.href = '/';
-      } catch (fallbackError) {
-        console.error('홈 페이지 이동도 실패:', fallbackError);
+      } catch {
         window.location.reload();
       }
     }
@@ -321,15 +288,13 @@ const Header: React.FC = () => {
             )}
           </div>
 
-          {/* 로그인 상태에 따른 UI 분기 */}
+          {/* 로그인 상태 UI */}
           {isUserLoggedIn && user ? (
             <>
-              {/* 사용자 닉네임 */}
               <div className="user-greeting">
                 <span className="user-nickname">{user.nickname}님</span>
               </div>
 
-              {/* 내 정보 드롭다운 */}
               <div className="profile-selector" ref={profileDropdownRef}>
                 <button
                   className="profile-button"
@@ -361,11 +326,7 @@ const Header: React.FC = () => {
                           📋 주문 내역
                         </button>
                       </li>
-                      <li role="menuitem">
-                        <button className="profile-option">
-                          ❤️ 찜한 상품
-                        </button>
-                      </li>
+                      {/* ❤️ 찜한 상품 항목 제거됨 */}
                       <li role="menuitem">
                         <button className="profile-option">
                           🎫 체험 예약 내역
@@ -382,7 +343,6 @@ const Header: React.FC = () => {
               </div>
             </>
           ) : (
-            /* 로그인 버튼 */
             <button 
               className="header-button login-button" 
               onClick={handleLogin}
@@ -392,7 +352,7 @@ const Header: React.FC = () => {
             </button>
           )}
 
-          {/* 장바구니 버튼 - 로그인 확인 포함 */}
+          {/* 장바구니 버튼 */}
           <CartIcon onClick={handleCart} />
         </div>
       </div>

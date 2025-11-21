@@ -3,9 +3,12 @@
 import { useState } from 'react';
 import './Login.css';
 import SignupContainer from './SignupContainer/SignupContainer';
+import { login as loginApi } from '../../utils/authApi';
 
 const Login: React.FC = () => {
   const [showSignup, setShowSignup] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string>('');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -20,10 +23,38 @@ const Login: React.FC = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('로그인 시도:', formData);
-    // 실제 로그인 로직 구현
+    setError('');
+    setIsLoading(true);
+
+    try {
+      // 로그인 API 호출
+      const result = await loginApi(formData.email, formData.password);
+
+      if (result.success && result.data) {
+        console.log('로그인 성공:', result.data);
+        
+        // 로그인 성공 메시지
+        alert(`환영합니다, ${result.data.nickname}님!`);
+        
+        // 메인 페이지로 이동 (URL에서 view 파라미터 제거)
+        if (typeof window !== 'undefined') {
+          const url = new URL(window.location.href);
+          url.searchParams.delete('view');
+          url.searchParams.delete('brewery');
+          window.location.href = url.toString();
+        }
+      } else {
+        // 로그인 실패
+        setError(result.error || '로그인에 실패했습니다.');
+      }
+    } catch (err) {
+      console.error('로그인 오류:', err);
+      setError('로그인 중 오류가 발생했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSocialLogin = (provider: string) => {
@@ -84,6 +115,22 @@ const Login: React.FC = () => {
         
         <h1 className="login-title">로그인</h1>
         
+        {/* 에러 메시지 표시 */}
+        {error && (
+          <div style={{
+            backgroundColor: '#fee2e2',
+            border: '1px solid #fca5a5',
+            borderRadius: '8px',
+            padding: '12px',
+            marginBottom: '16px',
+            color: '#dc2626',
+            fontSize: '14px',
+            textAlign: 'center'
+          }}>
+            {error}
+          </div>
+        )}
+        
         {/* 이메일 입력 */}
         <div className="form-group">
           <label htmlFor="email" className="form-label">이메일</label>
@@ -139,8 +186,16 @@ const Login: React.FC = () => {
         </div>
 
         {/* 로그인 버튼 */}
-        <button type="submit" className="login-button">
-          로그인
+        <button 
+          type="submit" 
+          className="login-button"
+          disabled={isLoading}
+          style={{
+            opacity: isLoading ? 0.7 : 1,
+            cursor: isLoading ? 'not-allowed' : 'pointer'
+          }}
+        >
+          {isLoading ? '로그인 중...' : '로그인'}
         </button>
 
         {/* 구분선 */}

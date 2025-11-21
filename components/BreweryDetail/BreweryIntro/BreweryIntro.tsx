@@ -15,30 +15,38 @@ const BreweryIntro: React.FC<BreweryIntroProps> = ({ brewery, forwardRef }) => {
       <h2 className="section-title">양조장 소개</h2>
       <div className="brewery-intro-content">
         <div className="brewery-intro-description">
-          <p>{brewery.introduction || '양조장 소개글이 준비 중입니다.'}</p>
+          {/* introduction -> brewery_introduction */}
+          <p>{brewery.brewery_introduction || '양조장 소개글이 준비 중입니다.'}</p>
         </div>
         
         <div className="brewery-intro-details">
           <div className="brewery-detail-grid">
             <div className="brewery-detail-item">
               <span className="brewery-detail-label">주소</span>
-              <span className="brewery-detail-value">{brewery.brewery_address}</span>
+              <span className="brewery-detail-value">
+                {brewery.brewery_address} {brewery.brewery_address_detail}
+              </span>
             </div>
             
             <div className="brewery-detail-item">
               <span className="brewery-detail-label">주종</span>
-              <span className="brewery-detail-value">{brewery.alcohol_types.join(', ')}</span>
+              <span className="brewery-detail-value">
+                {/* alcohol_types -> tags_name (API 데이터 우선, 없으면 alcohol_types 사용) */}
+                {(brewery.tags_name || brewery.alcohol_types || []).join(', ')}
+              </span>
             </div>
             
             <div className="brewery-detail-item">
               <span className="brewery-detail-label">연락처</span>
-              <span className="brewery-detail-value">{brewery.business_phone}</span>
+              {/* business_phone -> users_phone (여기가 오류 났던 부분) */}
+              <span className="brewery-detail-value">{brewery.users_phone}</span>
             </div>
             
-            {brewery.business_email && (
+            {/* business_email -> users_email */}
+            {brewery.users_email && (
               <div className="brewery-detail-item">
                 <span className="brewery-detail-label">이메일</span>
-                <span className="brewery-detail-value">{brewery.business_email}</span>
+                <span className="brewery-detail-value">{brewery.users_email}</span>
               </div>
             )}
             

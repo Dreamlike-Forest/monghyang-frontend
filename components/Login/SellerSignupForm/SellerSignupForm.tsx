@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import TermsAgreement from '../TermsAgreement/TermsAgreement';
 import AddressSearch from '../AddressSearch/AddressSearch';
+import { checkEmailAvailability, signupSeller } from '../../../utils/authApi';
 import './SellerSignupForm.css';
 
 interface SellerSignupFormProps {
@@ -87,12 +88,23 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
 
     setIsCheckingEmail(true);
     
-    // 실제 API 호출 시뮬레이션
-    setTimeout(() => {
-      setEmailChecked(true);
+    try {
+      const isAvailable = await checkEmailAvailability(formData.email);
+      
+      if (isAvailable) {
+        setEmailChecked(true);
+        setErrors(prev => ({ ...prev, email: '' }));
+      } else {
+        setErrors(prev => ({ ...prev, email: '이미 사용 중인 이메일입니다.' }));
+        setEmailChecked(false);
+      }
+    } catch (error) {
+      console.error('이메일 중복 확인 오류:', error);
+      setErrors(prev => ({ ...prev, email: '이메일 확인 중 오류가 발생했습니다.' }));
+      setEmailChecked(false);
+    } finally {
       setIsCheckingEmail(false);
-      setErrors(prev => ({ ...prev, email: '' }));
-    }, 1000);
+    }
   };
 
   const handleAgreementChange = (agreed: boolean) => {
@@ -131,15 +143,52 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) {
       return;
     }
 
-    console.log('판매자 회원가입:', { ...formData, is_agreed });
-    // 실제 회원가입 API 호출
+    // gender 필드 변환: male -> man, female -> woman
+    const genderValue = formData.gender === 'male' ? 'man' : 'woman';
+
+    // 최종 제출 데이터 - 백엔드 필드명에 맞춤
+    const submitData = {
+      email: formData.email,
+      password: formData.password,
+      nickname: formData.nickname,
+      name: formData.name,
+      phone: formData.phone,
+      birth: formData.birth,
+      gender: genderValue,
+      address: formData.seller_address, // seller_address -> address
+      address_detail: formData.seller_address_detail, // seller_address_detail -> address_detail
+      is_agreed: is_agreed,
+      business_registration_number: formData.business_registration_number,
+      seller_account_number: formData.seller_account_number,
+      seller_depositor: formData.seller_depositor,
+      seller_bank_name: formData.seller_bank_name,
+      introduction: formData.introduction || '',
+      is_agreed_seller: is_agreed, // 판매자 약관도 동의한 것으로 처리
+      images: [] as File[] // 이미지 업로드 기능이 구현되면 추가
+    };
+
+    console.log('판매자 회원가입 요청:', submitData);
+    
+    try {
+      const response = await signupSeller(submitData);
+      
+      if (response.success) {
+        alert(response.message || '판매자 회원가입이 완료되었습니다!');
+        onBack(); // 로그인 페이지로 돌아가기
+      } else {
+        alert(response.message || '판매자 회원가입에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('판매자 회원가입 오류:', error);
+      alert('회원가입 중 오류가 발생했습니다. 다시 시도해주세요.');
+    }
   };
 
   return (

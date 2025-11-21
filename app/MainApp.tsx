@@ -11,7 +11,8 @@ import Cart from '../components/Cart/Cart';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Brewery as BreweryType, ProductWithDetails } from '../types/mockData';
-import { getBreweriesWithExperience, getProductsWithBrewery } from '../data/mockData';
+import { getProductsWithBrewery } from '../data/mockData';
+import { getBreweryById, convertBreweryDetailToType } from '../utils/brewery';
 
 type View = 'home' | 'about' | 'brewery' | 'shop' | 'community' | 'login' | 'brewery-detail' | 'product-detail' | 'cart';
 
@@ -50,38 +51,47 @@ export default function MainApp() {
 
         // 양조장 상세페이지 처리
         if (breweryId) {
-          const breweries = getBreweriesWithExperience();
-          const foundBrewery = breweries.find(b => b.brewery_id === parseInt(breweryId));
+          console.log('🏭 양조장 상세 페이지 요청:', breweryId);
           
-          console.log('찾은 양조장:', foundBrewery);
-          
-          if (foundBrewery) {
-            setSelectedBrewery(foundBrewery);
-            const products = getProductsWithBrewery().filter(p => p.brewery_id === foundBrewery.brewery_id);
-            setBreweryProducts(products);
-            setCurrentView('brewery-detail');
-            console.log('양조장 상세페이지로 설정:', foundBrewery.brewery_name);
-          } else {
-            console.log('양조장을 찾을 수 없음, brewery 목록으로 리다이렉트');
+          try {
+            // API로 양조장 상세 정보 가져오기
+            const breweryDetail = await getBreweryById(parseInt(breweryId));
+            
+            if (breweryDetail) {
+              const convertedBrewery = convertBreweryDetailToType(breweryDetail);
+              setSelectedBrewery(convertedBrewery);
+              
+              // 해당 양조장의 상품 가져오기 (mockData - 추후 API로 변경 필요)
+              const products = getProductsWithBrewery().filter(p => p.brewery_id === convertedBrewery.id);
+              
+              setBreweryProducts(products);
+              setCurrentView('brewery-detail');
+              console.log('✅ 양조장 상세페이지 로드 완료:', convertedBrewery.brewery_name);
+            } else {
+              console.log('❌ 양조장을 찾을 수 없음, brewery 목록으로 리다이렉트');
+              setCurrentView('brewery');
+              setSelectedBrewery(null);
+              setBreweryProducts([]);
+            }
+          } catch (error) {
+            console.error('❌ 양조장 상세 정보 로드 실패:', error);
             setCurrentView('brewery');
             setSelectedBrewery(null);
             setBreweryProducts([]);
           }
-        } else if (view && ['home', 'about', 'brewery', 'shop', 'community', 'login', 'cart'].includes(view)) { // 수정: cart 추가
-          // 일반 뷰 처리 - cart 추가
+        } else if (view && ['home', 'about', 'brewery', 'shop', 'community', 'login', 'cart'].includes(view)) { 
+          // 일반 뷰 처리
           setCurrentView(view);
           // 뷰가 변경되면 선택된 양조장 초기화
           setSelectedBrewery(null);
           setBreweryProducts([]);
 
-          // 검색 파라미터가 있는 경우 로그 출력 (실제 검색은 각 컴포넌트에서 처리)
+          // 검색 파라미터가 있는 경우 로그 출력
           if (searchKeyword && searchType) {
             console.log(`${searchType} 검색 요청: "${searchKeyword}"`);
             if (searchType === 'brewery' && view !== 'brewery') {
-              // 양조장 검색인데 brewery 뷰가 아니면 brewery로 이동
               setCurrentView('brewery');
             } else if (searchType === 'product' && view !== 'shop') {
-              // 상품 검색인데 shop 뷰가 아니면 shop으로 이동
               setCurrentView('shop');
             }
           }
@@ -107,7 +117,6 @@ export default function MainApp() {
   // Header가 URL 변경을 감지할 수 있도록 커스텀 이벤트 리스너 추가
   useEffect(() => {
     const handleLocationChange = () => {
-      // URL이 변경되었을 때 필요한 처리
       console.log('URL 변경 감지됨');
     };
 
@@ -118,7 +127,7 @@ export default function MainApp() {
     };
   }, []);
 
-  // 뷰 전환 함수 개선 - Nav 컴포넌트와 호환
+  // 뷰 전환 함수 개선
   const navigateToView = (view: View, params?: Record<string, string>) => {
     console.log('네비게이션 요청:', view, params);
     
@@ -141,7 +150,6 @@ export default function MainApp() {
       });
     }
     
-    // URL 업데이트 - Nav 컴포넌트와 일관성 유지
     window.location.href = url.toString();
   };
 
@@ -199,7 +207,7 @@ export default function MainApp() {
       case 'login':
         return <Login />;
 
-      case 'cart': // 추가: Cart 컴포넌트 렌더링
+      case 'cart': 
         return <Cart />;
 
       case 'brewery-detail':
@@ -293,11 +301,9 @@ export default function MainApp() {
     }
   };
 
-  // 로그인 페이지일 때는 전체 레이아웃 변경
   if (currentView === 'login') {
     return <Login />;
   }
 
-  // 일반 페이지일 때는 컨텐츠만 렌더링 (Header, Nav, Footer는 page.tsx에서 처리)
   return renderView();
 }
