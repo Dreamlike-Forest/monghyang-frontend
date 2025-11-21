@@ -19,6 +19,26 @@ interface BreweryProps {
   className?: string;
 }
 
+// [중요 수정] DB ID 매핑 수정
+const REGION_MAP: Record<string, number> = {
+  '서울/경기': 2,
+  '강원도': 3,
+  '충청도': 5,
+  '전라도': 4,
+  '경상도': 7,   
+  '제주도': 6  
+};
+
+// 주종 ID 매핑 (만약 주종 필터도 이상하다면 이 숫자들도 DB 확인이 필요합니다)
+const TAG_MAP: Record<string, number> = {
+  '막걸리': 1,
+  '청주': 2,
+  '과실주': 3,
+  '증류주': 4,
+  '리큐르': 5,
+  '기타': 6
+};
+
 const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className }) => {
   const searchParams = useSearchParams();
   const [breweryData, setBreweryData] = useState<Brewery[]>([]);
@@ -35,7 +55,7 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   
-  // [수정] 페이지당 아이템 개수 설정 (6개)
+  // 페이지당 아이템 개수 설정
   const itemsPerPage = 6; 
 
   useEffect(() => {
@@ -70,7 +90,6 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
     try {
       console.log('🔍 양조장 데이터 로드 시작 - Page:', currentPage);
 
-      // startOffset: 0부터 시작하는 페이지 번호
       const startOffset = currentPage - 1;
 
       const hasFilters = filters.searchKeyword || 
@@ -82,27 +101,32 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
       let response;
 
       if (hasFilters) {
+        // 선택된 필터(문자열)를 ID(숫자) 리스트로 변환
+        const regionIds = filters.regions
+          .map(region => REGION_MAP[region])
+          .filter((id): id is number => id !== undefined);
+
+        const tagIds = filters.alcoholTypes
+          .map(type => TAG_MAP[type])
+          .filter((id): id is number => id !== undefined);
+
+        // 디버깅용 로그: 실제 전송되는 ID 확인
+        console.log('선택된 지역 ID:', regionIds);
+
         const params: BrewerySearchParams = {
           startOffset,
-          size: itemsPerPage, // [수정] 페이지당 개수 전달
+          size: itemsPerPage,
           keyword: filters.searchKeyword || undefined,
           min_price: filters.priceRange.min !== '' ? Number(filters.priceRange.min) : undefined,
           max_price: filters.priceRange.max !== '' ? Number(filters.priceRange.max) : undefined,
+          region_id_list: regionIds.length > 0 ? regionIds : undefined,
+          tag_id_list: tagIds.length > 0 ? tagIds : undefined
         };
 
-        console.log('📋 검색 API 호출:', params);
         response = await searchBreweries(params);
       } else {
-        console.log('📋 최신 양조장 API 호출');
-        // [수정] 페이지당 개수(itemsPerPage) 전달
         response = await getLatestBreweries(startOffset, itemsPerPage);
       }
-
-      console.log('✅ API 응답:', {
-        contentLength: response.content?.length,
-        totalElements: response.totalElements,
-        totalPages: response.totalPages
-      });
 
       const convertedData = response.content.map(convertToBreweryType);
       
@@ -125,7 +149,7 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
     fetchBreweries();
   }, [currentPage, filters]);
 
-  // breweryCount 통계 계산
+  // 통계 계산
   const breweryCount = useMemo(() => {
     const byRegion: Record<string, number> = {};
     const byAlcoholType: Record<string, number> = {};
