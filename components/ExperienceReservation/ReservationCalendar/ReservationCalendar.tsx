@@ -65,7 +65,13 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({
   };
 
   const formatDateString = (date: Date): string => {
-    return date.toISOString().split('T')[0];
+    // toISOString()은 UTC 기준이므로 로컬 시간대 이슈가 발생할 수 있어 조정
+    // 간단하게 "YYYY-MM-DD" 형식을 직접 구성하거나, 기존 로직 유지 시 주의
+    // 여기서는 기존 로직을 유지하되, 시간대 오차 방지를 위해 년/월/일 직접 추출 권장
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const isToday = (date: Date): boolean => {
@@ -85,6 +91,13 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({
 
   const isSelected = (date: Date): boolean => {
     return selectedDate === formatDateString(date);
+  };
+
+  // [수정] 현재 보고 있는 달력이 '이번 달'인지 확인하는 함수 추가
+  const isCurrentMonthView = (): boolean => {
+    const today = new Date();
+    return currentDate.getMonth() === today.getMonth() && 
+           currentDate.getFullYear() === today.getFullYear();
   };
 
   const handleDateClick = (date: Date) => {
@@ -109,6 +122,8 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({
   };
 
   const goToPreviousMonth = () => {
+    // [수정] 이전 달 이동 시 한 번 더 체크 (선택 사항이지만 안전장치)
+    if (isCurrentMonthView()) return;
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1));
   };
 
@@ -119,10 +134,12 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({
   return (
     <div className="reservation-calendar">
       <div className="reservation-calendar-header">
+        {/* [수정] 이번 달이면 이전 버튼 disabled 처리 */}
         <button 
           className="reservation-calendar-nav-btn prev"
           onClick={goToPreviousMonth}
           type="button"
+          disabled={isCurrentMonthView()}
         >
           ◀
         </button>
