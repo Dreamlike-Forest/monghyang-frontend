@@ -7,6 +7,8 @@ import ExperienceSelector from './ExperienceSelector/ExperienceSelector';
 import CustomerInfoForm from './CustomerInfoForm/CustomerInfoForm';
 import ReservationSummary from './ReservationSummary/ReservationSummary';
 import ReservationSuccessModal from './ReservationSuccessModal/ReservationSuccessModal';
+import { prepareReservation, requestPayment, getTimeSlotInfo } from '../../utils/reservationApi';
+import { checkAuthAndPrompt } from '../../utils/authUtils';
 import './ExperienceReservation.css';
 
 interface ExperienceReservationProps {
@@ -35,12 +37,17 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
 }) => {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [selectedExperienceId, setSelectedExperienceId] = useState<number | null>(null);
+  const [selectedExperienceId, setSelectedExperienceId] = useState<number | null>(experienceId || null);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     name: '',
     phoneNumber: '',
     headCount: 1
   });
+  
+  // [추가] 예약 가능한 시간대 목록 및 잔여석 정보
+  const [availableTimeSlots, setAvailableTimeSlots] = useState<string[]>([]);
+  const [timeSlotCounts, setTimeSlotCounts] = useState<Record<string, number>>({});
+
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showReservationModal, setShowReservationModal] = useState(true);
@@ -49,23 +56,20 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
   const experienceRef = useRef<HTMLElement>(null);
   const customerInfoRef = useRef<HTMLElement>(null);
 
-  // mockData의 Joy 타입 사용 (joy_id, joy_final_price 등)
   const selectedExperience = brewery.joy?.find(
     exp => exp.joy_id === selectedExperienceId
   ) || null;
 
-  // 총 금액 계산
   const totalAmount = selectedExperience ? selectedExperience.joy_final_price * customerInfo.headCount : 0;
 
   useEffect(() => {
     if (Object.keys(errors).length > 0) {
-      const timer = setTimeout(() => {
-        setErrors({});
-      }, 5000);
+      const timer = setTimeout(() => { setErrors({}); }, 5000);
       return () => clearTimeout(timer);
     }
   }, [errors]);
 
+  // 모달 스크롤 방지
   useEffect(() => {
     if (showSuccessModal || showReservationModal) {
       const scrollY = window.scrollY;
@@ -97,18 +101,68 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
     };
   }, [showSuccessModal, showReservationModal]);
 
-  const handleDateSelect = (date: string) => {
+  // [수정] 날짜 선택 시 시간대 및 잔여석 조회
+  const handleDateSelect = async (date: string) => {
     setSelectedDate(date);
+    setSelectedTime(null); // 날짜 바뀌면 시간 초기화
+    setTimeSlotCounts({}); // 잔여석 정보 초기화
+    
+    // 날짜가 바뀌면 인원수도 1로 초기화 (안전하게)
+    setCustomerInfo(prev => ({ ...prev, headCount: 1 }));
+
     if (errors.date) setErrors(prev => ({ ...prev, date: undefined }));
+
+    if (!selectedExperienceId) {
+      alert('먼저 체험 프로그램을 선택해주세요.');
+      return;
+    }
+
+    try {
+      console.log(`📅 시간대 조회 요청: joyId=${selectedExperienceId}, date=${date}`);
+      const data = await getTimeSlotInfo(selectedExperienceId, date);
+      
+      // 1. 시간대 목록 설정 (HH:mm:ss -> HH:mm)
+      const times = (data.time_info || []).map((t: string) => t.substring(0, 5));
+      setAvailableTimeSlots(times);
+
+      // 2. 잔여석 정보 파싱 및 저장
+      const counts: Record<string, number> = {};
+      if (data.remaining_count_list) {
+        data.remaining_count_list.forEach((slot: any) => {
+          const timeKey = slot.joy_slot_reservation_time.substring(0, 5);
+          counts[timeKey] = slot.joy_slot_remaining_count;
+        });
+      }
+      setTimeSlotCounts(counts);
+      
+      console.log('✅ 예약 가능 시간대:', times);
+      console.log('✅ 잔여석 정보:', counts);
+
+    } catch (error) {
+      console.error('시간대 정보 조회 실패:', error);
+      setAvailableTimeSlots([]); 
+      setTimeSlotCounts({});
+    }
   };
 
   const handleTimeSelect = (time: string | null) => {
     setSelectedTime(time);
+    // [수정] 시간이 바뀌면 인원수를 1로 리셋 (새로운 시간대의 잔여석에 맞추기 위해)
+    if (time) {
+      setCustomerInfo(prev => ({ ...prev, headCount: 1 }));
+    }
     if (errors.time) setErrors(prev => ({ ...prev, time: undefined }));
   };
 
-  const handleExperienceSelect = (experienceId: number | null) => {
-    setSelectedExperienceId(experienceId);
+  const handleExperienceSelect = (id: number | null) => {
+    setSelectedExperienceId(id);
+    // 체험이 바뀌면 날짜/시간 관련 정보 모두 초기화
+    setSelectedDate(null);
+    setSelectedTime(null);
+    setAvailableTimeSlots([]);
+    setTimeSlotCounts({});
+    setCustomerInfo(prev => ({ ...prev, headCount: 1 }));
+    
     if (errors.experience) setErrors(prev => ({ ...prev, experience: undefined }));
   };
 
@@ -130,56 +184,72 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const scrollToFirstError = (errors: ValidationErrors) => {
-    if (errors.date || errors.time) dateRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    else if (errors.experience) experienceRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    else if (errors.customerInfo) customerInfoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const scrollToFirstError = (errs: ValidationErrors) => {
+    if (errs.date || errs.time) dateRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    else if (errs.experience) experienceRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    else if (errs.customerInfo) customerInfoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
   const handleReservationSubmit = async () => {
-    const validationErrors = validateForm();
-    
-    if (!validationErrors) {
-      scrollToFirstError(errors);
+    if (!validateForm()) {
+      setTimeout(() => scrollToFirstError(errors), 0);
       return;
     }
 
-    // [수정 중요] ERD의 joy_order 테이블 구조에 맞춰 데이터 준비
-    // reservation 필드 (datetime) 생성: YYYY-MM-DD + HH:mm -> ISO String
-    let reservationDateTime = '';
-    if (selectedDate && selectedTime) {
-      reservationDateTime = `${selectedDate}T${selectedTime}:00`;
-    }
-
-    // 백엔드로 전송할 데이터 객체 (ERD 기준)
-    const orderData = {
-      joy_id: selectedExperienceId,
-      // user_id: 1, // 실제로는 로그인된 유저 ID를 가져와야 함
-      count: customerInfo.headCount,          // joy_order.count
-      total_price: totalAmount,               // joy_order.total_price
-      payer_name: customerInfo.name,          // joy_order.payer_name
-      payer_phone: customerInfo.phoneNumber,  // joy_order.payer_phone
-      reservation: reservationDateTime,       // joy_order.reservation (datetime)
-      created_at: new Date().toISOString(),   // joy_order.created_at
+    const prepareData = {
+      id: selectedExperienceId!,
+      count: customerInfo.headCount,
+      payer_name: customerInfo.name,
+      payer_phone: customerInfo.phoneNumber,
+      reservation_date: selectedDate!,
+      reservation_time: selectedTime!
     };
 
-    console.log('🚀 [API 요청] 체험 예약 데이터:', orderData);
+    console.log('🚀 [1단계] 예약 준비 요청:', prepareData);
 
-    // TODO: 여기서 실제 API 호출 (axios.post 등)
-    
-    setShowReservationModal(false);
-    setShowSuccessModal(true);
+    try {
+      const prepareResponse = await prepareReservation(prepareData);
+      console.log('✅ [1단계] 응답 성공:', prepareResponse);
+
+      const pgOrderId = prepareResponse.content;
+
+      if (!pgOrderId) {
+        throw new Error('예약 주문 번호(pg_order_id)를 받지 못했습니다.');
+      }
+
+      const uniquePaymentKey = `test_pay_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+
+      const requestData = {
+        pg_order_id: pgOrderId,
+        pg_payment_key: uniquePaymentKey,
+        total_amount: totalAmount
+      };
+
+      console.log('🚀 [2단계] 결제 승인 요청:', requestData);
+
+      const requestResponse = await requestPayment(requestData);
+      console.log('✅ [2단계] 결제 완료:', requestResponse);
+
+      setShowReservationModal(false);
+      setShowSuccessModal(true);
+
+    } catch (error: any) {
+      console.error('❌ 예약/결제 실패:', error);
+      const errorMsg = error.response?.data?.message || error.message || '오류가 발생했습니다.';
+      alert(`예약 실패: ${errorMsg}`);
+    }
   };
 
-  const handleSuccessModalClose = () => {
-    setShowSuccessModal(false);
-    onClose();
-  };
+  const handleSuccessModalClose = () => { setShowSuccessModal(false); onClose(); };
+  const handleReservationModalClose = () => { setShowReservationModal(false); onClose(); };
 
-  const handleReservationModalClose = () => {
-    setShowReservationModal(false);
-    onClose();
-  };
+  // [핵심] 현재 선택된 시간의 최대 예약 가능 인원 계산
+  // 1. 시간 미선택 -> 1 (선택 유도)
+  // 2. 시간 선택 & 잔여석 정보 있음 -> 잔여석
+  // 3. 시간 선택 & 잔여석 정보 없음 -> 20 (기본값)
+  const currentMaxCount = selectedTime 
+    ? (timeSlotCounts[selectedTime] !== undefined ? timeSlotCounts[selectedTime] : 20) 
+    : 1;
 
   if (!showReservationModal && !showSuccessModal) {
     return null;
@@ -199,19 +269,8 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
 
           <div className="reservation-content">
             <div className="reservation-main">
-              <section ref={dateRef} className="reservation-section reservation-scroll-target">
-                <h2 className="reservation-section-title">1. 날짜 및 시간 선택</h2>
-                <ReservationCalendar
-                  selectedDate={selectedDate}
-                  selectedTime={selectedTime}
-                  onDateSelect={handleDateSelect}
-                  onTimeSelect={handleTimeSelect}
-                  error={errors.date || errors.time}
-                />
-              </section>
-
               <section ref={experienceRef} className="reservation-section reservation-scroll-target">
-                <h2 className="reservation-section-title">2. 체험 선택</h2>
+                <h2 className="reservation-section-title">1. 체험 선택</h2>
                 <ExperienceSelector
                   experiences={brewery.joy || []}
                   selectedExperience={selectedExperienceId}
@@ -220,13 +279,40 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
                 />
               </section>
 
+              <section ref={dateRef} className="reservation-section reservation-scroll-target">
+                <h2 className="reservation-section-title">2. 날짜 및 시간 선택</h2>
+                <ReservationCalendar
+                  selectedDate={selectedDate}
+                  selectedTime={selectedTime}
+                  onDateSelect={handleDateSelect}
+                  onTimeSelect={handleTimeSelect}
+                  availableTimeSlots={availableTimeSlots}
+                  error={errors.date || errors.time}
+                />
+              </section>
+
               <section ref={customerInfoRef} className="reservation-section reservation-scroll-target">
                 <h2 className="reservation-section-title">3. 예약자 정보</h2>
+                
+                {/* [수정] maxHeadCount 전달 */}
                 <CustomerInfoForm
                   customerInfo={customerInfo}
                   onCustomerInfoChange={handleCustomerInfoChange}
                   error={errors.customerInfo}
+                  maxHeadCount={currentMaxCount}
                 />
+                
+                {/* [추가] 안내 문구 */}
+                {selectedTime && (
+                  <div style={{ padding: '0 24px 20px', color: '#666', fontSize: '14px', marginTop: '-10px' }}>
+                    * 선택하신 시간의 예약 가능 인원은 <strong>최대 {currentMaxCount}명</strong>입니다.
+                  </div>
+                )}
+                {!selectedTime && selectedDate && (
+                  <div style={{ padding: '0 24px 20px', color: '#dc2626', fontSize: '14px', marginTop: '-10px' }}>
+                    * 시간을 먼저 선택해주세요.
+                  </div>
+                )}
               </section>
             </div>
 

@@ -21,12 +21,17 @@ const BreweryExperiencePrograms: React.FC<BreweryExperienceProgramsProps> = ({
   const [selectedExperienceId, setSelectedExperienceId] = useState<number | null>(null);
   const [imageLoadStates, setImageLoadStates] = useState<Record<number, 'loading' | 'loaded' | 'error'>>({});
 
+  // [수정] 이미지 URL을 백엔드 API로 연결
   const getImageUrl = useCallback((imageKey: string | undefined): string => {
     if (!imageKey) return '';
-    if (imageKey.startsWith('http://') || imageKey.startsWith('https://') || imageKey.startsWith('/')) {
+    // 이미 전체 URL인 경우 (http로 시작)
+    if (imageKey.startsWith('http://') || imageKey.startsWith('https://')) {
       return imageKey;
     }
-    return `/images/experiences/${imageKey}`;
+    
+    // API 명세서에 따른 이미지 요청 URL 생성
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://16.184.16.198:61234';
+    return `${API_URL}/api/image/${imageKey}`;
   }, []);
 
   const hasValidImage = useCallback((imageKey: string | undefined): boolean => {
@@ -35,7 +40,6 @@ const BreweryExperiencePrograms: React.FC<BreweryExperienceProgramsProps> = ({
     return !invalidPatterns.some(pattern => imageKey.toLowerCase().includes(pattern.toLowerCase()));
   }, []);
 
-  // API Key 변경: program.image_key -> program.joy_image_key
   const getExperienceImage = useCallback((program: any): string | undefined => {
     if (program.joy_image_key) {
       return getImageUrl(program.joy_image_key);
@@ -79,7 +83,6 @@ const BreweryExperiencePrograms: React.FC<BreweryExperienceProgramsProps> = ({
     return () => { document.body.style.overflow = 'unset'; };
   }, [showReservation]);
 
-  // API Key 변경: experience_programs -> joy
   const programs = brewery.joy || [];
 
   return (
@@ -90,14 +93,13 @@ const BreweryExperiencePrograms: React.FC<BreweryExperienceProgramsProps> = ({
         {programs.length > 0 ? (
           <div className="brewery-experience-grid">
             {programs.map((program) => {
-              // API Key 변경: joy_id
               const imageUrl = getExperienceImage(program);
               const imageState = imageLoadStates[program.joy_id] || 'loading';
               
               return (
                 <div key={program.joy_id} className="brewery-experience-card">
                   <div className="brewery-experience-image-container">
-                    {hasValidImage(imageUrl) ? (
+                    {hasValidImage(program.joy_image_key) ? (
                       <>
                         {imageState === 'loading' && (
                           <div className="brewery-experience-image-placeholder">
@@ -107,7 +109,6 @@ const BreweryExperiencePrograms: React.FC<BreweryExperienceProgramsProps> = ({
                         )}
                         <img 
                           src={imageUrl} 
-                          // API Key 변경: joy_name
                           alt={`${program.joy_name} 이미지`}
                           className={`brewery-experience-image ${imageState === 'loading' ? 'image-loading' : ''}`}
                           style={{ display: imageState === 'error' ? 'none' : 'block' }}
@@ -132,7 +133,6 @@ const BreweryExperiencePrograms: React.FC<BreweryExperienceProgramsProps> = ({
 
                   <div className="brewery-experience-content">
                     <div className="brewery-experience-header">
-                      {/* API Key 변경: joy_name, joy_final_price */}
                       <h3 className="brewery-experience-title">{program.joy_name}</h3>
                       <span className="brewery-experience-price">
                         {program.joy_final_price.toLocaleString()}원
@@ -141,12 +141,10 @@ const BreweryExperiencePrograms: React.FC<BreweryExperienceProgramsProps> = ({
                     
                     <div className="brewery-experience-place">
                       <span className="brewery-place-icon">📍</span>
-                      {/* API Key 변경: joy_place */}
                       {program.joy_place}
                     </div>
                     
                     <p className="brewery-experience-description">
-                      {/* API Key 변경: joy_detail */}
                       {program.joy_detail}
                     </p>
                     

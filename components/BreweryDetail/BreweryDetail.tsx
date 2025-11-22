@@ -30,6 +30,12 @@ const BreweryDetail: React.FC<BreweryDetailProps> = ({
 
   const refs = { imagesRef, introRef, experienceRef, productsRef, reviewsRef };
 
+  // [수정] 페이지 진입 시(컴포넌트 마운트 시) 스크롤을 최상단으로 강제 이동
+  useEffect(() => {
+    // 'smooth'가 아닌 'auto'를 사용하여 즉시 이동
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, []); // 빈 의존성 배열: 컴포넌트가 처음 나타날 때 한 번만 실행
+
   useEffect(() => {
     const handleScroll = () => {
       const sections = [
@@ -82,7 +88,8 @@ const BreweryDetail: React.FC<BreweryDetailProps> = ({
     };
 
     window.addEventListener('scroll', debouncedHandleScroll, { passive: true });
-    handleScroll();
+    // 초기 로드 시에도 스크롤 위치 체크 (네비게이션 활성화용)
+    debouncedHandleScroll();
 
     return () => {
       window.removeEventListener('scroll', debouncedHandleScroll);
