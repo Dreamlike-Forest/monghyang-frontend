@@ -10,17 +10,16 @@ import Community from '../components/community/Community';
 import Cart from '../components/Cart/Cart'; 
 import OrderHistory from '../components/OrderHistory/OrderHistory';
 import ReservationHistory from '../components/ReservationHistory/ReservationHistory';
+import ProfileLayout from '../components/Profile/ProfileLayout'; // [추가] 프로필 레이아웃 임포트
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Brewery as BreweryType, ProductWithDetails } from '../types/mockData';
-// [수정] Mock 데이터 import 제거 (더 이상 사용 안 함)
-// import { getProductsWithBrewery } from '../data/mockData'; 
-import { getBreweryById, convertBreweryDetailToType } from '../utils/brewery';
-// [수정] 상품 API 함수 import 추가
+import { getBreweryById, convertBreweryDetailToType, getLatestBreweries } from '../utils/brewery';
 import { getProductsByUserId, convertToProductWithDetails } from '../utils/shopApi';
 
-type View = 'home' | 'about' | 'brewery' | 'shop' | 'community' | 'login' | 'brewery-detail' | 'product-detail' | 'cart' | 'order-history' | 'reservation-history';
+// [수정] View 타입에 'profile' 추가
+type View = 'home' | 'about' | 'brewery' | 'shop' | 'community' | 'login' | 'brewery-detail' | 'product-detail' | 'cart' | 'order-history' | 'reservation-history' | 'profile';
 
 export default function MainApp() {
   const searchParams = useSearchParams();
@@ -55,43 +54,102 @@ export default function MainApp() {
         // 2. 양조장 상세페이지 처리
         if (breweryId) {
           try {
-            // 양조장 상세 정보 호출
-            const breweryDetail = await getBreweryById(parseInt(breweryId));
+            const targetId = parseInt(breweryId);
             
+            // [1차 시도] 양조장 상세 정보 API 호출
+            let breweryDetail = await getBreweryById(targetId);
+            
+            // [2차 시도 - 폴백 로직] 상세 API가 실패 시 목록 API에서 검색
+            if (!breweryDetail) {
+              console.warn(`⚠️ 양조장(ID:${targetId}) 상세 API 실패. 목록 API에서 정보를 찾습니다.`);
+              try {
+                const fallbackList = await getLatestBreweries(0, 50); 
+                const foundItem = fallbackList.content.find(item => item.brewery_id === targetId);
+
+                if (foundItem) {
+                  console.log('✅ 목록에서 양조장 정보를 찾았습니다:', foundItem);
+                  
+                  // 체험 프로그램(joy) 데이터 임시 생성
+                  const joyList = [];
+                  const joyCount = Number(foundItem.brewery_joy_count || foundItem.joy_count || 0);
+                  
+                  if (joyCount > 0) {
+                    for (let i = 0; i < joyCount; i++) {
+                      joyList.push({
+                        joy_id: -(i + 1),
+                        joy_name: i === 0 ? '대표 체험 프로그램' : `체험 프로그램 ${i + 1}`,
+                        joy_place: foundItem.region_type_name || '양조장 내',
+                        joy_detail: '현재 상세 정보를 불러올 수 없습니다. 전화로 문의해주세요.',
+                        joy_final_price: foundItem.brewery_joy_min_price || 0,
+                        joy_origin_price: foundItem.brewery_joy_min_price || 0,
+                        joy_sales_volume: 0,
+                        joy_is_soldout: false,
+                        joy_image_key: foundItem.image_key 
+                      });
+                    }
+                  }
+
+                  // List Item 형식을 Detail 형식으로 강제 변환
+                  breweryDetail = {
+                    brewery_id: foundItem.brewery_id,
+                    users_id: 0, 
+                    users_email: '',
+                    users_phone: '',
+                    region_type_name: foundItem.region_type_name,
+                    brewery_name: foundItem.brewery_brewery_name || foundItem.brewery_name || '이름 없음',
+                    brewery_address: '주소 정보 없음',
+                    brewery_address_detail: '',
+                    brewery_introduction: foundItem.brewery_introduction || '소개글이 없습니다.',
+                    brewery_website: '',
+                    brewery_registered_at: new Date().toISOString(),
+                    brewery_is_regular_visit: foundItem.is_regular_visit,
+                    brewery_is_visiting_brewery: foundItem.is_visiting_brewery,
+                    brewery_image_image_key: [{
+                      brewery_image_image_key: foundItem.image_key,
+                      brewery_image_seq: 1
+                    }],
+                    tags_name: foundItem.tag_name || [],
+                    joy: joyList 
+                  };
+                }
+              } catch (fallbackError) {
+                console.error('❌ 목록 폴백 검색 실패:', fallbackError);
+              }
+            }
+
+            // [결과 처리]
             if (breweryDetail) {
               const convertedBrewery = convertBreweryDetailToType(breweryDetail);
               setSelectedBrewery(convertedBrewery);
               
-              // [수정] Mock 데이터 대신 API를 통해 해당 양조장(판매자)의 상품 목록 가져오기
-              try {
-                // users_id를 사용하여 상품 조회 (0페이지)
-                const productResponse = await getProductsByUserId(convertedBrewery.users_id, 0);
-                
-                // API 응답 데이터를 UI 모델로 변환
-                const realProducts = productResponse.content.map(convertToProductWithDetails);
-                
-                console.log(`양조장(ID:${convertedBrewery.id}) 상품 로드 성공:`, realProducts.length, '개');
-                setBreweryProducts(realProducts);
-              } catch (prodError) {
-                console.error('양조장 상품 로드 실패:', prodError);
+              if (convertedBrewery.users_id > 0) {
+                try {
+                  const productResponse = await getProductsByUserId(convertedBrewery.users_id, 0);
+                  const realProducts = productResponse.content.map(convertToProductWithDetails);
+                  setBreweryProducts(realProducts);
+                } catch (prodError) {
+                  setBreweryProducts([]);
+                }
+              } else {
                 setBreweryProducts([]);
               }
 
               setCurrentView('brewery-detail');
             } else {
+              console.error('❌ 양조장 정보를 찾을 수 없습니다.');
               setCurrentView('brewery');
               setSelectedBrewery(null);
               setBreweryProducts([]);
             }
           } catch (error) {
-            console.error('양조장 상세 로드 실패:', error);
+            console.error('양조장 처리 중 치명적 오류:', error);
             setCurrentView('brewery');
             setSelectedBrewery(null);
             setBreweryProducts([]);
           }
         } 
-        // 3. 일반 뷰 처리
-        else if (view && ['home', 'about', 'brewery', 'shop', 'community', 'login', 'cart', 'order-history', 'reservation-history'].includes(view)) { 
+        // 3. 일반 뷰 처리 (profile 추가)
+        else if (view && ['home', 'about', 'brewery', 'shop', 'community', 'login', 'cart', 'order-history', 'reservation-history', 'profile'].includes(view)) { 
           setCurrentView(view);
           setSelectedBrewery(null);
           setBreweryProducts([]);
@@ -120,8 +178,6 @@ export default function MainApp() {
 
     handleURLParams();
   }, [searchParams]);
-
-  // ... (이하 코드는 기존과 동일) ...
 
   useEffect(() => {
     const handleLocationChange = () => {
@@ -215,6 +271,9 @@ export default function MainApp() {
 
       case 'reservation-history':
         return <ReservationHistory />;
+
+      case 'profile': // [추가] 프로필 화면 케이스
+        return <ProfileLayout />;
 
       case 'brewery-detail':
         if (selectedBrewery) {
