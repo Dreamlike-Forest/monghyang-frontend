@@ -8,17 +8,18 @@ import About from '../components/About/About';
 import Home from '../components/Home/Home';
 import Community from '../components/community/Community';
 import Cart from '../components/Cart/Cart'; 
-// [추가] 주문 내역 및 예약 내역 컴포넌트 임포트
 import OrderHistory from '../components/OrderHistory/OrderHistory';
 import ReservationHistory from '../components/ReservationHistory/ReservationHistory';
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Brewery as BreweryType, ProductWithDetails } from '../types/mockData';
-import { getProductsWithBrewery } from '../data/mockData';
+// [수정] Mock 데이터 import 제거 (더 이상 사용 안 함)
+// import { getProductsWithBrewery } from '../data/mockData'; 
 import { getBreweryById, convertBreweryDetailToType } from '../utils/brewery';
+// [수정] 상품 API 함수 import 추가
+import { getProductsByUserId, convertToProductWithDetails } from '../utils/shopApi';
 
-// [수정] View 타입에 'order-history'와 'reservation-history' 추가
 type View = 'home' | 'about' | 'brewery' | 'shop' | 'community' | 'login' | 'brewery-detail' | 'product-detail' | 'cart' | 'order-history' | 'reservation-history';
 
 export default function MainApp() {
@@ -38,7 +39,6 @@ export default function MainApp() {
         const breweryId = searchParams.get('brewery');
         const productId = searchParams.get('product');
         
-        // 검색 관련 파라미터
         const searchKeyword = searchParams.get('search');
         const searchType = searchParams.get('searchType');
 
@@ -55,16 +55,28 @@ export default function MainApp() {
         // 2. 양조장 상세페이지 처리
         if (breweryId) {
           try {
+            // 양조장 상세 정보 호출
             const breweryDetail = await getBreweryById(parseInt(breweryId));
             
             if (breweryDetail) {
               const convertedBrewery = convertBreweryDetailToType(breweryDetail);
               setSelectedBrewery(convertedBrewery);
               
-              // 해당 양조장의 상품 가져오기 (Mock 데이터 사용 중)
-              const products = getProductsWithBrewery().filter(p => p.brewery_id === convertedBrewery.id);
-              
-              setBreweryProducts(products);
+              // [수정] Mock 데이터 대신 API를 통해 해당 양조장(판매자)의 상품 목록 가져오기
+              try {
+                // users_id를 사용하여 상품 조회 (0페이지)
+                const productResponse = await getProductsByUserId(convertedBrewery.users_id, 0);
+                
+                // API 응답 데이터를 UI 모델로 변환
+                const realProducts = productResponse.content.map(convertToProductWithDetails);
+                
+                console.log(`양조장(ID:${convertedBrewery.id}) 상품 로드 성공:`, realProducts.length, '개');
+                setBreweryProducts(realProducts);
+              } catch (prodError) {
+                console.error('양조장 상품 로드 실패:', prodError);
+                setBreweryProducts([]);
+              }
+
               setCurrentView('brewery-detail');
             } else {
               setCurrentView('brewery');
@@ -78,13 +90,12 @@ export default function MainApp() {
             setBreweryProducts([]);
           }
         } 
-        // 3. 일반 뷰 처리 (주문내역, 예약내역 포함)
+        // 3. 일반 뷰 처리
         else if (view && ['home', 'about', 'brewery', 'shop', 'community', 'login', 'cart', 'order-history', 'reservation-history'].includes(view)) { 
           setCurrentView(view);
           setSelectedBrewery(null);
           setBreweryProducts([]);
 
-          // 검색 파라미터가 있는 경우 뷰 전환 로직
           if (searchKeyword && searchType) {
             if (searchType === 'brewery' && view !== 'brewery') {
               setCurrentView('brewery');
@@ -93,7 +104,6 @@ export default function MainApp() {
             }
           }
         } else {
-          // 기본값
           setCurrentView('home');
           setSelectedBrewery(null);
           setBreweryProducts([]);
@@ -111,7 +121,8 @@ export default function MainApp() {
     handleURLParams();
   }, [searchParams]);
 
-  // 커스텀 이벤트 리스너 (Nav 등에서 발생시키는 이벤트 감지)
+  // ... (이하 코드는 기존과 동일) ...
+
   useEffect(() => {
     const handleLocationChange = () => {
       console.log('URL 변경 감지됨');
@@ -124,11 +135,9 @@ export default function MainApp() {
     };
   }, []);
 
-  // 뷰 전환 함수
   const navigateToView = (view: View, params?: Record<string, string>) => {
     const url = new URL(window.location.href);
     
-    // 기존 파라미터 초기화
     url.searchParams.delete('view');
     url.searchParams.delete('brewery');
     url.searchParams.delete('product');
@@ -147,7 +156,6 @@ export default function MainApp() {
     window.location.href = url.toString();
   };
 
-  // 뷰 렌더링 로직
   const renderView = () => {
     if (isLoading) {
       return (
@@ -202,11 +210,9 @@ export default function MainApp() {
       case 'cart': 
         return <Cart />;
 
-      // [추가] 주문 내역 페이지
       case 'order-history':
         return <OrderHistory />;
 
-      // [추가] 체험 예약 내역 페이지
       case 'reservation-history':
         return <ReservationHistory />;
 
