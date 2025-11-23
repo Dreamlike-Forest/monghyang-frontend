@@ -8,7 +8,6 @@ import CustomerInfoForm from './CustomerInfoForm/CustomerInfoForm';
 import ReservationSummary from './ReservationSummary/ReservationSummary';
 import ReservationSuccessModal from './ReservationSuccessModal/ReservationSuccessModal';
 import { prepareReservation, requestPayment, getTimeSlotInfo } from '../../utils/reservationApi';
-import { checkAuthAndPrompt } from '../../utils/authUtils';
 import './ExperienceReservation.css';
 
 interface ExperienceReservationProps {
@@ -44,7 +43,6 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
     headCount: 1
   });
   
-  // [추가] 예약 가능한 시간대 목록 및 잔여석 정보
   const [availableTimeSlots, setAvailableTimeSlots] = useState<string[]>([]);
   const [timeSlotCounts, setTimeSlotCounts] = useState<Record<string, number>>({});
 
@@ -73,43 +71,34 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
   useEffect(() => {
     if (showSuccessModal || showReservationModal) {
       const scrollY = window.scrollY;
-      const body = document.body;
-      body.style.position = 'fixed';
-      body.style.top = `-${scrollY}px`;
-      body.style.width = '100%';
-      body.style.overflow = 'hidden';
-      body.classList.add('reservation-modal-open');
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      document.body.classList.add('reservation-modal-open');
     } else {
       const body = document.body;
       const scrollY = body.style.top;
       body.style.position = '';
       body.style.top = '';
       body.style.width = '';
-      body.style.overflow = '';
       body.classList.remove('reservation-modal-open');
       if (scrollY) {
         window.scrollTo(0, parseInt(scrollY || '0') * -1);
       }
     }
     return () => {
-      const body = document.body;
-      body.style.position = '';
-      body.style.top = '';
-      body.style.width = '';
-      body.style.overflow = '';
-      body.classList.remove('reservation-modal-open');
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.classList.remove('reservation-modal-open');
     };
   }, [showSuccessModal, showReservationModal]);
 
-  // [수정] 날짜 선택 시 시간대 및 잔여석 조회
+  // 날짜 선택 시 시간대 및 잔여석 조회
   const handleDateSelect = async (date: string) => {
     setSelectedDate(date);
-    setSelectedTime(null); // 날짜 바뀌면 시간 초기화
-    setTimeSlotCounts({}); // 잔여석 정보 초기화
-    
-    // 날짜가 바뀌면 인원수도 1로 초기화 (안전하게)
+    setSelectedTime(null);
+    setTimeSlotCounts({});
     setCustomerInfo(prev => ({ ...prev, headCount: 1 }));
-
     if (errors.date) setErrors(prev => ({ ...prev, date: undefined }));
 
     if (!selectedExperienceId) {
@@ -121,11 +110,11 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
       console.log(`📅 시간대 조회 요청: joyId=${selectedExperienceId}, date=${date}`);
       const data = await getTimeSlotInfo(selectedExperienceId, date);
       
-      // 1. 시간대 목록 설정 (HH:mm:ss -> HH:mm)
+      // 1. 전체 운영 시간대 (time_info)
       const times = (data.time_info || []).map((t: string) => t.substring(0, 5));
       setAvailableTimeSlots(times);
 
-      // 2. 잔여석 정보 파싱 및 저장
+      // 2. 예약이 있어 잔여석이 변동된 시간대들 (remaining_count_list)
       const counts: Record<string, number> = {};
       if (data.remaining_count_list) {
         data.remaining_count_list.forEach((slot: any) => {
@@ -134,9 +123,6 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
         });
       }
       setTimeSlotCounts(counts);
-      
-      console.log('✅ 예약 가능 시간대:', times);
-      console.log('✅ 잔여석 정보:', counts);
 
     } catch (error) {
       console.error('시간대 정보 조회 실패:', error);
@@ -147,7 +133,6 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
 
   const handleTimeSelect = (time: string | null) => {
     setSelectedTime(time);
-    // [수정] 시간이 바뀌면 인원수를 1로 리셋 (새로운 시간대의 잔여석에 맞추기 위해)
     if (time) {
       setCustomerInfo(prev => ({ ...prev, headCount: 1 }));
     }
@@ -156,7 +141,6 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
 
   const handleExperienceSelect = (id: number | null) => {
     setSelectedExperienceId(id);
-    // 체험이 바뀌면 날짜/시간 관련 정보 모두 초기화
     setSelectedDate(null);
     setSelectedTime(null);
     setAvailableTimeSlots([]);
@@ -205,17 +189,11 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
       reservation_time: selectedTime!
     };
 
-    console.log('🚀 [1단계] 예약 준비 요청:', prepareData);
-
     try {
       const prepareResponse = await prepareReservation(prepareData);
-      console.log('✅ [1단계] 응답 성공:', prepareResponse);
-
       const pgOrderId = prepareResponse.content;
 
-      if (!pgOrderId) {
-        throw new Error('예약 주문 번호(pg_order_id)를 받지 못했습니다.');
-      }
+      if (!pgOrderId) throw new Error('예약 주문 번호를 받지 못했습니다.');
 
       const uniquePaymentKey = `test_pay_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
 
@@ -225,16 +203,12 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
         total_amount: totalAmount
       };
 
-      console.log('🚀 [2단계] 결제 승인 요청:', requestData);
-
-      const requestResponse = await requestPayment(requestData);
-      console.log('✅ [2단계] 결제 완료:', requestResponse);
-
+      await requestPayment(requestData);
       setShowReservationModal(false);
       setShowSuccessModal(true);
 
     } catch (error: any) {
-      console.error('❌ 예약/결제 실패:', error);
+      console.error('예약/결제 실패:', error);
       const errorMsg = error.response?.data?.message || error.message || '오류가 발생했습니다.';
       alert(`예약 실패: ${errorMsg}`);
     }
@@ -243,10 +217,8 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
   const handleSuccessModalClose = () => { setShowSuccessModal(false); onClose(); };
   const handleReservationModalClose = () => { setShowReservationModal(false); onClose(); };
 
-  // [핵심] 현재 선택된 시간의 최대 예약 가능 인원 계산
-  // 1. 시간 미선택 -> 1 (선택 유도)
-  // 2. 시간 선택 & 잔여석 정보 있음 -> 잔여석
-  // 3. 시간 선택 & 잔여석 정보 없음 -> 20 (기본값)
+  // 현재 선택된 시간의 최대 예약 가능 인원 계산
+  // 잔여석 정보에 없으면 20명(기본값)
   const currentMaxCount = selectedTime 
     ? (timeSlotCounts[selectedTime] !== undefined ? timeSlotCounts[selectedTime] : 20) 
     : 1;
@@ -287,30 +259,22 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
                   onDateSelect={handleDateSelect}
                   onTimeSelect={handleTimeSelect}
                   availableTimeSlots={availableTimeSlots}
+                  timeSlotCounts={timeSlotCounts}
                   error={errors.date || errors.time}
                 />
               </section>
 
               <section ref={customerInfoRef} className="reservation-section reservation-scroll-target">
                 <h2 className="reservation-section-title">3. 예약자 정보</h2>
-                
-                {/* [수정] maxHeadCount 전달 */}
                 <CustomerInfoForm
                   customerInfo={customerInfo}
                   onCustomerInfoChange={handleCustomerInfoChange}
                   error={errors.customerInfo}
                   maxHeadCount={currentMaxCount}
                 />
-                
-                {/* [추가] 안내 문구 */}
                 {selectedTime && (
                   <div style={{ padding: '0 24px 20px', color: '#666', fontSize: '14px', marginTop: '-10px' }}>
                     * 선택하신 시간의 예약 가능 인원은 <strong>최대 {currentMaxCount}명</strong>입니다.
-                  </div>
-                )}
-                {!selectedTime && selectedDate && (
-                  <div style={{ padding: '0 24px 20px', color: '#dc2626', fontSize: '14px', marginTop: '-10px' }}>
-                    * 시간을 먼저 선택해주세요.
                   </div>
                 )}
               </section>

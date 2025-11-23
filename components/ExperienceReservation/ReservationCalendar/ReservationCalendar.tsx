@@ -8,8 +8,8 @@ interface ReservationCalendarProps {
   selectedTime: string | null;
   onDateSelect: (date: string) => void;
   onTimeSelect: (time: string | null) => void;
-  // [필수 추가] 부모 컴포넌트에서 전달하는 예약 가능 시간대 목록
   availableTimeSlots?: string[]; 
+  timeSlotCounts?: Record<string, number>; // 잔여석 정보 (Key: 시간, Value: 잔여석)
   error?: string;
 }
 
@@ -18,7 +18,8 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({
   selectedTime,
   onDateSelect,
   onTimeSelect,
-  availableTimeSlots = [], // 기본값 설정
+  availableTimeSlots = [], 
+  timeSlotCounts = {}, 
   error
 }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -75,12 +76,6 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({
     return selectedDate === formatDateString(date);
   };
 
-  const isCurrentMonthView = (): boolean => {
-    const today = new Date();
-    return currentDate.getMonth() === today.getMonth() && 
-           currentDate.getFullYear() === today.getFullYear();
-  };
-
   const handleDateClick = (date: Date) => {
     if (isPastDate(date)) return;
     onDateSelect(formatDateString(date));
@@ -93,9 +88,18 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({
   return (
     <div className="reservation-calendar">
       <div className="reservation-calendar-header">
-        <button className="reservation-calendar-nav-btn prev" onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))} type="button" disabled={isCurrentMonthView()}>◀</button>
+        <button 
+          className="reservation-calendar-nav-btn prev" 
+          onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))} 
+          type="button"
+          disabled={currentDate.getMonth() === new Date().getMonth() && currentDate.getFullYear() === new Date().getFullYear()}
+        >◀</button>
         <h3 className="reservation-calendar-title">{currentDate.getFullYear()}. {currentDate.getMonth() + 1}.</h3>
-        <button className="reservation-calendar-nav-btn next" onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))} type="button">▶</button>
+        <button 
+          className="reservation-calendar-nav-btn next" 
+          onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))} 
+          type="button"
+        >▶</button>
       </div>
 
       <div className="reservation-calendar-weekdays">
@@ -107,7 +111,12 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({
           <button
             key={index}
             type="button"
-            className={`reservation-calendar-day ${!isCurrentMonth(date) ? 'other-month' : ''} ${isPastDate(date) ? 'past-date' : ''} ${isToday(date) ? 'today' : ''} ${isSelected(date) ? 'selected' : ''}`}
+            className={`reservation-calendar-day 
+              ${!isCurrentMonth(date) ? 'other-month' : ''} 
+              ${isPastDate(date) ? 'past-date' : ''} 
+              ${isToday(date) ? 'today' : ''} 
+              ${isSelected(date) ? 'selected' : ''}
+            `}
             onClick={() => handleDateClick(date)}
             disabled={isPastDate(date)}
           >
@@ -123,12 +132,29 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({
           </h4>
           {availableTimeSlots.length > 0 ? (
             <div className="reservation-time-buttons">
-              {availableTimeSlots.map((time) => (
-                <button key={time} type="button" className={`reservation-time-option ${selectedTime === time ? 'selected' : ''}`} onClick={() => handleTimeClick(time)}>{time}</button>
-              ))}
+              {availableTimeSlots.map((time) => {
+                // 명세서 로직: 리스트에 없으면 예약자 0명(여유), 0이면 마감
+                const remaining = timeSlotCounts[time];
+                const isSoldOut = remaining === 0; // 0일 때만 마감으로 처리
+                
+                return (
+                  <button 
+                    key={time} 
+                    type="button" 
+                    className={`reservation-time-option ${selectedTime === time ? 'selected' : ''} ${isSoldOut ? 'sold-out' : ''}`} 
+                    onClick={() => !isSoldOut && handleTimeClick(time)}
+                    disabled={isSoldOut}
+                  >
+                    {time}
+                    {isSoldOut ? ' (마감)' : (remaining !== undefined ? ` (${remaining}석)` : '')}
+                  </button>
+                );
+              })}
             </div>
           ) : (
-            <div style={{textAlign: 'center', padding: '20px', color: '#888', fontSize: '14px'}}>해당 날짜에는 예약 가능한 시간대가 없습니다.</div>
+            <div style={{textAlign: 'center', padding: '20px', color: '#888', fontSize: '14px'}}>
+              해당 날짜에는 예약 가능한 시간대가 없습니다.
+            </div>
           )}
         </div>
       )}
