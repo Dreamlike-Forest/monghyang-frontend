@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ProductWithDetails } from '../../types/mockData';
 import { 
   addToCart as addToCartStore, 
@@ -43,19 +43,58 @@ const Cart: React.FC = () => {
     total: 0
   });
 
+  // [헬퍼 함수 1] 이미지 유효성 검사
+  const isValidImage = (url: string | undefined) => {
+    return url && !url.includes('placeholder') && !url.includes('no-image');
+  };
+
+  // [헬퍼 함수 2] 가격 가져오기 (안전장치 추가)
+  // useCallback으로 감싸서 useEffect 의존성 관리
+  const getSelectedOptionPrice = useCallback((item: CartItem): number => {
+    try {
+      // 1. 선택된 옵션에서 가격 찾기 시도
+      const selectedOption = item.product.options?.find(
+        option => option.product_option_id === item.selectedOptionId
+      );
+      
+      if (selectedOption && selectedOption.price > 0) {
+        return selectedOption.price;
+      }
+
+      // 2. 옵션 가격이 없으면 상품의 기본 가격(minPrice) 사용 (Fallback)
+      if (item.product.minPrice > 0) {
+        return item.product.minPrice;
+      }
+
+      return 0;
+    } catch (error) {
+      console.error('가격 조회 오류:', error);
+      return 0;
+    }
+  }, []);
+
+  // [헬퍼 함수 3] 용량 가져오기
+  const getSelectedOptionVolume = useCallback((item: CartItem): number => {
+    try {
+      const selectedOption = item.product.options?.find(
+        option => option.product_option_id === item.selectedOptionId
+      );
+      return selectedOption?.volume || item.product.volume;
+    } catch (error) {
+      return item.product.volume;
+    }
+  }, []);
+
   // 컴포넌트 마운트 시 초기화 - localStorage에서 데이터 로드
   useEffect(() => {
     console.log('Cart 컴포넌트 마운트 - localStorage에서 데이터 로드');
     
-    // 약간의 지연을 두어 localStorage 로드 완료 보장
     const loadTimer = setTimeout(() => {
       try {
-        // 초기 데이터 로드 (localStorage에서 자동 로드됨)
         const initialItems = getCartItems();
         console.log('초기 장바구니 아이템:', initialItems.length, '개');
         setCartItems(initialItems);
         
-        // 디버그 정보 출력
         if (process.env.NODE_ENV === 'development') {
           debugCartState();
         }
@@ -67,12 +106,10 @@ const Cart: React.FC = () => {
       }
     }, 100);
 
-    // 상태 변경 리스너 등록
     const unsubscribe = subscribeToCart(() => {
       console.log('Cart 컴포넌트: 장바구니 변경 감지');
       try {
         const updatedItems = getCartItems();
-        console.log('업데이트된 아이템:', updatedItems.length, '개');
         setCartItems(updatedItems);
       } catch (error) {
         console.error('장바구니 업데이트 오류:', error);
@@ -85,56 +122,29 @@ const Cart: React.FC = () => {
     };
   }, []);
 
-  // 주문 요약 계산
+  // 주문 요약 계산 (수정됨: getSelectedOptionPrice 재사용)
   useEffect(() => {
     try {
       const subtotal = cartItems.reduce((sum, item) => {
-        const selectedOption = item.product.options.find(
-          option => option.product_option_id === item.selectedOptionId
-        );
-        const price = selectedOption?.price || 0;
+        // 여기서도 안전한 가격 조회 함수 사용
+        const price = getSelectedOptionPrice(item);
         return sum + (price * item.quantity);
       }, 0);
       
       const shipping = subtotal >= 50000 ? 0 : 3000;
-      const total = subtotal + shipping;
+      // 상품이 하나도 없으면 배송비도 0원
+      const finalShipping = subtotal === 0 ? 0 : shipping;
+      const total = subtotal + finalShipping;
 
-      setOrderSummary({ subtotal, shipping, total });
+      setOrderSummary({ subtotal, shipping: finalShipping, total });
     } catch (error) {
       console.error('주문 요약 계산 오류:', error);
       setOrderSummary({ subtotal: 0, shipping: 0, total: 0 });
     }
-  }, [cartItems]);
-
-  // 선택된 옵션의 가격 가져오기
-  const getSelectedOptionPrice = (item: CartItem): number => {
-    try {
-      const selectedOption = item.product.options.find(
-        option => option.product_option_id === item.selectedOptionId
-      );
-      return selectedOption?.price || 0;
-    } catch (error) {
-      console.error('옵션 가격 조회 오류:', error);
-      return 0;
-    }
-  };
-
-  // 선택된 옵션의 용량 가져오기
-  const getSelectedOptionVolume = (item: CartItem): number => {
-    try {
-      const selectedOption = item.product.options.find(
-        option => option.product_option_id === item.selectedOptionId
-      );
-      return selectedOption?.volume || item.product.volume;
-    } catch (error) {
-      console.error('옵션 용량 조회 오류:', error);
-      return item.product.volume;
-    }
-  };
+  }, [cartItems, getSelectedOptionPrice]);
 
   // 수량 변경
   const updateQuantity = (productId: number, optionId: number, newQuantity: number) => {
-    console.log('수량 변경 요청:', productId, optionId, newQuantity);
     try {
       updateCartItemQuantity(productId, optionId, newQuantity);
     } catch (error) {
@@ -145,7 +155,6 @@ const Cart: React.FC = () => {
 
   // 아이템 제거
   const removeItem = (productId: number, optionId: number) => {
-    console.log('아이템 제거 요청:', productId, optionId);
     try {
       removeFromCart(productId, optionId);
     } catch (error) {
@@ -245,7 +254,23 @@ const Cart: React.FC = () => {
                   return (
                     <div key={`${item.product.product_id}-${item.selectedOptionId}`} className="cart-item">
                       <div className="cart-item-image">
-                        <div className="cart-item-image-placeholder">
+                        {/* [수정] 실제 이미지 렌더링 추가 */}
+                        {isValidImage(item.product.image_key) ? (
+                          <img 
+                            src={item.product.image_key} 
+                            alt={item.product.name}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.nextElementSibling?.removeAttribute('style');
+                            }}
+                          />
+                        ) : null}
+                        
+                        <div 
+                          className="cart-item-image-placeholder"
+                          style={{ display: isValidImage(item.product.image_key) ? 'none' : 'flex' }}
+                        >
                           <div>🍶</div>
                         </div>
                       </div>
@@ -340,7 +365,7 @@ const Cart: React.FC = () => {
                 <span className="summary-value">{orderSummary.total.toLocaleString()}원</span>
               </div>
 
-              {orderSummary.subtotal < 50000 && (
+              {orderSummary.subtotal < 50000 && orderSummary.subtotal > 0 && (
                 <div className="free-shipping-notice">
                   {(50000 - orderSummary.subtotal).toLocaleString()}원 더 주문하시면 무료배송입니다!
                 </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import PostDetail from '../../community/PostDetail/PostDetail';
 import ProductReviewModal from '../ProductReviewModal/ProductReviewModal';
 import { WritePostData, Post, PostImage } from '../../../types/community'; 
@@ -24,11 +24,16 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
   reviews: propReviews,
   hideTitle = false
 }) => {
+  // [수정] useMemo를 사용하여 배열 참조값을 고정 (무한 루프 방지)
   // 커뮤니티에서 해당 상품에 대한 리뷰만 가져오기
-  const productReviews = getProductReviews(productName);
+  const productReviews = useMemo(() => {
+    return getProductReviews(productName);
+  }, [productName]);
   
-  // Props로 받은 리뷰가 있으면 사용, 없으면 커뮤니티에서 가져온 리뷰 사용
-  const reviews = propReviews || productReviews;
+  // [수정] Props로 받은 리뷰가 있으면 사용, 없으면 커뮤니티에서 가져온 리뷰 사용
+  const reviews = useMemo(() => {
+    return propReviews || productReviews;
+  }, [propReviews, productReviews]);
   
   const [selectedReview, setSelectedReview] = useState<Post | null>(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
@@ -38,6 +43,7 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
   const reviewsPerPage = 3; // 페이지당 리뷰 개수
 
   // reviews가 변경되면 localReviews 업데이트
+  // (useMemo 덕분에 내용이 같으면 실행되지 않음)
   useEffect(() => {
     setLocalReviews(reviews);
   }, [reviews]);
@@ -46,7 +52,13 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
   useEffect(() => {
     const updateReviews = () => {
       const latestReviews = getProductReviews(productName);
-      setLocalReviews(latestReviews);
+      // JSON 문자열 비교를 통해 내용이 바뀌었을 때만 업데이트하여 렌더링 최적화
+      setLocalReviews(prev => {
+        if (JSON.stringify(prev) !== JSON.stringify(latestReviews)) {
+          return latestReviews;
+        }
+        return prev;
+      });
     };
 
     // 컴포넌트 마운트 시 한 번 실행

@@ -7,7 +7,13 @@ import ProductList from './ProductList/ProductList';
 import ProductDetailMain from '../ProductDetailMain/ProductDetailMain'; 
 import { ProductWithDetails, ProductActiveFilters, Brewery } from '../../types/mockData';
 import { getProductsWithBrewery, mockFilterOptions, getBreweriesWithExperience } from '../../data/mockData';
-import { searchProducts, getLatestProducts, convertToProductWithDetails } from '../../utils/shopApi';
+import { 
+  searchProducts, 
+  getLatestProducts, 
+  getProductById, // 추가됨
+  convertToProductWithDetails,
+  convertDetailToProductWithDetails // 추가됨
+} from '../../utils/shopApi';
 import { 
   hasActiveFilters as checkActiveFilters,
   buildSearchParams,
@@ -44,11 +50,9 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
     const view = searchParams.get('view');
     const productId = searchParams.get('product');
     
-    if (productId && allProducts.length > 0) {
-      const product = allProducts.find(p => p.product_id === parseInt(productId));
-      if (product) {
-        handleProductClick(product.product_id);
-      }
+    // URL에 productId가 있으면 상세 페이지 열기
+    if (productId) {
+      handleProductClick(parseInt(productId));
     }
     
     if (!search || !searchType) {
@@ -63,7 +67,7 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
       setActiveFilters(prev => ({ ...prev, searchKeyword: '' }));
       setCurrentPage(1);
     }
-  }, [searchParams, allProducts]);
+  }, [searchParams]);
 
   const hasActiveFilters = checkActiveFilters(activeFilters);
 
@@ -111,18 +115,51 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
     window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
   };
 
-  const handleProductClick = (productId: number) => {
-    const product = filteredProducts.find(p => p.product_id === productId) || 
-                    allProducts.find(p => p.product_id === productId);
+  // [수정] 상품 클릭 핸들러: 상세 API 호출 추가
+  const handleProductClick = async (productId: number) => {
+    // 1. 리스트에 있는 기본 정보로 먼저 상세창 띄우기 (빠른 반응성)
+    const basicProduct = filteredProducts.find(p => p.product_id === productId) || 
+                         allProducts.find(p => p.product_id === productId);
 
-    if (!product) return;
+    // 리스트에도 정보가 없으면 API 호출 전까지는 null (이 경우 로딩 처리가 필요할 수 있음)
+    if (basicProduct) {
+      setSelectedProduct(basicProduct);
+      // 양조장 정보 찾기 (임시 Mock 매칭)
+      const brewery = allBreweries.find(b => b.brewery_id === basicProduct.brewery_id);
+      setSelectedProductBrewery(brewery || null);
+      setIsProductDetailOpen(true);
+    }
 
-    // [수정] Brewery id 필드명 변경 반영 (brewery_id)
-    const brewery = allBreweries.find(b => b.brewery_id === product.brewery_id);
-    
-    setSelectedProduct(product);
-    setSelectedProductBrewery(brewery || null);
-    setIsProductDetailOpen(true);
+    // 2. [핵심] 상세 API를 호출하여 이미지 등 추가 정보 가져오기
+    try {
+      const detailData = await getProductById(productId);
+      
+      if (detailData) {
+        // API 데이터를 UI 포맷으로 변환 (이미지 배열 포함)
+        const fullProduct = convertDetailToProductWithDetails(detailData);
+        
+        // 기존 정보와 상세 정보를 병합
+        const mergedProduct = {
+          ...basicProduct, // 기존 리스트 정보
+          ...fullProduct,  // 상세 정보 (images, description 등) 덮어쓰기
+          // 평점, 리뷰 수 등은 리스트 정보가 더 정확할 수 있으므로 리스트 정보 우선 (없으면 상세 정보 사용)
+          averageRating: basicProduct?.averageRating || fullProduct.averageRating,
+          reviewCount: basicProduct?.reviewCount || fullProduct.reviewCount,
+        };
+
+        console.log('상세 데이터 로드 완료:', mergedProduct);
+        setSelectedProduct(mergedProduct);
+        
+        // 만약 리스트에 없던 상품이었다면 여기서 상세창을 열어줌
+        if (!basicProduct) {
+           // 양조장 정보는 여기서 추가로 fetch하거나 basicProduct 로직 사용
+           setIsProductDetailOpen(true);
+        }
+      }
+    } catch (error) {
+      console.error('상세 정보 로드 실패:', error);
+      // 실패해도 기본 정보(basicProduct)는 보여짐
+    }
 
     window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
 
@@ -193,7 +230,7 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
             totalPages={totalPages}
             onPageChange={handlePageChange}
             totalCount={totalElements}
-            onProductClick={handleProductClick}
+            onProductClick={handleProductClick} // 수정된 핸들러 전달
             onAddToCart={handleAddToCart}
             onToggleWishlist={handleToggleWishlist}
           />

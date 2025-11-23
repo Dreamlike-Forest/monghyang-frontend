@@ -8,13 +8,19 @@ import About from '../components/About/About';
 import Home from '../components/Home/Home';
 import Community from '../components/community/Community';
 import Cart from '../components/Cart/Cart'; 
+import OrderHistory from '../components/OrderHistory/OrderHistory';
+import ReservationHistory from '../components/ReservationHistory/ReservationHistory';
+
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Brewery as BreweryType, ProductWithDetails } from '../types/mockData';
-import { getProductsWithBrewery } from '../data/mockData';
+// [수정] Mock 데이터 import 제거 (더 이상 사용 안 함)
+// import { getProductsWithBrewery } from '../data/mockData'; 
 import { getBreweryById, convertBreweryDetailToType } from '../utils/brewery';
+// [수정] 상품 API 함수 import 추가
+import { getProductsByUserId, convertToProductWithDetails } from '../utils/shopApi';
 
-type View = 'home' | 'about' | 'brewery' | 'shop' | 'community' | 'login' | 'brewery-detail' | 'product-detail' | 'cart';
+type View = 'home' | 'about' | 'brewery' | 'shop' | 'community' | 'login' | 'brewery-detail' | 'product-detail' | 'cart' | 'order-history' | 'reservation-history';
 
 export default function MainApp() {
   const searchParams = useSearchParams();
@@ -23,7 +29,7 @@ export default function MainApp() {
   const [breweryProducts, setBreweryProducts] = useState<ProductWithDetails[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // URL 파라미터 처리 개선 - 검색 파라미터 지원 추가
+  // URL 파라미터 처리
   useEffect(() => {
     const handleURLParams = async () => {
       setIsLoading(true);
@@ -33,62 +39,64 @@ export default function MainApp() {
         const breweryId = searchParams.get('brewery');
         const productId = searchParams.get('product');
         
-        // 검색 관련 파라미터들
         const searchKeyword = searchParams.get('search');
         const searchType = searchParams.get('searchType');
 
         console.log('URL 파라미터:', { view, breweryId, productId, searchKeyword, searchType });
 
-        // 상품 상세페이지 처리 - shop 뷰로 처리
+        // 1. 상품 상세페이지 처리
         if (productId) {
-          console.log('상품 상세페이지 요청:', productId);
-          // Shop 컴포넌트에서 처리하도록 shop view로 설정
           setCurrentView('shop');
           setSelectedBrewery(null);
           setBreweryProducts([]);
           return;
         }
 
-        // 양조장 상세페이지 처리
+        // 2. 양조장 상세페이지 처리
         if (breweryId) {
-          console.log('🏭 양조장 상세 페이지 요청:', breweryId);
-          
           try {
-            // API로 양조장 상세 정보 가져오기
+            // 양조장 상세 정보 호출
             const breweryDetail = await getBreweryById(parseInt(breweryId));
             
             if (breweryDetail) {
               const convertedBrewery = convertBreweryDetailToType(breweryDetail);
               setSelectedBrewery(convertedBrewery);
               
-              // 해당 양조장의 상품 가져오기 (mockData - 추후 API로 변경 필요)
-              const products = getProductsWithBrewery().filter(p => p.brewery_id === convertedBrewery.id);
-              
-              setBreweryProducts(products);
+              // [수정] Mock 데이터 대신 API를 통해 해당 양조장(판매자)의 상품 목록 가져오기
+              try {
+                // users_id를 사용하여 상품 조회 (0페이지)
+                const productResponse = await getProductsByUserId(convertedBrewery.users_id, 0);
+                
+                // API 응답 데이터를 UI 모델로 변환
+                const realProducts = productResponse.content.map(convertToProductWithDetails);
+                
+                console.log(`양조장(ID:${convertedBrewery.id}) 상품 로드 성공:`, realProducts.length, '개');
+                setBreweryProducts(realProducts);
+              } catch (prodError) {
+                console.error('양조장 상품 로드 실패:', prodError);
+                setBreweryProducts([]);
+              }
+
               setCurrentView('brewery-detail');
-              console.log('✅ 양조장 상세페이지 로드 완료:', convertedBrewery.brewery_name);
             } else {
-              console.log('❌ 양조장을 찾을 수 없음, brewery 목록으로 리다이렉트');
               setCurrentView('brewery');
               setSelectedBrewery(null);
               setBreweryProducts([]);
             }
           } catch (error) {
-            console.error('❌ 양조장 상세 정보 로드 실패:', error);
+            console.error('양조장 상세 로드 실패:', error);
             setCurrentView('brewery');
             setSelectedBrewery(null);
             setBreweryProducts([]);
           }
-        } else if (view && ['home', 'about', 'brewery', 'shop', 'community', 'login', 'cart'].includes(view)) { 
-          // 일반 뷰 처리
+        } 
+        // 3. 일반 뷰 처리
+        else if (view && ['home', 'about', 'brewery', 'shop', 'community', 'login', 'cart', 'order-history', 'reservation-history'].includes(view)) { 
           setCurrentView(view);
-          // 뷰가 변경되면 선택된 양조장 초기화
           setSelectedBrewery(null);
           setBreweryProducts([]);
 
-          // 검색 파라미터가 있는 경우 로그 출력
           if (searchKeyword && searchType) {
-            console.log(`${searchType} 검색 요청: "${searchKeyword}"`);
             if (searchType === 'brewery' && view !== 'brewery') {
               setCurrentView('brewery');
             } else if (searchType === 'product' && view !== 'shop') {
@@ -96,13 +104,12 @@ export default function MainApp() {
             }
           }
         } else {
-          // view 파라미터가 없거나 유효하지 않으면 home으로 설정
           setCurrentView('home');
           setSelectedBrewery(null);
           setBreweryProducts([]);
         }
       } catch (error) {
-        console.error('URL 파라미터 처리 중 오류:', error);
+        console.error('URL 파라미터 처리 오류:', error);
         setCurrentView('home');
         setSelectedBrewery(null);
         setBreweryProducts([]);
@@ -114,7 +121,8 @@ export default function MainApp() {
     handleURLParams();
   }, [searchParams]);
 
-  // Header가 URL 변경을 감지할 수 있도록 커스텀 이벤트 리스너 추가
+  // ... (이하 코드는 기존과 동일) ...
+
   useEffect(() => {
     const handleLocationChange = () => {
       console.log('URL 변경 감지됨');
@@ -127,20 +135,15 @@ export default function MainApp() {
     };
   }, []);
 
-  // 뷰 전환 함수 개선
   const navigateToView = (view: View, params?: Record<string, string>) => {
-    console.log('네비게이션 요청:', view, params);
-    
     const url = new URL(window.location.href);
     
-    // 기존 파라미터 정리
     url.searchParams.delete('view');
     url.searchParams.delete('brewery');
     url.searchParams.delete('product');
     url.searchParams.delete('search');
     url.searchParams.delete('searchType');
     
-    // 새로운 파라미터 설정
     if (view !== 'home') {
       url.searchParams.set('view', view);
     }
@@ -153,7 +156,6 @@ export default function MainApp() {
     window.location.href = url.toString();
   };
 
-  // 뷰 렌더링 함수
   const renderView = () => {
     if (isLoading) {
       return (
@@ -186,8 +188,6 @@ export default function MainApp() {
       );
     }
     
-    console.log('현재 뷰 렌더링:', currentView);
-    
     switch (currentView) {
       case 'home':
         return <Home />;
@@ -210,9 +210,14 @@ export default function MainApp() {
       case 'cart': 
         return <Cart />;
 
+      case 'order-history':
+        return <OrderHistory />;
+
+      case 'reservation-history':
+        return <ReservationHistory />;
+
       case 'brewery-detail':
         if (selectedBrewery) {
-          console.log('양조장 상세페이지 렌더링:', selectedBrewery.brewery_name);
           return (
             <BreweryDetail 
               brewery={selectedBrewery}
@@ -234,9 +239,6 @@ export default function MainApp() {
               <h2 style={{ color: '#333', marginBottom: '16px' }}>
                 양조장을 찾을 수 없습니다
               </h2>
-              <p style={{ color: '#666', marginBottom: '24px' }}>
-                요청하신 양조장 정보를 찾을 수 없습니다.
-              </p>
               <button
                 onClick={() => navigateToView('brewery')}
                 style={{
@@ -247,14 +249,7 @@ export default function MainApp() {
                   borderRadius: '8px',
                   fontSize: '16px',
                   fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#7c4d34';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#8b5a3c';
+                  cursor: 'pointer'
                 }}
               >
                 양조장 목록으로 돌아가기
@@ -278,9 +273,6 @@ export default function MainApp() {
             <h2 style={{ color: '#333', marginBottom: '16px' }}>
               페이지를 찾을 수 없습니다
             </h2>
-            <p style={{ color: '#666', marginBottom: '24px' }}>
-              요청하신 페이지가 존재하지 않습니다.
-            </p>
             <button
               onClick={() => navigateToView('home')}
               style={{

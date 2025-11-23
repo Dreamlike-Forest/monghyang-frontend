@@ -22,18 +22,15 @@ const languages: Language[] = [
   { code: 'en', name: 'English', flag: '🇺🇸' }
 ];
 
-// 장바구니 아이콘 컴포넌트 - 로그인 확인 추가
+// 장바구니 아이콘 컴포넌트
 const CartIcon: React.FC<{ onClick: () => void }> = ({ onClick }) => {
   const [cartItemCount, setCartItemCount] = useState(0);
 
   useEffect(() => {
-    // 초기 장바구니 아이템 수 가져오기
     setCartItemCount(getCartItemCount());
 
-    // 장바구니 변경사항 구독
     const unsubscribe = subscribeToCart(() => {
       const newCount = getCartItemCount();
-      console.log('Header: 장바구니 아이템 수 업데이트:', newCount);
       setCartItemCount(newCount);
     });
 
@@ -133,10 +130,31 @@ const Header: React.FC = () => {
     };
   }, []);
 
+  // [추가] 안전한 페이지 이동을 위한 헬퍼 함수
+  // 상세 페이지에 있을 때 다른 메뉴로 이동 시 충돌나는 파라미터들을 제거합니다.
+  const handleNavigation = (viewName: string) => {
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      
+      // 1. 상세 페이지 유발 파라미터 제거 (MainApp 로직 충돌 방지)
+      url.searchParams.delete('product');
+      url.searchParams.delete('brewery');
+      
+      // 2. 검색 관련 파라미터 제거 (선택 사항, 깔끔한 이동을 위해 권장)
+      url.searchParams.delete('search');
+      url.searchParams.delete('searchType');
+
+      // 3. 목표 뷰 설정
+      url.searchParams.set('view', viewName);
+      
+      window.location.href = url.toString();
+      setIsProfileDropdownOpen(false);
+    }
+  };
+
   const handleLanguageSelect = (language: Language) => {
     setCurrentLanguage(language);
     setIsLanguageDropdownOpen(false);
-    console.log('언어 변경:', language);
   };
 
   // 로그인 핸들러
@@ -145,76 +163,45 @@ const Header: React.FC = () => {
     
     try {
       const currentHref = window.location.href;
-      if (!currentHref) throw new Error('현재 URL을 가져올 수 없습니다.');
-
       const currentUrl = new URL(currentHref);
       const productId = currentUrl.searchParams.get('product');
       
       if (productId) {
         sessionStorage.setItem('returnToProduct', productId);
-        console.log('상품 ID 저장됨:', productId);
       }
       
-      const baseUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
-      const newUrl = new URL(baseUrl);
-      newUrl.searchParams.set('view', 'login');
-      window.location.href = newUrl.toString();
+      // 로그인 페이지로 이동 시에도 기존 파라미터 정리 후 이동
+      handleNavigation('login');
     } catch (error) {
       console.error('로그인 페이지 이동 중 오류:', error);
-      try {
-        window.location.href = '/?view=login';
-      } catch {
-        window.location.reload();
-      }
+      window.location.href = '/?view=login';
     }
   };
 
-  // 장바구니 이동 (로그인 확인)
+  // 장바구니 이동
   const handleCart = () => {
-    console.log('장바구니 버튼 클릭 - 로그인 상태 확인');
-    
     const canProceed = checkAuthAndPrompt(
       '장바구니 기능',
-      () => {
-        console.log('로그인 페이지로 이동');
-      },
-      () => {
-        console.log('장바구니 접근 취소됨');
-      }
+      () => console.log('로그인 페이지로 이동'),
+      () => console.log('취소됨')
     );
 
     if (!canProceed) return;
 
-    if (typeof window === 'undefined') return;
-    
-    try {
-      const baseUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
-      const newUrl = new URL(baseUrl);
-      newUrl.searchParams.set('view', 'cart');
-      window.location.href = newUrl.toString();
-    } catch (error) {
-      console.error('장바구니 페이지 이동 중 오류:', error);
-      try {
-        window.location.href = '/?view=cart';
-      } catch {
-        window.location.reload();
-      }
-    }
+    handleNavigation('cart');
   };
 
   const handleProfile = () => {
     setIsProfileDropdownOpen(!isProfileDropdownOpen);
   };
 
-  // 로그아웃 + 장바구니 초기화
+  // 로그아웃
   const handleLogout = () => {
     if (typeof window === 'undefined') return;
     
     try {
-      // 장바구니 초기화
       try {
         clearCart();
-        console.log('로그아웃 시 장바구니 초기화 완료');
       } catch (cartError) {
         console.error('장바구니 초기화 오류:', cartError);
       }
@@ -228,18 +215,11 @@ const Header: React.FC = () => {
       setUser(null);
       setIsProfileDropdownOpen(false);
       
-      console.log('로그아웃 완료');
-      
+      // 로그아웃 시 홈으로 이동하며 파라미터 초기화
       const baseUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
-      const newUrl = new URL(baseUrl);
-      window.location.href = newUrl.toString();
+      window.location.href = baseUrl;
     } catch (error) {
-      console.error('로그아웃 중 오류:', error);
-      try {
-        window.location.href = '/';
-      } catch {
-        window.location.reload();
-      }
+      window.location.href = '/';
     }
   };
 
@@ -247,7 +227,7 @@ const Header: React.FC = () => {
     <header className="header">
       <div className="header-container">
         <div className="header-actions">
-          {/* 언어 선택 드롭다운 */}
+          {/* 언어 선택 */}
           <div className="language-selector" ref={languageDropdownRef}>
             <button
               className="language-button"
@@ -259,9 +239,7 @@ const Header: React.FC = () => {
               <span className="language-name">{currentLanguage.name}</span>
               <svg 
                 className={`language-arrow ${isLanguageDropdownOpen ? 'open' : ''}`}
-                width="12" 
-                height="12" 
-                viewBox="0 0 12 12"
+                width="12" height="12" viewBox="0 0 12 12"
               >
                 <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" fill="none"/>
               </svg>
@@ -288,7 +266,7 @@ const Header: React.FC = () => {
             )}
           </div>
 
-          {/* 로그인 상태 UI */}
+          {/* 로그인/프로필 영역 */}
           {isUserLoggedIn && user ? (
             <>
               <div className="user-greeting">
@@ -305,9 +283,7 @@ const Header: React.FC = () => {
                   내 정보
                   <svg 
                     className={`profile-arrow ${isProfileDropdownOpen ? 'open' : ''}`}
-                    width="12" 
-                    height="12" 
-                    viewBox="0 0 12 12"
+                    width="12" height="12" viewBox="0 0 12 12"
                   >
                     <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" fill="none"/>
                   </svg>
@@ -317,18 +293,23 @@ const Header: React.FC = () => {
                   <div className="profile-dropdown">
                     <ul role="menu" className="profile-list">
                       <li role="menuitem">
-                        <button className="profile-option">
-                          👤 프로필 수정
-                        </button>
+                        <button className="profile-option">👤 프로필 수정</button>
                       </li>
                       <li role="menuitem">
-                        <button className="profile-option">
+                        {/* [수정] handleNavigation 사용하여 파라미터 충돌 방지 */}
+                        <button 
+                          className="profile-option"
+                          onClick={() => handleNavigation('order-history')}
+                        >
                           📋 주문 내역
                         </button>
                       </li>
-                      {/* ❤️ 찜한 상품 항목 제거됨 */}
                       <li role="menuitem">
-                        <button className="profile-option">
+                        {/* [수정] handleNavigation 사용하여 파라미터 충돌 방지 */}
+                        <button 
+                          className="profile-option"
+                          onClick={() => handleNavigation('reservation-history')}
+                        >
                           🎫 체험 예약 내역
                         </button>
                       </li>
@@ -352,7 +333,6 @@ const Header: React.FC = () => {
             </button>
           )}
 
-          {/* 장바구니 버튼 */}
           <CartIcon onClick={handleCart} />
         </div>
       </div>

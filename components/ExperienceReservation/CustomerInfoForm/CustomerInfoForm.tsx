@@ -13,12 +13,18 @@ interface CustomerInfoFormProps {
   customerInfo: CustomerInfo;
   onCustomerInfoChange: (field: keyof CustomerInfo, value: string | number) => void;
   error?: string;
+  // [추가] 최대 인원수 제한 (기본값 20)
+  maxHeadCount?: number;
+  // [추가] 인원수만 변경하는 모드인지 여부 (예약 내역 변경 모달용)
+  onlyHeadCount?: boolean;
 }
 
 const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
   customerInfo,
   onCustomerInfoChange,
-  error
+  error,
+  maxHeadCount = 20, // 기본값 20
+  onlyHeadCount = false
 }) => {
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onCustomerInfoChange('name', e.target.value);
@@ -27,7 +33,6 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/[^0-9]/g, '');
     
-    // 전화번호 포맷팅 (010-1234-5678)
     if (value.length <= 3) {
       value = value;
     } else if (value.length <= 7) {
@@ -41,13 +46,14 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
 
   const handleHeadCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value) || 1;
-    if (value >= 1 && value <= 20) {
+    // 1 이상, 최대값(maxHeadCount) 이하로만 입력 가능
+    if (value >= 1 && value <= maxHeadCount) {
       onCustomerInfoChange('headCount', value);
     }
   };
 
   const incrementHeadCount = () => {
-    if (customerInfo.headCount < 20) {
+    if (customerInfo.headCount < maxHeadCount) {
       onCustomerInfoChange('headCount', customerInfo.headCount + 1);
     }
   };
@@ -59,36 +65,40 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
   };
 
   return (
-    <div className="reservation-customer-info-form">
-      <div className="reservation-form-group">
-        <label htmlFor="customerName" className="reservation-form-label">
-          예약자 이름 <span className="reservation-form-required">*</span>
-        </label>
-        <input
-          id="customerName"
-          type="text"
-          value={customerInfo.name}
-          onChange={handleNameChange}
-          placeholder="예약자 이름을 입력하세요"
-          className="reservation-form-input"
-          maxLength={20}
-        />
-      </div>
+    <div className="reservation-customer-info-form" style={onlyHeadCount ? {border:'none', padding:0, boxShadow:'none'} : {}}>
+      {!onlyHeadCount && (
+        <>
+          <div className="reservation-form-group">
+            <label htmlFor="customerName" className="reservation-form-label">
+              예약자 이름 <span className="reservation-form-required">*</span>
+            </label>
+            <input
+              id="customerName"
+              type="text"
+              value={customerInfo.name}
+              onChange={handleNameChange}
+              placeholder="예약자 이름을 입력하세요"
+              className="reservation-form-input"
+              maxLength={20}
+            />
+          </div>
 
-      <div className="reservation-form-group">
-        <label htmlFor="customerPhone" className="reservation-form-label">
-          예약자 전화번호 <span className="reservation-form-required">*</span>
-        </label>
-        <input
-          id="customerPhone"
-          type="tel"
-          value={customerInfo.phoneNumber}
-          onChange={handlePhoneChange}
-          placeholder="010-1234-5678"
-          className="reservation-form-input"
-          maxLength={13}
-        />
-      </div>
+          <div className="reservation-form-group">
+            <label htmlFor="customerPhone" className="reservation-form-label">
+              예약자 전화번호 <span className="reservation-form-required">*</span>
+            </label>
+            <input
+              id="customerPhone"
+              type="tel"
+              value={customerInfo.phoneNumber}
+              onChange={handlePhoneChange}
+              placeholder="010-1234-5678"
+              className="reservation-form-input"
+              maxLength={13}
+            />
+          </div>
+        </>
+      )}
 
       <div className="reservation-form-group">
         <label htmlFor="headCount" className="reservation-form-label">
@@ -109,19 +119,24 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
             value={customerInfo.headCount}
             onChange={handleHeadCountChange}
             min="1"
-            max="20"
+            max={maxHeadCount}
             className="reservation-head-count-number"
           />
           <button
             type="button"
             className="reservation-head-count-btn increase"
             onClick={incrementHeadCount}
-            disabled={customerInfo.headCount >= 20}
+            // [중요] 최대 인원수에 도달하면 버튼 비활성화
+            disabled={customerInfo.headCount >= maxHeadCount}
           >
             +
           </button>
         </div>
-        <p className="reservation-head-count-note">최소 1명, 최대 20명까지 예약 가능합니다.</p>
+        {!onlyHeadCount && (
+          <p className="reservation-head-count-note">
+            최소 1명, 최대 {maxHeadCount}명까지 예약 가능합니다.
+          </p>
+        )}
       </div>
 
       {error && <div className="reservation-form-error">{error}</div>}
