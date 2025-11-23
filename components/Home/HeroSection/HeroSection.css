@@ -1,6 +1,5 @@
 .hero-section {
-  background: linear-gradient(135deg, rgba(139, 90, 60, 0.9) 0%, rgba(124, 77, 52, 0.95) 100%),
-              url('/images/hero-bg.jpg') center/cover;
+  background: linear-gradient(135deg, rgba(139, 90, 60, 0.9) 0%, rgba(124, 77, 52, 0.95) 100%);
   color: white;
   text-align: center;
   padding: 80px 20px;
