@@ -10,22 +10,20 @@ import { login as loginApi } from '../../utils/authApi';
 type LoginView = 'login' | 'signup' | 'findPassword';
 
 const Login: React.FC = () => {
-  // 상태를 string enum 형태로 변경하여 관리
   const [currentView, setCurrentView] = useState<LoginView>('login');
   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [formData, setFormData] = useState({
     email: '',
-    password: '',
-    rememberMe: false
+    password: ''
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: value
     }));
   };
 
@@ -55,8 +53,6 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleSocialLogin = (provider: string) => { console.log(`${provider} 로그인 시도`); };
-
   const handleBackToHome = () => {
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href);
@@ -66,7 +62,6 @@ const Login: React.FC = () => {
     }
   };
 
-  // [렌더링 로직 변경]
   if (currentView === 'signup') {
     return <SignupContainer onBackToLogin={() => setCurrentView('login')} />;
   }
@@ -142,20 +137,8 @@ const Login: React.FC = () => {
           />
         </div>
 
-        <div className="login-options">
-          <div className="remember-me">
-            <input
-              type="checkbox"
-              id="rememberMe"
-              name="rememberMe"
-              className="remember-checkbox"
-              checked={formData.rememberMe}
-              onChange={handleInputChange}
-            />
-            <label htmlFor="rememberMe" className="remember-label">
-              로그인 상태 유지
-            </label>
-          </div>
+        <div className="login-options" style={{ justifyContent: 'flex-end' }}>
+          {/* 로그인 상태 유지 체크박스 제거됨 */}
           <button
             type="button"
             className="forgot-password"
@@ -171,30 +154,14 @@ const Login: React.FC = () => {
           disabled={isLoading}
           style={{
             opacity: isLoading ? 0.7 : 1,
-            cursor: isLoading ? 'not-allowed' : 'pointer'
+            cursor: isLoading ? 'not-allowed' : 'pointer',
+            marginBottom: '24px' // 하단 여백 조정
           }}
         >
           {isLoading ? '로그인 중...' : '로그인'}
         </button>
 
-        <div className="divider">
-          <span className="divider-text">또는</span>
-        </div>
-
-        <div className="social-login">
-          <button
-            type="button"
-            className="social-button google-login"
-            onClick={() => handleSocialLogin('google')}
-          >
-            <img 
-              src="/logo/Google_logo.svg" 
-              alt="Google"
-              className="google-icon"
-            />
-            Google로 계속하기
-          </button>
-        </div>
+        {/* 구분선 및 소셜 로그인 버튼 제거됨 */}
 
         <div className="signup-link">
           아직 계정이 없으신가요? <button type="button" onClick={() => setCurrentView('signup')}>회원가입</button>
