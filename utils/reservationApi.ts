@@ -1,5 +1,5 @@
 import apiClient from './api';
-import { JoyOrder, ChangeTimeRequest } from '../types/reservation';
+import { JoyOrder } from '../types/reservation';
 
 // 사용자 ID 추출 헬퍼
 const getUserId = (): number | null => {
@@ -16,16 +16,15 @@ const getUserId = (): number | null => {
   return null;
 };
 
-// 1. 예약 내역 조회 (GET /api/joy-order/my/{startOffset})
+// 1. 예약 내역 조회
 export const getMyReservations = async (startOffset: number = 0) => {
   const userId = getUserId();
   const params = userId ? { userId } : {};
   const response = await apiClient.get(`/api/joy-order/my/${startOffset}`, { params });
-  // 명세서 기준 응답 구조: content.content
   return response.data.content?.content || []; 
 };
 
-// 2. 예약 준비 (POST /api/joy-order/prepare) - FormData
+// 2. 예약 준비
 export const prepareReservation = async (data: {
   id: number;
   count: number;
@@ -48,7 +47,7 @@ export const prepareReservation = async (data: {
   return response.data;
 };
 
-// 3. 결제 승인 요청 (POST /api/joy-order/request) - FormData
+// 3. 결제 승인 요청
 export const requestPayment = async (data: {
   pg_order_id: string;
   pg_payment_key: string;
@@ -57,7 +56,6 @@ export const requestPayment = async (data: {
   const formData = new FormData();
   formData.append('pg_order_id', data.pg_order_id);
   formData.append('pg_payment_key', data.pg_payment_key);
-  // 소수점 2자리 강제 포맷팅 (명세서 준수)
   formData.append('total_amount', data.total_amount.toFixed(2));
 
   const response = await apiClient.post('/api/joy-order/request', formData, {
@@ -66,10 +64,9 @@ export const requestPayment = async (data: {
   return response.data;
 };
 
-// 4. 예약 변경 (POST /api/joy-order/change) - FormData
-// 명세서(image_8310e6.png) 참고: id, reservation_date, reservation_time, count
+// 4. 예약 변경
 export const changeReservation = async (data: {
-  id: number; // joy_order_id가 아니라 그냥 'id'로 전송
+  id: number;
   reservation_date: string;
   reservation_time: string;
   count: number;
@@ -86,31 +83,40 @@ export const changeReservation = async (data: {
   return response.data;
 };
 
-// 5. 예약 취소 (DELETE /api/joy-order/cancel/{joyOrderId})
+// 5. 예약 취소
 export const cancelReservation = async (joyOrderId: number) => {
   const response = await apiClient.delete(`/api/joy-order/cancel/${joyOrderId}`);
   return response.data;
 };
 
-// 6. 내역 삭제 (DELETE /api/joy-order/history/{joyOrderId})
+// 6. 내역 삭제
 export const deleteReservationHistory = async (joyOrderId: number) => {
   const response = await apiClient.delete(`/api/joy-order/history/${joyOrderId}`);
   return response.data;
 };
 
-// 7. 예약 불가능 날짜 조회 (GET /api/joy-order/calendar)
+// 7. 예약 불가능 날짜 조회
 export const getUnavailableDates = async (joyId: number, year: number, month: number) => {
-  const response = await apiClient.get(`/api/joy-order/calendar`, {
-    params: { joyId, year, month }
-  });
-  return response.data.content?.joy_unavailable_reservation_date || [];
+  try {
+    const response = await apiClient.get(`/api/joy-order/calendar`, {
+      params: { joyId, year, month }
+    });
+    return response.data.content?.joy_unavailable_reservation_date || [];
+  } catch (error) {
+    console.error('예약 불가능 날짜 조회 실패:', error);
+    return [];
+  }
 };
 
-// 8. 시간대별 예약 가능 여부 조회 (GET /api/joy-order/calendar/time-info)
-// 명세서(image_20d1d9.png) 참고
+// 8. 시간대별 예약 가능 여부 조회
 export const getTimeSlotInfo = async (joyId: number, date: string) => {
-  const response = await apiClient.get(`/api/joy-order/calendar/time-info`, {
-    params: { joyId, date }
-  });
-  return response.data.content;
+  try {
+    const response = await apiClient.get(`/api/joy-order/calendar/time-info`, {
+      params: { joyId, date }
+    });
+    return response.data.content || { time_info: [], remaining_count_list: [] };
+  } catch (error) {
+    console.error('시간대 정보 조회 실패:', error);
+    return { time_info: [], remaining_count_list: [] };
+  }
 };
