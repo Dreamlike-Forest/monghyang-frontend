@@ -6,8 +6,8 @@ import {
   ProductDetail as ProductDetailType,
   ProductSearchParams,
 } from '../types/product';
+import { ALCOHOL_TAG_IDS } from './brewery'; // 양조장에서 정의한 ID 상수 재사용
 
-// [수정됨] export 추가하여 외부에서 사용 가능하게 변경
 export const getImageUrl = (imageKey: string | null | undefined): string => {
   if (!imageKey) return '/images/no-image.png';
   if (imageKey.startsWith('http://') || imageKey.startsWith('https://')) return imageKey;
@@ -15,9 +15,6 @@ export const getImageUrl = (imageKey: string | null | undefined): string => {
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://16.184.16.198:61234';
   return `${API_URL}/api/image/${imageKey}`;
 };
-
-// ... 나머지 코드는 그대로 유지 ...
-// (아래 코드는 기존 shopApi.ts 내용을 그대로 두시면 됩니다. getImageUrl만 export 붙이면 됩니다.)
 
 // 빈 페이지 응답 생성 헬퍼 함수
 const createEmptyPageResponse = <T>(): PageResponse<T> => ({
@@ -91,13 +88,11 @@ export const searchProducts = async (
 ): Promise<PageResponse<ProductListItem>> => {
   try {
     const { startOffset, ...queryParams } = params;
+    
+    // 필터 파라미터가 undefined나 null이 아닌 경우에만 포함
     const filteredParams = Object.entries(queryParams).reduce((acc, [key, value]) => {
       if (value !== undefined && value !== null) {
-        if (Array.isArray(value)) {
-          acc[key] = value.join(',');
-        } else {
-          acc[key] = value;
-        }
+        acc[key] = value;
       }
       return acc;
     }, {} as Record<string, any>);
@@ -161,7 +156,6 @@ export const getProductById = async (
   productId: number
 ): Promise<ProductDetailDto | null> => {
   try {
-    console.log('🔍 상품 상세 조회 요청:', `/api/product/${productId}`);
     const response = await apiClient.get<ApiResponse<ProductDetailDto>>(
       `/api/product/${productId}`
     );

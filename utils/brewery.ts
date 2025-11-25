@@ -1,13 +1,37 @@
 import apiClient from './api';
 import { ApiResponse, PageResponse } from '../types/product';
 
-// ==================== 양조장 관련 타입 정의 ====================
+// ==================== 상수 정의 (API 문서 기준) ====================
 
-// 양조장 목록 아이템 (리스트 API 응답)
+// 지역 ID 매핑
+export const REGION_IDS = {
+  UNKNOWN: 1,      // 미정
+  SEOUL: 2,        // 서울
+  GYEONGGI: 3,     // 경기도
+  GANGWON: 4,      // 강원도
+  CHUNGCHEONG: 5,  // 충청도
+  JEONLA: 6,       // 전라도
+  GYEONGSANG: 7,   // 경상도
+  JEJU: 8          // 제주도
+};
+
+// 주종 태그 ID 매핑
+export const ALCOHOL_TAG_IDS = {
+  MAKGEOLLI: 1, // 막걸리
+  CHEONGJU: 2,  // 청주 (약주 포함)
+  SOJU: 3,      // 소주
+  FRUIT: 5,     // 과실주
+  SPIRITS: 6,   // 증류주
+  LIQUEUR: 7,   // 리큐르
+  OTHER: 8      // 기타
+};
+
+// ==================== 타입 정의 ====================
+
 export interface BreweryListItem {
   brewery_id: number;
   
-  // 이름 관련 키값 후보들
+  // 서버에서 내려오는 다양한 이름 키값들 모두 정의
   brewery_brewery_name?: string; 
   brewery_name?: string; 
   breweryName?: string;  
@@ -17,7 +41,6 @@ export interface BreweryListItem {
   region_type_name: string;
   brewery_introduction: string;
   
-  // 체험 프로그램 관련 키값 후보들
   brewery_joy_min_price?: number;
   min_joy_price?: number;
   
@@ -71,6 +94,19 @@ export interface BreweryTag {
   tags_name: string;
 }
 
+// 태그 검색 결과 타입 (API 문서 반영)
+export interface TagSearchResult {
+  tags_id: number;
+  tag_category_name: string;
+  tags_name: string;
+}
+
+// 태그 카테고리 검색 결과 타입 (API 문서 반영)
+export interface TagCategorySearchResult {
+  id: number;
+  name: string;
+}
+
 export interface BrewerySearchParams {
   startOffset: number; 
   size?: number;       
@@ -83,29 +119,21 @@ export interface BrewerySearchParams {
 
 // ==================== API 함수들 ====================
 
+// 1. 양조장 검색
 export const searchBreweries = async (
   params: BrewerySearchParams
 ): Promise<PageResponse<BreweryListItem>> => {
   try {
     const { startOffset, size = 6, ...queryParams } = params;
     
-    const filteredParams: Record<string, any> = {
-      size: size,
-      ...Object.entries(queryParams).reduce((acc, [key, value]) => {
-        if (value !== undefined && value !== null) {
-          if (Array.isArray(value)) {
-            acc[key] = value.join(',');
-          } else {
-            acc[key] = value;
-          }
-        }
-        return acc;
-      }, {} as Record<string, any>)
+    const requestParams = {
+      size,
+      ...queryParams
     };
 
     const response = await apiClient.get<ApiResponse<PageResponse<BreweryListItem>>>(
       `/api/brewery/search/${startOffset}`,
-      { params: filteredParams }
+      { params: requestParams }
     );
 
     if (!response.data || !response.data.content) {
@@ -119,6 +147,7 @@ export const searchBreweries = async (
   }
 };
 
+// 2. 최신 양조장 조회
 export const getLatestBreweries = async (
   startOffset: number,
   size: number = 6 
@@ -142,6 +171,7 @@ export const getLatestBreweries = async (
   }
 };
 
+// 3. 양조장 상세 조회
 export const getBreweryById = async (
   breweryId: number
 ): Promise<BreweryDetail | null> => {
@@ -156,6 +186,7 @@ export const getBreweryById = async (
   }
 };
 
+// 4. 양조장 태그 리스트 조회 (문서: /api/brewery/tag-list/{breweryId})
 export const getBreweryTags = async (
   breweryId: number
 ): Promise<BreweryTag[]> => {
@@ -163,10 +194,59 @@ export const getBreweryTags = async (
     const response = await apiClient.get<ApiResponse<BreweryTag[]>>(
       `/api/brewery/tag-list/${breweryId}`
     );
+    // 문서를 보면 content 자체가 배열임
     return response.data.content || [];
   } catch (error: any) {
     console.error('❌ 양조장 태그 조회 실패:', error);
     return [];
+  }
+};
+
+// 5. 키워드로 태그 조회 (문서: /api/tag/keyword/{keyword}/{startOffset})
+export const searchTagsByKeyword = async (
+  keyword: string,
+  startOffset: number = 0
+): Promise<PageResponse<TagSearchResult>> => {
+  try {
+    // 문서 요청사항: 한글 문자열 UTF-8 변환
+    const encodedKeyword = encodeURIComponent(keyword);
+    
+    const response = await apiClient.get<ApiResponse<PageResponse<TagSearchResult>>>(
+      `/api/tag/keyword/${encodedKeyword}/${startOffset}`
+    );
+
+    if (!response.data || !response.data.content) {
+      return createEmptyPageResponse<TagSearchResult>();
+    }
+
+    return normalizePageResponse<TagSearchResult>(response.data.content);
+  } catch (error: any) {
+    console.error('❌ 태그 키워드 검색 실패:', error);
+    return createEmptyPageResponse<TagSearchResult>();
+  }
+};
+
+// 6. 키워드로 태그 카테고리 조회 (문서: /api/tag-category/keyword/{keyword}/{startOffset})
+export const searchTagCategoriesByKeyword = async (
+  keyword: string,
+  startOffset: number = 0
+): Promise<PageResponse<TagCategorySearchResult>> => {
+  try {
+    // 한글 문자열 UTF-8 변환
+    const encodedKeyword = encodeURIComponent(keyword);
+
+    const response = await apiClient.get<ApiResponse<PageResponse<TagCategorySearchResult>>>(
+      `/api/tag-category/keyword/${encodedKeyword}/${startOffset}`
+    );
+
+    if (!response.data || !response.data.content) {
+      return createEmptyPageResponse<TagCategorySearchResult>();
+    }
+
+    return normalizePageResponse<TagCategorySearchResult>(response.data.content);
+  } catch (error: any) {
+    console.error('❌ 태그 카테고리 키워드 검색 실패:', error);
+    return createEmptyPageResponse<TagCategorySearchResult>();
   }
 };
 
@@ -224,18 +304,13 @@ export const getImageUrl = (imageKey: string | null | undefined): string => {
   return `${API_URL}/api/image/${imageKey}`;
 };
 
-/**
- * [수정] 로그 제거 완료
- */
 export const convertToBreweryType = (item: BreweryListItem): any => {
-  // console.log('🔍 Server Item:', item); // <-- 이 줄을 삭제했습니다.
-
   return {
     id: item.brewery_id,
     brewery_id: item.brewery_id,
     
-    // 확인된 키값(brewery_brewery_name)을 최우선으로 사용
-    brewery_name: item.brewery_brewery_name || item.brewery_name || item.breweryName || item.name || '이름 없음',
+    // 이름 필드 우선순위 적용
+    brewery_name: item.brewery_brewery_name || item.brewery_name || item.users_nickname || item.breweryName || item.name || '이름 없음',
     
     region_type_name: item.region_type_name,
     brewery_introduction: item.brewery_introduction,
@@ -247,9 +322,9 @@ export const convertToBreweryType = (item: BreweryListItem): any => {
     brewery_is_visiting_brewery: item.is_visiting_brewery,
     brewery_is_regular_visit: item.is_regular_visit,
     
-    tag_name: item.tag_name,
-    tags_name: item.tag_name,
-    alcohol_types: item.tag_name,
+    tag_name: item.tag_name || [],
+    tags_name: item.tag_name || [],
+    alcohol_types: item.tag_name || [],
     
     users_id: 0,
     brewery_address: '',

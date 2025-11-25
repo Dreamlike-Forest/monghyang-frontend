@@ -10,7 +10,9 @@ import {
   searchBreweries, 
   getLatestBreweries, 
   convertToBreweryType,
-  BrewerySearchParams 
+  BrewerySearchParams,
+  REGION_IDS,      // ID 매핑 상수
+  ALCOHOL_TAG_IDS  // ID 매핑 상수
 } from '../../utils/brewery';
 import './Brewery.css';
 
@@ -19,24 +21,26 @@ interface BreweryProps {
   className?: string;
 }
 
-// [중요 수정] DB ID 매핑 수정
-const REGION_MAP: Record<string, number> = {
-  '서울/경기': 2,
-  '강원도': 3,
-  '충청도': 5,
-  '전라도': 4,
-  '경상도': 7,   
-  '제주도': 6  
+// [중요] UI 필터 문자열과 API ID 매핑
+// 서울/경기 -> SEOUL(2), GYEONGGI(3)
+const REGION_MAP: Record<string, number[]> = {
+  '서울/경기': [REGION_IDS.SEOUL, REGION_IDS.GYEONGGI], 
+  '강원도': [REGION_IDS.GANGWON],
+  '충청도': [REGION_IDS.CHUNGCHEONG],
+  '전라도': [REGION_IDS.JEONLA],
+  '경상도': [REGION_IDS.GYEONGSANG],
+  '제주도': [REGION_IDS.JEJU]
 };
 
-// 주종 ID 매핑 (만약 주종 필터도 이상하다면 이 숫자들도 DB 확인이 필요합니다)
+// 주종 매핑
 const TAG_MAP: Record<string, number> = {
-  '막걸리': 1,
-  '청주': 2,
-  '과실주': 3,
-  '증류주': 4,
-  '리큐르': 5,
-  '기타': 6
+  '막걸리': ALCOHOL_TAG_IDS.MAKGEOLLI,
+  '청주': ALCOHOL_TAG_IDS.CHEONGJU, 
+  '과실주': ALCOHOL_TAG_IDS.FRUIT,
+  '증류주': ALCOHOL_TAG_IDS.SPIRITS,
+  '리큐르': ALCOHOL_TAG_IDS.LIQUEUR,
+  '소주': ALCOHOL_TAG_IDS.SOJU,
+  '기타': ALCOHOL_TAG_IDS.OTHER
 };
 
 const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className }) => {
@@ -101,17 +105,20 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
       let response;
 
       if (hasFilters) {
-        // 선택된 필터(문자열)를 ID(숫자) 리스트로 변환
-        const regionIds = filters.regions
-          .map(region => REGION_MAP[region])
-          .filter((id): id is number => id !== undefined);
+        // [중요] 필터 ID 변환 로직
+        const regionIds: number[] = [];
+        filters.regions.forEach(region => {
+            if (REGION_MAP[region]) {
+                regionIds.push(...REGION_MAP[region]);
+            }
+        });
 
         const tagIds = filters.alcoholTypes
           .map(type => TAG_MAP[type])
           .filter((id): id is number => id !== undefined);
 
-        // 디버깅용 로그: 실제 전송되는 ID 확인
-        console.log('선택된 지역 ID:', regionIds);
+        console.log('전송될 지역 ID:', regionIds);
+        console.log('전송될 주종 태그 ID:', tagIds);
 
         const params: BrewerySearchParams = {
           startOffset,
@@ -149,7 +156,7 @@ const BreweryComponent: React.FC<BreweryProps> = ({ onBreweryClick, className })
     fetchBreweries();
   }, [currentPage, filters]);
 
-  // 통계 계산
+  // 통계 계산 (클라이언트 사이드 추정치)
   const breweryCount = useMemo(() => {
     const byRegion: Record<string, number> = {};
     const byAlcoholType: Record<string, number> = {};

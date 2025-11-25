@@ -16,7 +16,8 @@ import {
 } from '../../utils/shopApi';
 import { 
   getBreweryById, 
-  convertBreweryDetailToType 
+  convertBreweryDetailToType,
+  ALCOHOL_TAG_IDS // ID 상수 재사용
 } from '../../utils/brewery';
 import { 
   hasActiveFilters as checkActiveFilters,
@@ -29,6 +30,17 @@ import './Shop.css';
 interface ShopProps {
   className?: string;
 }
+
+// 주종 문자열 -> ID 매핑 (Brewery와 동일)
+const SHOP_TAG_MAP: Record<string, number> = {
+  'takju': ALCOHOL_TAG_IDS.MAKGEOLLI,
+  'cheongju': ALCOHOL_TAG_IDS.CHEONGJU,
+  'yakju': ALCOHOL_TAG_IDS.CHEONGJU,
+  'soju': ALCOHOL_TAG_IDS.SOJU,
+  'fruit': ALCOHOL_TAG_IDS.FRUIT,
+  'spirits': ALCOHOL_TAG_IDS.SPIRITS,
+  'liqueur': ALCOHOL_TAG_IDS.LIQUEUR
+};
 
 const Shop: React.FC<ShopProps> = ({ className }) => {
   const searchParams = useSearchParams();
@@ -79,8 +91,29 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
     try {
       let response;
       if (hasActiveFilters) {
-        const params = buildSearchParams(activeFilters, currentPage);
-        response = await searchProducts(params);
+        // [수정] 필터 파라미터 변환
+        
+        // 1. 주종 ID 변환
+        const tagIds = activeFilters.types
+          .map(type => SHOP_TAG_MAP[type])
+          .filter(id => id !== undefined);
+
+        // 2. 도수 범위 변환
+        let minAlcohol, maxAlcohol;
+        if (activeFilters.alcoholRange === 'low') { minAlcohol = 0; maxAlcohol = 6; }
+        else if (activeFilters.alcoholRange === 'medium') { minAlcohol = 7; maxAlcohol = 15; }
+        else if (activeFilters.alcoholRange === 'high1') { minAlcohol = 16; maxAlcohol = 25; }
+        else if (activeFilters.alcoholRange === 'high2') { minAlcohol = 26; maxAlcohol = 100; }
+
+        response = await searchProducts({
+          startOffset: currentPage - 1,
+          keyword: activeFilters.searchKeyword || undefined,
+          min_price: activeFilters.priceMin > 0 ? activeFilters.priceMin : undefined,
+          max_price: activeFilters.priceMax < 999999 ? activeFilters.priceMax : undefined,
+          tag_id_list: tagIds.length > 0 ? tagIds : undefined,
+          min_alcohol: minAlcohol,
+          max_alcohol: maxAlcohol
+        });
       } else {
         response = await getLatestProducts(currentPage - 1);
       }
