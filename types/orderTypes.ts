@@ -1,119 +1,79 @@
-// 주문 상태 enum
+// 주문 상태 (Enum)
 export enum OrderStatus {
-  PENDING = 'PENDING',           // 결제 대기
-  PAID = 'PAID',                 // 결제 완료
-  PREPARING = 'PREPARING',       // 배송 준비 중
-  SHIPPED = 'SHIPPED',           // 배송 중
-  DELIVERED = 'DELIVERED',       // 배송 완료
-  CANCELLED = 'CANCELLED',       // 주문 취소
-  REFUNDED = 'REFUNDED'          // 환불 완료
+  PENDING = 'PENDING',
+  PAID = 'PAID',
+  PREPARING = 'PREPARING',
+  SHIPPED = 'SHIPPED',
+  DELIVERED = 'DELIVERED',
+  CANCELLED = 'CANCELLED',
+  REFUNDED = 'REFUNDED'
 }
 
-// 주문 아이템 배송 상태
+// 배송 상태 (Enum)
 export enum FulfillmentStatus {
-  PENDING = 'PENDING',           // 배송 대기
-  PROCESSING = 'PROCESSING',     // 배송 준비 중
-  SHIPPED = 'SHIPPED',           // 배송 중
-  DELIVERED = 'DELIVERED',       // 배송 완료
-  CANCELLED = 'CANCELLED'        // 배송 취소
+  PENDING = 'PENDING',
+  PROCESSING = 'PROCESSING',
+  SHIPPED = 'SHIPPED',
+  DELIVERED = 'DELIVERED',
+  CANCELLED = 'CANCELLED'
 }
 
-// 환불 상태
-export enum RefundStatus {
-  NONE = 'NONE',                 // 환불 없음
-  REQUESTED = 'REQUESTED',       // 환불 요청
-  APPROVED = 'APPROVED',         // 환불 승인
-  REJECTED = 'REJECTED',         // 환불 거부
-  COMPLETED = 'COMPLETED'        // 환불 완료
-}
-
-// 주문 아이템 (개별 상품)
+// [수정됨] 주문 아이템 (API 필드명 일치)
 export interface OrderItem {
   order_item_id: number;
   order_id: number;
-  provider_id: number;           // 판매자 ID (user_id)
   product_id: number;
-  quantity: number;
-  amount: number;                // 해당 아이템의 총 금액
-  fulfillment_status: FulfillmentStatus;
-  refund_status: RefundStatus;
-  carrier_code: string | null;   // 택배사 코드
-  tracking_no: string | null;    // 송장 번호
-  shipped_at: string | null;
-  delivered_at: string | null;
-  created_at: string;
-  updated_at: string | null;
-  version: number | null;
-  is_deleted: boolean;
+  product_name: string;
   
-  // 조인된 상품 정보 (프론트엔드에서 사용)
-  product_name?: string;
+  // 판매자 정보
+  provider_id: number;
+  provider_nickname: string;
+  provider_role?: string;
+  
+  // 상품 이미지
   product_image_key?: string;
-  brewery_name?: string;
+  
+  // [중요] API 명세서 필드명 반영
+  order_item_quantity: number;
+  order_item_amount: number;
+  
+  order_item_fulfillment_status: string;
+  order_item_refund_status?: string;
+  order_item_carrier_code?: string | null;
+  order_item_tracking_no?: string | null;
+  
+  order_item_shipped_at?: string | null;
+  order_item_delivered_at?: string | null;
+  order_item_created_at?: string;
+  order_item_updated_at?: string;
+  
+  // UI용 (API에 없으면 계산해서 넣거나 옵셔널)
   product_volume?: number;
   product_alcohol?: number;
 }
 
-// 주문 정보
+// [수정됨] 주문 정보 (API 필드명 일치)
 export interface Order {
   order_id: number;
-  user_id: number;
-  total_amount: number;          // 총 주문 금액
-  currency: string;              // 통화 (KRW)
-  pg_payment_key: string | null; // PG사 결제 키
-  pg_order_id: string | null;    // PG사 주문 ID
-  payer_name: string | null;     // 주문자 이름
-  payer_phone: string | null;    // 주문자 연락처
-  payment_status: string;        // 결제 상태 enum
-  address: string | null;        // 배송 주소
-  address_detail: string | null; // 상세 주소
-  created_at: string;            // 주문 일시
-  updated_at: string | null;
-  version: number | null;
-  is_deleted: boolean;
+  order_total_amount: number;
+  order_currency?: string;
+  order_payer_name?: string;
+  order_payer_phone?: string;
+  order_payment_status?: string;
+  order_address?: string;
+  order_address_detail?: string;
   
-  // 주문 아이템 목록 (조인)
-  items: OrderItem[];
+  order_created_at: string;
+  order_updated_at?: string;
+  
+  // 주문에 포함된 아이템 목록
+  order_items: OrderItem[]; 
+  // 만약 API가 order_items가 아니라 다른 이름(예: items)이라면 여기서 수정해야 함.
+  // 현재 코드는 order_items로 가정하고 작성됨.
 }
 
-// 주문 상태 히스토리
-export interface OrderStatusHistory {
-  status_history_id: number;
-  order_id: number;
-  to_status: string;             // enum
-  reason_code: string | null;
-  created_at: string;
-}
-
-// 배송 정보 (주문자 정보)
-export interface ShippingInfo {
-  recipient_name: string;        // 받는 사람 이름
-  recipient_phone: string;       // 받는 사람 연락처
-  address: string;               // 주소
-  address_detail: string;        // 상세 주소
-  delivery_request?: string;     // 배송 요청사항
-}
-
-// API 응답 타입
-export interface OrderHistoryResponse {
-  orders: Order[];
-  total_count: number;
-  page: number;
-  page_size: number;
-}
-
-// 주문 내역 요청 파라미터
-export interface OrderHistoryParams {
-  user_id?: number;
-  page?: number;
-  page_size?: number;
-  status_filter?: OrderStatus[];
-  start_date?: string;
-  end_date?: string;
-}
-
-// 날짜별 주문 그룹
+// 날짜별 그룹화 (UI용)
 export interface OrdersByDate {
-  date: string;                  // YYYY-MM-DD
+  date: string;
   orders: Order[];
 }

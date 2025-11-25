@@ -1,27 +1,24 @@
-// components/Cart/Cart.tsx
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { 
   getCartItems, 
-  subscribeToCart,
-  updateCartItemQuantity,
-  removeFromCart,
-  clearCart as clearCartStore,
+  subscribeToCart, 
+  updateCartItemQuantity, 
+  removeFromCart, 
+  clearCart as clearCartStore, 
   getCartItemCount,
   initCart,
-  CartItem // CartStore에서 정의한 타입 import
+  CartItem 
 } from './CartStore';
 import './Cart.css';
 
-// 주문 요약 타입
 interface OrderSummary {
   subtotal: number;
   shipping: number;
   total: number;
 }
 
-// 외부 export 유지
 export const getCartItemsCount = getCartItemCount;
 
 const Cart: React.FC = () => {
@@ -33,27 +30,21 @@ const Cart: React.FC = () => {
     total: 0
   });
 
-  // [헬퍼 함수] 유효한 이미지인지 확인
   const isValidImage = (url: string | undefined) => {
     return url && !url.includes('placeholder') && !url.includes('no-image');
   };
 
-  // 초기 데이터 로드 및 구독 설정
   useEffect(() => {
-    // 1. 초기 데이터 로드 요청
     initCart();
     
-    // 2. 스토어 상태 구독
     const unsubscribe = subscribeToCart(() => {
       const updatedItems = getCartItems();
       setCartItems(updatedItems);
-      setIsLoading(false); // 데이터가 들어오면 로딩 해제
+      setIsLoading(false);
     });
 
-    // 3. 최초 마운트 시 로컬 상태 동기화
     setCartItems(getCartItems());
     
-    // 0.5초 뒤 로딩 강제 해제 (데이터가 없어도 화면을 보여주기 위함)
     const timeout = setTimeout(() => setIsLoading(false), 500);
 
     return () => {
@@ -62,10 +53,8 @@ const Cart: React.FC = () => {
     };
   }, []);
 
-  // 주문 요약 계산
   useEffect(() => {
     const subtotal = cartItems.reduce((sum, item) => {
-      // 가격 정보는 product 객체 안에 있음
       const price = item.product.minPrice || 0; 
       return sum + (price * item.quantity);
     }, 0);
@@ -77,39 +66,49 @@ const Cart: React.FC = () => {
     setOrderSummary({ subtotal, shipping: finalShipping, total });
   }, [cartItems]);
 
-  // 수량 변경 핸들러
   const handleUpdateQuantity = async (item: CartItem, newQuantity: number) => {
     if (newQuantity < 1) return;
     if (newQuantity > item.maxQuantity) {
       alert(`최대 주문 가능 수량은 ${item.maxQuantity}개입니다.`);
       return;
     }
-
-    // Optimistic UI (선반영) 대신 로딩 인디케이터를 보여주는 게 좋지만, 
-    // 여기서는 Store가 API 호출 후 상태를 업데이트할 때까지 기다림
     await updateCartItemQuantity(item.cart_id, item.quantity, newQuantity);
   };
 
-  // 아이템 삭제 핸들러
   const handleRemoveItem = async (cartId: number) => {
     if (!window.confirm('장바구니에서 삭제하시겠습니까?')) return;
     await removeFromCart(cartId);
   };
 
-  // 전체 삭제 핸들러
   const handleClearCart = async () => {
     if (window.confirm('장바구니를 모두 비우시겠습니까?')) {
       await clearCartStore();
     }
   };
 
+  // [수정됨] 주문하기 버튼 핸들러
   const handleCheckout = () => {
     if (cartItems.length === 0) {
       alert('장바구니에 상품이 없습니다.');
       return;
     }
-    alert('주문 결제 페이지로 이동합니다. (구현 예정)');
-    // router.push('/order'); 
+    
+    // 1. 구매 페이지로 넘길 데이터 구성
+    const checkoutData = cartItems.map(item => ({
+      cart_id: item.cart_id,
+      product_id: item.product.product_id,
+      product_name: item.product.name,
+      image_key: item.product.image_key,
+      quantity: item.quantity,
+      price: item.product.minPrice || 0,
+      brewery_name: item.product.brewery
+    }));
+
+    // 2. 세션 스토리지에 저장
+    sessionStorage.setItem('checkoutItems', JSON.stringify(checkoutData));
+
+    // 3. 구매 페이지로 이동
+    window.location.href = '/?view=purchase';
   };
 
   if (isLoading && cartItems.length === 0) {
@@ -145,7 +144,6 @@ const Cart: React.FC = () => {
         </div>
       ) : (
         <div className="cart-content">
-          {/* 상품 리스트 섹션 */}
           <div className="cart-items-section">
             <div className="cart-items-header">
               <h2>주문상품 ({cartItems.length}개)</h2>
@@ -161,7 +159,6 @@ const Cart: React.FC = () => {
 
                 return (
                   <div key={item.cart_id} className="cart-item">
-                    {/* 이미지 영역 */}
                     <div className="cart-item-image">
                       {isValidImage(item.product.image_key) ? (
                         <img 
@@ -182,7 +179,6 @@ const Cart: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* 정보 영역 */}
                     <div className="cart-item-info">
                       <div className="cart-item-brewery">{item.product.brewery}</div>
                       <h3 className="cart-item-name">{item.product.name}</h3>
@@ -191,7 +187,6 @@ const Cart: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* 수량 조절 영역 */}
                     <div className="quantity-controls">
                       <button
                         className="quantity-btn"
@@ -215,7 +210,6 @@ const Cart: React.FC = () => {
                       </button>
                     </div>
 
-                    {/* 가격 및 삭제 버튼 */}
                     <div className="cart-item-actions">
                       <div className="cart-item-price">
                         {(itemPrice * item.quantity).toLocaleString()}원
@@ -233,7 +227,6 @@ const Cart: React.FC = () => {
             </div>
           </div>
 
-          {/* 결제 요약 섹션 */}
           <div className="cart-summary-section">
             <div className="cart-summary">
               <h3 className="cart-summary-title">주문요약</h3>
