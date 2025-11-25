@@ -282,23 +282,14 @@ const OrderHistory: React.FC = () => {
     alert('주문 취소 기능은 API 연동 후 사용 가능합니다.');
   };
 
+  // [수정] 교환, 반품 신청 핸들러 - 준비중 알림
   const handleRequestRefund = async (orderItemId: number) => {
-    if (!window.confirm('환불을 요청하시겠습니까?')) {
-      return;
-    }
-    alert('환불 요청 기능은 API 연동 후 사용 가능합니다.');
+    alert('아직 준비중입니다.');
   };
 
+  // [수정] 배송 조회 핸들러 - 준비중 알림
   const handleTrackingInfo = async (orderItemId: number) => {
-    const item = orders
-      .flatMap(order => order.items)
-      .find(item => item.order_item_id === orderItemId);
-    
-    if (item && item.tracking_no) {
-      alert(`배송 조회\n택배사: ${item.carrier_code}\n송장번호: ${item.tracking_no}`);
-    } else {
-      alert('배송 정보를 찾을 수 없습니다.');
-    }
+    alert('아직 준비중입니다.');
   };
 
   const handleAddToCart = (item: OrderItem) => {

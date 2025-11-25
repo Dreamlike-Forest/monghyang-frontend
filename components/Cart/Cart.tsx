@@ -1,27 +1,18 @@
+// components/Cart/Cart.tsx
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { ProductWithDetails } from '../../types/mockData';
 import { 
-  addToCart as addToCartStore, 
   getCartItems, 
   subscribeToCart,
   updateCartItemQuantity,
   removeFromCart,
   clearCart as clearCartStore,
   getCartItemCount,
-  debugCartState
+  initCart,
+  CartItem // CartStore에서 정의한 타입 import
 } from './CartStore';
 import './Cart.css';
-
-// 장바구니 아이템 타입 (CartStore.ts와 동일)
-interface CartItem {
-  product: ProductWithDetails;
-  selectedOptionId: number;
-  quantity: number;
-  maxQuantity: number;
-  addedAt: string;
-}
 
 // 주문 요약 타입
 interface OrderSummary {
@@ -30,8 +21,7 @@ interface OrderSummary {
   total: number;
 }
 
-// 외부에서 사용할 수 있는 함수들 - CartStore 함수들을 그대로 export
-export const addToCart = addToCartStore;
+// 외부 export 유지
 export const getCartItemsCount = getCartItemCount;
 
 const Cart: React.FC = () => {
@@ -43,173 +33,91 @@ const Cart: React.FC = () => {
     total: 0
   });
 
-  // [헬퍼 함수 1] 이미지 유효성 검사
+  // [헬퍼 함수] 유효한 이미지인지 확인
   const isValidImage = (url: string | undefined) => {
     return url && !url.includes('placeholder') && !url.includes('no-image');
   };
 
-  // [헬퍼 함수 2] 가격 가져오기 (안전장치 추가)
-  // useCallback으로 감싸서 useEffect 의존성 관리
-  const getSelectedOptionPrice = useCallback((item: CartItem): number => {
-    try {
-      // 1. 선택된 옵션에서 가격 찾기 시도
-      const selectedOption = item.product.options?.find(
-        option => option.product_option_id === item.selectedOptionId
-      );
-      
-      if (selectedOption && selectedOption.price > 0) {
-        return selectedOption.price;
-      }
-
-      // 2. 옵션 가격이 없으면 상품의 기본 가격(minPrice) 사용 (Fallback)
-      if (item.product.minPrice > 0) {
-        return item.product.minPrice;
-      }
-
-      return 0;
-    } catch (error) {
-      console.error('가격 조회 오류:', error);
-      return 0;
-    }
-  }, []);
-
-  // [헬퍼 함수 3] 용량 가져오기
-  const getSelectedOptionVolume = useCallback((item: CartItem): number => {
-    try {
-      const selectedOption = item.product.options?.find(
-        option => option.product_option_id === item.selectedOptionId
-      );
-      return selectedOption?.volume || item.product.volume;
-    } catch (error) {
-      return item.product.volume;
-    }
-  }, []);
-
-  // 컴포넌트 마운트 시 초기화 - localStorage에서 데이터 로드
+  // 초기 데이터 로드 및 구독 설정
   useEffect(() => {
-    console.log('Cart 컴포넌트 마운트 - localStorage에서 데이터 로드');
+    // 1. 초기 데이터 로드 요청
+    initCart();
     
-    const loadTimer = setTimeout(() => {
-      try {
-        const initialItems = getCartItems();
-        console.log('초기 장바구니 아이템:', initialItems.length, '개');
-        setCartItems(initialItems);
-        
-        if (process.env.NODE_ENV === 'development') {
-          debugCartState();
-        }
-      } catch (error) {
-        console.error('장바구니 초기 로드 오류:', error);
-        setCartItems([]);
-      } finally {
-        setIsLoading(false);
-      }
-    }, 100);
-
+    // 2. 스토어 상태 구독
     const unsubscribe = subscribeToCart(() => {
-      console.log('Cart 컴포넌트: 장바구니 변경 감지');
-      try {
-        const updatedItems = getCartItems();
-        setCartItems(updatedItems);
-      } catch (error) {
-        console.error('장바구니 업데이트 오류:', error);
-      }
+      const updatedItems = getCartItems();
+      setCartItems(updatedItems);
+      setIsLoading(false); // 데이터가 들어오면 로딩 해제
     });
 
+    // 3. 최초 마운트 시 로컬 상태 동기화
+    setCartItems(getCartItems());
+    
+    // 0.5초 뒤 로딩 강제 해제 (데이터가 없어도 화면을 보여주기 위함)
+    const timeout = setTimeout(() => setIsLoading(false), 500);
+
     return () => {
-      clearTimeout(loadTimer);
       unsubscribe();
+      clearTimeout(timeout);
     };
   }, []);
 
-  // 주문 요약 계산 (수정됨: getSelectedOptionPrice 재사용)
+  // 주문 요약 계산
   useEffect(() => {
-    try {
-      const subtotal = cartItems.reduce((sum, item) => {
-        // 여기서도 안전한 가격 조회 함수 사용
-        const price = getSelectedOptionPrice(item);
-        return sum + (price * item.quantity);
-      }, 0);
-      
-      const shipping = subtotal >= 50000 ? 0 : 3000;
-      // 상품이 하나도 없으면 배송비도 0원
-      const finalShipping = subtotal === 0 ? 0 : shipping;
-      const total = subtotal + finalShipping;
+    const subtotal = cartItems.reduce((sum, item) => {
+      // 가격 정보는 product 객체 안에 있음
+      const price = item.product.minPrice || 0; 
+      return sum + (price * item.quantity);
+    }, 0);
+    
+    const shipping = subtotal >= 50000 ? 0 : 3000;
+    const finalShipping = subtotal === 0 ? 0 : shipping;
+    const total = subtotal + finalShipping;
 
-      setOrderSummary({ subtotal, shipping: finalShipping, total });
-    } catch (error) {
-      console.error('주문 요약 계산 오류:', error);
-      setOrderSummary({ subtotal: 0, shipping: 0, total: 0 });
+    setOrderSummary({ subtotal, shipping: finalShipping, total });
+  }, [cartItems]);
+
+  // 수량 변경 핸들러
+  const handleUpdateQuantity = async (item: CartItem, newQuantity: number) => {
+    if (newQuantity < 1) return;
+    if (newQuantity > item.maxQuantity) {
+      alert(`최대 주문 가능 수량은 ${item.maxQuantity}개입니다.`);
+      return;
     }
-  }, [cartItems, getSelectedOptionPrice]);
 
-  // 수량 변경
-  const updateQuantity = (productId: number, optionId: number, newQuantity: number) => {
-    try {
-      updateCartItemQuantity(productId, optionId, newQuantity);
-    } catch (error) {
-      console.error('수량 변경 오류:', error);
-      alert('수량 변경 중 오류가 발생했습니다.');
+    // Optimistic UI (선반영) 대신 로딩 인디케이터를 보여주는 게 좋지만, 
+    // 여기서는 Store가 API 호출 후 상태를 업데이트할 때까지 기다림
+    await updateCartItemQuantity(item.cart_id, item.quantity, newQuantity);
+  };
+
+  // 아이템 삭제 핸들러
+  const handleRemoveItem = async (cartId: number) => {
+    if (!window.confirm('장바구니에서 삭제하시겠습니까?')) return;
+    await removeFromCart(cartId);
+  };
+
+  // 전체 삭제 핸들러
+  const handleClearCart = async () => {
+    if (window.confirm('장바구니를 모두 비우시겠습니까?')) {
+      await clearCartStore();
     }
   };
 
-  // 아이템 제거
-  const removeItem = (productId: number, optionId: number) => {
-    try {
-      removeFromCart(productId, optionId);
-    } catch (error) {
-      console.error('아이템 제거 오류:', error);
-      alert('상품 제거 중 오류가 발생했습니다.');
-    }
-  };
-
-  // 장바구니 전체 비우기
-  const clearCartHandler = () => {
-    if (window.confirm('장바구니를 비우시겠습니까?')) {
-      try {
-        clearCartStore();
-      } catch (error) {
-        console.error('장바구니 비우기 오류:', error);
-        alert('장바구니 비우기 중 오류가 발생했습니다.');
-      }
-    }
-  };
-
-  // 주문하기
   const handleCheckout = () => {
     if (cartItems.length === 0) {
       alert('장바구니에 상품이 없습니다.');
       return;
     }
-    
-    try {
-      console.log('주문 진행:', {
-        items: cartItems.length,
-        total: orderSummary.total
-      });
-      alert('주문 기능이 구현될 예정입니다!');
-    } catch (error) {
-      console.error('주문 처리 오류:', error);
-      alert('주문 처리 중 오류가 발생했습니다.');
-    }
+    alert('주문 결제 페이지로 이동합니다. (구현 예정)');
+    // router.push('/order'); 
   };
 
-  // 쇼핑 계속하기
-  const continueShopping = () => {
-    try {
-      window.location.href = '/?view=shop';
-    } catch (error) {
-      console.error('페이지 이동 오류:', error);
-      window.location.reload();
-    }
-  };
-
-  if (isLoading) {
+  if (isLoading && cartItems.length === 0) {
     return (
       <div className="cart-container">
         <div className="cart-loading">
           <div className="loading-spinner"></div>
-          장바구니를 불러오는 중...
+          장바구니 정보를 불러오고 있습니다...
         </div>
       </div>
     );
@@ -231,119 +139,101 @@ const Cart: React.FC = () => {
           <p className="empty-cart-description">
             마음에 드는 전통주를 장바구니에 담아보세요!
           </p>
-          <button className="continue-shopping-btn" onClick={continueShopping}>
+          <button className="continue-shopping-btn" onClick={() => window.location.href = '/?view=shop'}>
             쇼핑하러 가기
           </button>
         </div>
       ) : (
         <div className="cart-content">
+          {/* 상품 리스트 섹션 */}
           <div className="cart-items-section">
             <div className="cart-items-header">
               <h2>주문상품 ({cartItems.length}개)</h2>
-              <button className="clear-cart-btn" onClick={clearCartHandler}>
+              <button className="clear-cart-btn" onClick={handleClearCart}>
                 전체 삭제
               </button>
             </div>
 
             <div className="cart-items-list">
               {cartItems.map((item) => {
-                try {
-                  const itemPrice = getSelectedOptionPrice(item);
-                  const itemVolume = getSelectedOptionVolume(item);
-                  
-                  return (
-                    <div key={`${item.product.product_id}-${item.selectedOptionId}`} className="cart-item">
-                      <div className="cart-item-image">
-                        {/* [수정] 실제 이미지 렌더링 추가 */}
-                        {isValidImage(item.product.image_key) ? (
-                          <img 
-                            src={item.product.image_key} 
-                            alt={item.product.name}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              e.currentTarget.nextElementSibling?.removeAttribute('style');
-                            }}
-                          />
-                        ) : null}
-                        
-                        <div 
-                          className="cart-item-image-placeholder"
-                          style={{ display: isValidImage(item.product.image_key) ? 'none' : 'flex' }}
-                        >
-                          <div>🍶</div>
-                        </div>
-                      </div>
+                const itemPrice = item.product.minPrice || 0;
+                const itemVolume = item.product.volume;
 
-                      <div className="cart-item-info">
-                        <div className="cart-item-brewery">{item.product.brewery}</div>
-                        <h3 className="cart-item-name">{item.product.name}</h3>
-                        <div className="cart-item-specs">
-                          {itemVolume}ml | {item.product.alcohol}%
-                        </div>
-                      </div>
-
-                      <div className="quantity-controls">
-                        <button
-                          className="quantity-btn"
-                          onClick={() => updateQuantity(item.product.product_id, item.selectedOptionId, item.quantity - 1)}
-                          disabled={item.quantity <= 1}
-                        >
-                          -
-                        </button>
-                        <input
-                          type="number"
-                          className="quantity-input"
-                          value={item.quantity}
-                          onChange={(e) => {
-                            const newQuantity = parseInt(e.target.value) || 1;
-                            updateQuantity(item.product.product_id, item.selectedOptionId, newQuantity);
+                return (
+                  <div key={item.cart_id} className="cart-item">
+                    {/* 이미지 영역 */}
+                    <div className="cart-item-image">
+                      {isValidImage(item.product.image_key) ? (
+                        <img 
+                          src={item.product.image_key} 
+                          alt={item.product.name}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.nextElementSibling?.removeAttribute('style');
                           }}
-                          min="1"
-                          max={item.maxQuantity}
                         />
-                        <button
-                          className="quantity-btn"
-                          onClick={() => updateQuantity(item.product.product_id, item.selectedOptionId, item.quantity + 1)}
-                          disabled={item.quantity >= item.maxQuantity}
-                        >
-                          +
-                        </button>
+                      ) : null}
+                      <div 
+                        className="cart-item-image-placeholder"
+                        style={{ display: isValidImage(item.product.image_key) ? 'none' : 'flex' }}
+                      >
+                        <div>🍶</div>
                       </div>
+                    </div>
 
-                      <div className="cart-item-actions">
-                        <div className="cart-item-price">
-                          {(itemPrice * item.quantity).toLocaleString()}원
-                        </div>
-                        <button
-                          className="remove-item-btn"
-                          onClick={() => removeItem(item.product.product_id, item.selectedOptionId)}
-                        >
-                          삭제
-                        </button>
+                    {/* 정보 영역 */}
+                    <div className="cart-item-info">
+                      <div className="cart-item-brewery">{item.product.brewery}</div>
+                      <h3 className="cart-item-name">{item.product.name}</h3>
+                      <div className="cart-item-specs">
+                        {itemVolume}ml | {item.product.alcohol}%
                       </div>
                     </div>
-                  );
-                } catch (itemError) {
-                  console.error('장바구니 아이템 렌더링 오류:', itemError, item);
-                  return (
-                    <div key={`error-${item.product.product_id}-${item.selectedOptionId}`} className="cart-item">
-                      <div className="cart-item-info">
-                        <div className="cart-item-name">상품 정보를 불러올 수 없습니다</div>
-                        <button
-                          className="remove-item-btn"
-                          onClick={() => removeItem(item.product.product_id, item.selectedOptionId)}
-                        >
-                          삭제
-                        </button>
-                      </div>
+
+                    {/* 수량 조절 영역 */}
+                    <div className="quantity-controls">
+                      <button
+                        className="quantity-btn"
+                        onClick={() => handleUpdateQuantity(item, item.quantity - 1)}
+                        disabled={item.quantity <= 1}
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        className="quantity-input"
+                        value={item.quantity}
+                        readOnly
+                      />
+                      <button
+                        className="quantity-btn"
+                        onClick={() => handleUpdateQuantity(item, item.quantity + 1)}
+                        disabled={item.quantity >= item.maxQuantity}
+                      >
+                        +
+                      </button>
                     </div>
-                  );
-                }
+
+                    {/* 가격 및 삭제 버튼 */}
+                    <div className="cart-item-actions">
+                      <div className="cart-item-price">
+                        {(itemPrice * item.quantity).toLocaleString()}원
+                      </div>
+                      <button
+                        className="remove-item-btn"
+                        onClick={() => handleRemoveItem(item.cart_id)}
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  </div>
+                );
               })}
             </div>
           </div>
 
+          {/* 결제 요약 섹션 */}
           <div className="cart-summary-section">
             <div className="cart-summary">
               <h3 className="cart-summary-title">주문요약</h3>
@@ -379,7 +269,6 @@ const Cart: React.FC = () => {
                 <div>• 50,000원이상 주문시 무료배송입니다.</div>
                 <div>• 전통주는 19세 이상만 구매 가능합니다</div>
                 <div>• 파손 위험이 있어 안전포장 후 배송됩니다</div>
-                <div>• 배송일정: 주문 후 2-3일 (주말/공휴일 제외)</div>
               </div>
             </div>
           </div>
