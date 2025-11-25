@@ -13,6 +13,7 @@ import {
 import CustomerInfoForm from '../ExperienceReservation/CustomerInfoForm/CustomerInfoForm';
 import './ReservationHistory.css';
 
+// 날짜 포맷팅 함수
 const formatDisplayDate = (dateString: string) => {
   if (!dateString) return { fullDate: '-', time: '-', weekDay: '' };
   const date = new Date(dateString);
@@ -34,14 +35,20 @@ const ReservationHistory: React.FC = () => {
   const [reservations, setReservations] = useState<JoyOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
+  // 모달 상태
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [targetReservation, setTargetReservation] = useState<JoyOrder | null>(null);
+  
+  // 변경 폼 데이터 상태
   const [newDate, setNewDate] = useState('');
   const [newTime, setNewTime] = useState('');
   const [newCount, setNewCount] = useState(1);
   
+  // 예약 가능 정보 상태
   const [availableTimes, setAvailableTimes] = useState<string[]>([]);
-  const [unavailableDates, setUnavailableDates] = useState<string[]>([]);
+  const [unavailableDatesList, setUnavailableDatesList] = useState<string[]>([]); 
+  
+  // 시간대별 잔여 인원수 저장 (Key: "HH:mm", Value: 남은 인원)
   const [timeSlotCounts, setTimeSlotCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
@@ -50,8 +57,10 @@ const ReservationHistory: React.FC = () => {
 
   const fetchReservations = async () => {
     try {
-      setIsLoading(true);
+      if (reservations.length === 0) setIsLoading(true);
+      
       const data = await getMyReservations(0); 
+      console.log('📋 예약 내역 데이터 로드:', data);
       setReservations(data); 
     } catch (error) {
       console.error('예약 내역 로드 실패:', error);
@@ -61,51 +70,65 @@ const ReservationHistory: React.FC = () => {
   };
 
   const handleCancel = async (id: number) => {
-    if (!window.confirm('정말로 예약을 취소하시겠습니까?')) return;
+    if (!window.confirm('정말로 예약을 취소하시겠습니까?\n취소 후에는 되돌릴 수 없습니다.')) return;
     try {
       await cancelReservation(id);
       alert('예약이 취소되었습니다.');
       fetchReservations();
     } catch (error: any) {
-      alert('예약 취소 실패');
+      console.error('예약 취소 실패:', error);
+      const msg = error.response?.data?.message || '실패';
+      alert(`예약 취소에 실패했습니다: ${msg}`);
     }
   };
 
   const handleDeleteHistory = async (id: number) => {
-    if (!window.confirm('이 내역을 삭제하시겠습니까?')) return;
+    if (!window.confirm('이 내역을 목록에서 삭제하시겠습니까?')) return;
     try {
       await deleteReservationHistory(id);
       alert('내역이 삭제되었습니다.');
       fetchReservations();
     } catch (error) {
-      alert('내역 삭제 실패');
+      console.error('내역 삭제 실패:', error);
+      alert('내역 삭제에 실패했습니다.');
     }
   };
 
+  // 변경 모달 열기
   const openChangeModal = async (reservation: JoyOrder) => {
     setTargetReservation(reservation);
     
     const dateObj = new Date(reservation.joy_order_reservation);
-    const dateStr = dateObj.toISOString().split('T')[0];
-    const timeStr = dateObj.toTimeString().slice(0, 5);
+    const dateStr = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD
+    const timeStr = dateObj.toTimeString().slice(0, 5);  // HH:mm
     
     setNewDate(dateStr);
     setNewTime(timeStr);
     setNewCount(reservation.joy_order_count);
     
+    // 초기화 후 데이터 로드
+    setTimeSlotCounts({});
+    setAvailableTimes([]);
+    
     setIsModalOpen(true);
 
     try {
       const joyId = reservation.joy_id; 
-      const dates = await getUnavailableDates(joyId, dateObj.getFullYear(), dateObj.getMonth() + 1);
-      setUnavailableDates(dates);
+      const year = dateObj.getFullYear();
+      const month = dateObj.getMonth() + 1;
       
+      // 예약 불가능 날짜 로드
+      const dates = await getUnavailableDates(joyId, year, month);
+      setUnavailableDatesList(dates);
+      
+      // 해당 날짜의 시간대 로드
       await loadTimeSlots(joyId, dateStr);
     } catch (e) {
       console.error('일정 정보 로드 실패:', e);
     }
   };
 
+  // 날짜 변경 핸들러
   const handleDateChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const date = e.target.value;
     setNewDate(date);
@@ -118,12 +141,16 @@ const ReservationHistory: React.FC = () => {
     }
   };
 
+  // 시간대 및 잔여석 로드 함수
   const loadTimeSlots = async (joyId: number, date: string) => {
     try {
       const data = await getTimeSlotInfo(joyId, date);
+      
+      // 1. 시간대 목록 (HH:mm 포맷팅)
       const times = (data.time_info || []).map((t: string) => t.substring(0, 5));
       setAvailableTimes(times);
 
+      // 2. 잔여석 정보 파싱
       const counts: Record<string, number> = {};
       if (data.remaining_count_list) {
         data.remaining_count_list.forEach((slot: any) => {
@@ -132,34 +159,93 @@ const ReservationHistory: React.FC = () => {
         });
       }
       setTimeSlotCounts(counts);
+
     } catch (e) {
+      console.error('시간대 로드 실패:', e);
       setAvailableTimes([]);
       setTimeSlotCounts({});
     }
   };
 
+  // 시간 변경 핸들러
+  const handleTimeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const time = e.target.value;
+    setNewTime(time);
+    setNewCount(1);
+  };
+
+  // 인원수 변경 핸들러
+  const handleCustomerInfoChange = (field: string, value: string | number) => {
+    if (field === 'headCount') {
+      setNewCount(Number(value));
+    }
+  };
+
+  // [수정됨] 예약 변경 제출 핸들러
   const handleSubmitChange = async () => {
     if (!targetReservation || !newDate || !newTime || newCount < 1) {
-      alert('모든 정보를 입력해주세요.');
+      alert('변경할 날짜, 시간, 인원을 모두 정확히 선택해주세요.');
       return;
     }
-    if (unavailableDates.includes(newDate)) {
+
+    if (unavailableDatesList.includes(newDate)) {
       alert('선택하신 날짜는 예약이 불가능합니다.');
       return;
     }
 
+    const changeData = {
+      id: targetReservation.joy_order_id,
+      reservation_date: newDate,
+      reservation_time: newTime,
+      count: newCount
+    };
+
     try {
-      await changeReservation({
-        id: targetReservation.joy_order_id,
-        reservation_date: newDate,
-        reservation_time: newTime,
-        count: newCount
-      });
-      alert('예약 정보가 변경되었습니다.');
+      await changeReservation(changeData);
+      
+      alert('예약 정보가 변경되었습니다.\n상태가 "예약 대기"로 변경됩니다.');
       setIsModalOpen(false);
-      fetchReservations();
+
+      // [핵심 수정] 화면의 데이터를 즉시 업데이트하고, 서버 재조회는 하지 않음
+      // (서버 데이터가 갱신되기 전에 덮어씌워지는 문제 방지)
+      setReservations(prevReservations => 
+        prevReservations.map(item => {
+          if (item.joy_order_id === targetReservation.joy_order_id) {
+            // 1인당 가격 추정
+            const unitPrice = item.joy_order_count > 0 
+              ? item.joy_total_price / item.joy_order_count 
+              : 0;
+            
+            return {
+              ...item,
+              // 변경된 정보 반영
+              joy_order_reservation: `${newDate}T${newTime}:00`,
+              joy_order_count: newCount,
+              joy_total_price: unitPrice * newCount,
+              joy_payment_status: 'PENDING' // 상태를 '예약 대기'로 강제 변경
+            };
+          }
+          return item;
+        })
+      );
+
+      // fetchReservations(); // <-- 이 부분을 제거하여 화면 깜빡임 및 롤백 방지
+
     } catch (error: any) {
-      alert('변경 실패');
+      console.error('변경 실패:', error);
+      const msg = error.response?.data?.message || '실패';
+      alert(`변경 실패: ${msg}`);
+    }
+  };
+
+  const getStatusInfo = (status: ReservationStatus) => {
+    switch (status) {
+      case 'CONFIRMED': 
+      case 'PAID': return { text: '예약 확정', className: 'confirmed' };
+      case 'PENDING': return { text: '예약 대기', className: 'pending' };
+      case 'CANCELLED': return { text: '예약 취소', className: 'cancelled' };
+      case 'COMPLETED': return { text: '체험 완료', className: 'confirmed' };
+      default: return { text: status, className: 'pending' };
     }
   };
 
@@ -182,7 +268,13 @@ const ReservationHistory: React.FC = () => {
 
   const currentMaxCount = calculateMaxCount();
 
-  if (isLoading) return <div className="reservation-loading">로딩 중...</div>;
+  if (isLoading) {
+    return (
+      <div className="reservation-history-container">
+        <div className="reservation-loading"><div className="loading-spinner"></div>로딩 중...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="reservation-history-container">
@@ -191,25 +283,48 @@ const ReservationHistory: React.FC = () => {
       </div>
 
       {reservations.length === 0 ? (
-        <div className="reservation-empty">예약 내역이 없습니다.</div>
+        <div className="reservation-empty">
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎫</div>
+          <h3>예약 내역이 없습니다</h3>
+          <button className="reservation-action-btn primary" style={{ width: 'auto', marginTop: '20px' }}
+            onClick={() => window.location.href = '/?view=brewery'}>
+            양조장 둘러보기
+          </button>
+        </div>
       ) : (
         <div className="reservation-list">
           {reservations.map((item) => {
+            const statusInfo = getStatusInfo(item.joy_payment_status);
             const { fullDate, time, weekDay } = formatDisplayDate(item.joy_order_reservation);
+            
+            const canCancel = ['PENDING', 'CONFIRMED', 'PAID'].includes(item.joy_payment_status);
+            const canDelete = ['CANCELLED', 'COMPLETED'].includes(item.joy_payment_status);
+
             return (
               <div key={item.joy_order_id} className="reservation-card">
                 <div className="reservation-card-header">
-                  <span>{fullDate} ({weekDay})</span>
-                  <span>{item.joy_payment_status}</span>
+                  <span className="reservation-date-label">{fullDate} ({weekDay})</span>
+                  <span className="reservation-id">주문번호: {item.joy_order_id}</span>
                 </div>
                 <div className="reservation-item">
                   <div className="reservation-item-info">
-                    <h3>{item.joy_name}</h3>
-                    <div>⏰ {time} | 👥 {item.joy_order_count}명</div>
+                    {item.brewery_name && <span className="reservation-brewery">{item.brewery_name}</span>}
+                    <h3 className="reservation-name">{item.joy_name}</h3>
+                    <div className="reservation-detail-row">
+                      <span className="reservation-time-badge">⏰ {time}</span>
+                      <span>👥 {item.joy_order_count}명</span>
+                    </div>
                   </div>
                   <div className="reservation-item-actions">
-                    <button className="reservation-action-btn" onClick={() => openChangeModal(item)}>예약 변경</button>
-                    <button className="reservation-action-btn danger" onClick={() => handleCancel(item.joy_order_id)}>취소</button>
+                    <span className="reservation-price">{item.joy_total_price.toLocaleString()}원</span>
+                    <span className={`reservation-status ${statusInfo.className}`}>{statusInfo.text}</span>
+                    
+                    {canCancel && <>
+                      <button className="reservation-action-btn" onClick={() => openChangeModal(item)}>예약 변경</button>
+                      <button className="reservation-action-btn danger" onClick={() => handleCancel(item.joy_order_id)}>예약 취소</button>
+                    </>}
+                    
+                    {canDelete && <button className="reservation-action-btn" onClick={() => handleDeleteHistory(item.joy_order_id)}>내역 삭제</button>}
                   </div>
                 </div>
               </div>
@@ -218,52 +333,88 @@ const ReservationHistory: React.FC = () => {
         </div>
       )}
 
+      {/* 변경 모달 */}
       {isModalOpen && targetReservation && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h3 className="modal-title">예약 변경</h3>
+            <h3 className="modal-title">예약 정보 변경</h3>
+            <p style={{fontSize: '13px', color: '#666', marginBottom: '20px'}}>
+              * 예약 전날까지만 변경 가능합니다.
+            </p>
+            
+            {/* 날짜 선택 */}
             <div className="modal-input-group">
-              <label>날짜</label>
+              <label className="modal-label">날짜 변경</label>
               <input 
                 type="date" 
+                className="modal-input" 
                 value={newDate} 
                 onChange={handleDateChange} 
-                className="modal-input" 
-                min={new Date().toISOString().split('T')[0]} // 오늘 이전 날짜 선택 방지
+                min={new Date().toISOString().split('T')[0]} 
               />
+              {unavailableDatesList.includes(newDate) && <p style={{color:'red', fontSize:'12px', marginTop:'4px'}}>⚠️ 예약 불가능한 날짜입니다.</p>}
             </div>
+
+            {/* 시간 선택 */}
             <div className="modal-input-group">
-              <label>시간</label>
-              <select value={newTime} onChange={(e) => { setNewTime(e.target.value); setNewCount(1); }} className="modal-input">
-                <option value="">시간 선택</option>
-                {availableTimes.map(t => {
+              <label className="modal-label">시간 변경</label>
+              <select 
+                className="modal-input" 
+                value={newTime} 
+                onChange={handleTimeChange}
+              >
+                <option value="">시간을 선택해주세요</option>
+                {availableTimes.length > 0 ? (
+                  availableTimes.map(time => {
+                    const remaining = timeSlotCounts[time];
+                    
                     const isMyTime = (
                       newDate === new Date(targetReservation.joy_order_reservation).toISOString().split('T')[0] &&
-                      t === new Date(targetReservation.joy_order_reservation).toTimeString().slice(0, 5)
+                      time === new Date(targetReservation.joy_order_reservation).toTimeString().slice(0, 5)
                     );
-                    const remaining = timeSlotCounts[t];
-                    const isSoldOut = remaining === 0 && !isMyTime;
+
+                    const isDisabled = (remaining === 0) && !isMyTime;
+                    const remainingText = remaining !== undefined ? ` (잔여 ${remaining}명)` : '';
+                    const myTimeText = isMyTime ? ' (현재 예약중)' : '';
                     
                     return (
-                        <option key={t} value={t} disabled={isSoldOut}>
-                            {t} {remaining !== undefined ? `(${remaining}석)` : ''} {isMyTime ? '(현재)' : ''}
-                        </option>
+                      <option key={time} value={time} disabled={isDisabled}>
+                        {time}{remainingText}{myTimeText}
+                      </option>
                     );
-                })}
+                  })
+                ) : (<option disabled>예약 가능한 시간이 없습니다</option>)}
               </select>
             </div>
+
+            {/* 인원 변경 */}
             <div className="modal-input-group">
-              <label>인원 (최대 {currentMaxCount}명)</label>
+              <label className="modal-label">인원 변경</label>
               <CustomerInfoForm
-                customerInfo={{ name: '', phoneNumber: '', headCount: newCount }}
-                onCustomerInfoChange={(f, v) => f === 'headCount' && setNewCount(Number(v))}
+                customerInfo={{
+                  name: targetReservation.joy_order_payer_name,
+                  phoneNumber: targetReservation.joy_order_payer_phone,
+                  headCount: newCount
+                }}
+                onCustomerInfoChange={handleCustomerInfoChange}
                 maxHeadCount={currentMaxCount}
                 onlyHeadCount={true}
               />
+              
+              {newTime ? (
+                <p style={{fontSize: '12px', color: '#888', marginTop: '8px'}}>
+                  * 선택하신 시간의 예약 가능 인원은 최대 {currentMaxCount}명입니다.
+                </p>
+              ) : (
+                <p style={{fontSize: '12px', color: '#dc2626', marginTop: '8px'}}>
+                  * 시간을 먼저 선택해주세요.
+                </p>
+              )}
             </div>
+
             <div className="modal-actions">
-              <button onClick={() => setIsModalOpen(false)} className="reservation-action-btn">취소</button>
-              <button onClick={handleSubmitChange} className="reservation-action-btn primary">변경완료</button>
+              <button className="reservation-action-btn" onClick={() => setIsModalOpen(false)}>취소</button>
+              <button className="reservation-action-btn primary" onClick={handleSubmitChange}>변경완료</button>
             </div>
           </div>
         </div>

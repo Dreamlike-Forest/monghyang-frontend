@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { getUnavailableDates } from '../../../utils/reservationApi';
 import './ReservationCalendar.css';
 
 interface ReservationCalendarProps {
@@ -9,8 +10,9 @@ interface ReservationCalendarProps {
   onDateSelect: (date: string) => void;
   onTimeSelect: (time: string | null) => void;
   availableTimeSlots?: string[]; 
-  timeSlotCounts?: Record<string, number>; // 잔여석 정보 (Key: 시간, Value: 잔여석)
+  timeSlotCounts?: Record<string, number>; 
   error?: string;
+  joyId?: number; // [필수] 달력 데이터 조회를 위한 체험 ID
 }
 
 const ReservationCalendar: React.FC<ReservationCalendarProps> = ({
@@ -20,16 +22,41 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({
   onTimeSelect,
   availableTimeSlots = [], 
   timeSlotCounts = {}, 
-  error
+  error,
+  joyId
 }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [calendarDays, setCalendarDays] = useState<Date[]>([]);
+  const [unavailableDates, setUnavailableDates] = useState<string[]>([]);
 
   const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
 
+  // 달력 생성
   useEffect(() => {
     generateCalendar();
   }, [currentDate]);
+
+  // 월이 변경되거나 체험 ID가 변경되면 예약 불가능 날짜 조회
+  useEffect(() => {
+    const fetchUnavailableDates = async () => {
+      if (!joyId) return;
+      
+      try {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth() + 1;
+        
+        // API 호출
+        const dates = await getUnavailableDates(joyId, year, month);
+        console.log(`📅 ${month}월 예약 불가 날짜:`, dates);
+        setUnavailableDates(dates);
+      } catch (e) {
+        console.error('예약 불가 날짜 조회 실패:', e);
+        setUnavailableDates([]);
+      }
+    };
+
+    fetchUnavailableDates();
+  }, [currentDate, joyId]);
 
   const generateCalendar = () => {
     const year = currentDate.getFullYear();
@@ -76,8 +103,14 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({
     return selectedDate === formatDateString(date);
   };
 
+  // 예약 불가능 날짜 확인
+  const isUnavailable = (date: Date): boolean => {
+    const dateStr = formatDateString(date);
+    return unavailableDates.includes(dateStr);
+  };
+
   const handleDateClick = (date: Date) => {
-    if (isPastDate(date)) return;
+    if (isPastDate(date) || isUnavailable(date)) return;
     onDateSelect(formatDateString(date));
   };
 
@@ -116,9 +149,10 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({
               ${isPastDate(date) ? 'past-date' : ''} 
               ${isToday(date) ? 'today' : ''} 
               ${isSelected(date) ? 'selected' : ''}
+              ${isUnavailable(date) ? 'disabled' : ''}
             `}
             onClick={() => handleDateClick(date)}
-            disabled={isPastDate(date)}
+            disabled={isPastDate(date) || isUnavailable(date)}
           >
             {date.getDate()}
           </button>
@@ -133,9 +167,9 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({
           {availableTimeSlots.length > 0 ? (
             <div className="reservation-time-buttons">
               {availableTimeSlots.map((time) => {
-                // 명세서 로직: 리스트에 없으면 예약자 0명(여유), 0이면 마감
+                // 잔여석 정보가 있으면 가져오고, 없으면 예약자가 없는 것이므로 여유있음 (20)
                 const remaining = timeSlotCounts[time];
-                const isSoldOut = remaining === 0; // 0일 때만 마감으로 처리
+                const isSoldOut = remaining === 0; // 0일 때만 마감
                 
                 return (
                   <button 

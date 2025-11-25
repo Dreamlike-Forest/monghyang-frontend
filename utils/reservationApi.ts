@@ -21,10 +21,11 @@ export const getMyReservations = async (startOffset: number = 0) => {
   const userId = getUserId();
   const params = userId ? { userId } : {};
   const response = await apiClient.get(`/api/joy-order/my/${startOffset}`, { params });
+  // 명세서 기준 응답 구조: content.content
   return response.data.content?.content || []; 
 };
 
-// 2. 예약 준비 (POST /api/joy-order/prepare)
+// 2. 예약 준비 (POST /api/joy-order/prepare) - FormData
 export const prepareReservation = async (data: {
   id: number;
   count: number;
@@ -47,7 +48,7 @@ export const prepareReservation = async (data: {
   return response.data;
 };
 
-// 3. 결제 승인 요청 (POST /api/joy-order/request)
+// 3. 결제 승인 요청 (POST /api/joy-order/request) - FormData
 export const requestPayment = async (data: {
   pg_order_id: string;
   pg_payment_key: string;
@@ -56,6 +57,7 @@ export const requestPayment = async (data: {
   const formData = new FormData();
   formData.append('pg_order_id', data.pg_order_id);
   formData.append('pg_payment_key', data.pg_payment_key);
+  // 소수점 2자리 강제 포맷팅 (명세서 준수)
   formData.append('total_amount', data.total_amount.toFixed(2));
 
   const response = await apiClient.post('/api/joy-order/request', formData, {
@@ -64,9 +66,10 @@ export const requestPayment = async (data: {
   return response.data;
 };
 
-// 4. 예약 변경 (POST /api/joy-order/change)
+// 4. 예약 변경 (POST /api/joy-order/change) - FormData
+// 명세서(image_8310e6.png) 참고: id, reservation_date, reservation_time, count
 export const changeReservation = async (data: {
-  id: number;
+  id: number; // joy_order_id가 아니라 그냥 'id'로 전송
   reservation_date: string;
   reservation_time: string;
   count: number;
@@ -104,8 +107,8 @@ export const getUnavailableDates = async (joyId: number, year: number, month: nu
 };
 
 // 8. 시간대별 예약 가능 여부 조회 (GET /api/joy-order/calendar/time-info)
+// 명세서(image_20d1d9.png) 참고
 export const getTimeSlotInfo = async (joyId: number, date: string) => {
-  // 명세서에 따라 /time-info 경로 사용
   const response = await apiClient.get(`/api/joy-order/calendar/time-info`, {
     params: { joyId, date }
   });

@@ -8,6 +8,7 @@ import CustomerInfoForm from './CustomerInfoForm/CustomerInfoForm';
 import ReservationSummary from './ReservationSummary/ReservationSummary';
 import ReservationSuccessModal from './ReservationSuccessModal/ReservationSuccessModal';
 import { prepareReservation, requestPayment, getTimeSlotInfo } from '../../utils/reservationApi';
+import { checkAuthAndPrompt } from '../../utils/authUtils';
 import './ExperienceReservation.css';
 
 interface ExperienceReservationProps {
@@ -67,7 +68,6 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
     }
   }, [errors]);
 
-  // 모달 스크롤 방지
   useEffect(() => {
     if (showSuccessModal || showReservationModal) {
       const scrollY = window.scrollY;
@@ -110,11 +110,11 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
       console.log(`📅 시간대 조회 요청: joyId=${selectedExperienceId}, date=${date}`);
       const data = await getTimeSlotInfo(selectedExperienceId, date);
       
-      // 1. 전체 운영 시간대 (time_info)
+      // [수정] 시간 포맷 통일 (HH:mm:ss -> HH:mm)
       const times = (data.time_info || []).map((t: string) => t.substring(0, 5));
       setAvailableTimeSlots(times);
 
-      // 2. 예약이 있어 잔여석이 변동된 시간대들 (remaining_count_list)
+      // 잔여석 정보 매핑 (초 단위 제거)
       const counts: Record<string, number> = {};
       if (data.remaining_count_list) {
         data.remaining_count_list.forEach((slot: any) => {
@@ -123,6 +123,9 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
         });
       }
       setTimeSlotCounts(counts);
+      
+      console.log('✅ 파싱된 시간대:', times);
+      console.log('✅ 파싱된 잔여석:', counts);
 
     } catch (error) {
       console.error('시간대 정보 조회 실패:', error);
@@ -217,8 +220,7 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
   const handleSuccessModalClose = () => { setShowSuccessModal(false); onClose(); };
   const handleReservationModalClose = () => { setShowReservationModal(false); onClose(); };
 
-  // 현재 선택된 시간의 최대 예약 가능 인원 계산
-  // 잔여석 정보에 없으면 20명(기본값)
+  // 최대 인원 계산
   const currentMaxCount = selectedTime 
     ? (timeSlotCounts[selectedTime] !== undefined ? timeSlotCounts[selectedTime] : 20) 
     : 1;
@@ -253,6 +255,7 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
 
               <section ref={dateRef} className="reservation-section reservation-scroll-target">
                 <h2 className="reservation-section-title">2. 날짜 및 시간 선택</h2>
+                {/* [수정] joyId 전달 */}
                 <ReservationCalendar
                   selectedDate={selectedDate}
                   selectedTime={selectedTime}
@@ -261,6 +264,7 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
                   availableTimeSlots={availableTimeSlots}
                   timeSlotCounts={timeSlotCounts}
                   error={errors.date || errors.time}
+                  joyId={selectedExperienceId || undefined}
                 />
               </section>
 
