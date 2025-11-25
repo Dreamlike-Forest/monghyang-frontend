@@ -41,7 +41,7 @@ const Purchase: React.FC = () => {
         const info = await getUserInfo();
         if (info) {
           setUserInfo(info);
-          setBuyerName(info.users_name || info.name || info.users_nickname || '');
+          setBuyerName(info.users_name || info.name || '');
           setBuyerPhone(info.users_phone || info.phone || '');
           setAddress(info.users_address || info.address || '');
           setAddressDetail(info.users_address_detail || info.address_detail || '');
@@ -73,7 +73,6 @@ const Purchase: React.FC = () => {
     return null;
   };
 
-  // [수정됨] 순수 API 연동 핸들러
   const handlePayment = async () => {
     if (!buyerName || !buyerPhone || !address) {
       alert('배송지 정보를 모두 입력해주세요.');
@@ -82,49 +81,51 @@ const Purchase: React.FC = () => {
 
     const userId = getUserId();
     if (!userId) {
-      alert('로그인 정보를 찾을 수 없습니다. 다시 로그인해주세요.');
+      alert('로그인 정보를 찾을 수 없습니다.');
       return;
     }
 
     try {
-      // 데이터 전처리
       const cartIds = items.map(item => Number(item.cart_id));
-      const sanitizedPhone = buyerPhone.replace(/-/g, '');
-
+      const sanitizedPhone = buyerPhone.replace(/-/g, ''); // 하이픈 제거
+      
       let orderId = '';
 
-      // [Step 1] 주문 준비 (Prepare) - 실제 API 호출
+      // 1. 주문 준비 (Prepare)
       try {
-        console.log('🚀 [API] 주문 준비 요청:', { userId, cart_id: cartIds });
-        
+        console.log('🚀 [API] 주문 준비 요청 (FormData):', {
+          userId,
+          cart_id: cartIds,
+          payer_name: buyerName,
+          payer_phone: sanitizedPhone
+        });
+
         orderId = await prepareOrderApi(userId, {
           cart_id: cartIds,
           payer_name: buyerName,
           payer_phone: sanitizedPhone,
           address: address,
-          address_detail: addressDetail || ' ' // 공백이라도 보내서 null 방지
+          address_detail: addressDetail || ' '
         });
-        
-        console.log('✅ [API] 주문 ID 발급 성공:', orderId);
+        console.log('✅ [API] 주문 ID 발급:', orderId);
 
       } catch (prepareError: any) {
-        // 에러 발생 시 상세 메시지를 알림으로 띄우고 중단 (가짜 처리 X)
         console.error('❌ [API] 주문 준비 실패:', prepareError);
         
         const serverMsg = prepareError.response?.data?.message || '알 수 없는 오류';
         alert(`주문 생성에 실패했습니다.\n사유: ${serverMsg}`);
-        return; // 여기서 함수 종료 (페이지 이동 안 함)
+        return; // 실패 시 여기서 중단
       }
 
       if (!orderId) {
-        alert('서버에서 주문 번호를 받지 못했습니다.');
+        alert('주문 번호를 발급받지 못했습니다.');
         return;
       }
 
-      // [Step 2] 결제 시스템 준비중 알림 (사용자 경험용)
+      // 2. 결제 준비중 알림
       alert('결제 시스템이 준비중입니다.\n(확인을 누르면 주문이 완료 처리됩니다)');
 
-      // [Step 3] 결제 승인 (Approve) - 실제 API 호출
+      // 3. 결제 승인 (Approve)
       try {
         await approveOrderApi(userId, {
           pg_order_id: orderId,
@@ -134,21 +135,21 @@ const Purchase: React.FC = () => {
         console.log('✅ [API] 결제 승인 성공');
       } catch (approveError: any) {
         console.error('❌ [API] 결제 승인 실패:', approveError);
-        const serverMsg = approveError.response?.data?.message || '알 수 없는 오류';
-        alert(`결제 승인 중 오류가 발생했습니다.\n사유: ${serverMsg}`);
+        const msg = approveError.response?.data?.message || '승인 처리 중 오류';
+        alert(`결제 승인 실패: ${msg}`);
         return; // 승인 실패 시 중단
       }
 
-      // [Step 4] 성공 시 마무리
-      await clearCart(); // 장바구니 비우기
-      sessionStorage.removeItem('checkoutItems'); 
+      // 4. 성공 시 마무리 (장바구니 비우기 & 이동)
+      await clearCart();
+      sessionStorage.removeItem('checkoutItems');
       
       alert('주문이 정상적으로 완료되었습니다!');
       window.location.href = '/?view=order-history'; 
 
     } catch (error) {
-      console.error('시스템 오류:', error);
-      alert('주문 처리 중 예기치 못한 오류가 발생했습니다.');
+      console.error('주문 프로세스 오류:', error);
+      alert('주문 처리 중 오류가 발생했습니다.');
     }
   };
 
@@ -181,13 +182,10 @@ const Purchase: React.FC = () => {
                 </div>
               </div>
               <div className="info-row">
-                <span className="info-label">배송메모</span>
-                <select className="info-select" value={deliveryMemo} onChange={(e) => setDeliveryMemo(e.target.value)}>
-                  <option value="문 앞">문 앞에 놓아주세요</option>
-                  <option value="직접 수령">직접 받겠습니다</option>
-                  <option value="경비실">경비실에 맡겨주세요</option>
-                  <option value="택배함">택배함에 넣어주세요</option>
-                </select>
+                 <span className="info-label">배송메모</span>
+                 <select className="info-select" value={deliveryMemo} onChange={(e) => setDeliveryMemo(e.target.value)}>
+                    <option>문 앞</option><option>경비실</option><option>택배함</option>
+                 </select>
               </div>
             </div>
           </section>
@@ -201,15 +199,13 @@ const Purchase: React.FC = () => {
                     {item.image_key ? (
                       <img src={getProductImage(item.image_key)} alt={item.product_name} />
                     ) : (
-                      <div style={{width:'100%', height:'100%', background:'#eee', display:'flex', alignItems:'center', justifyContent:'center'}}>🍶</div>
+                      <div style={{width:'100%', height:'100%', background:'#eee'}}></div>
                     )}
                   </div>
                   <div className="purchase-item-info">
                     <div className="item-brewery">{item.brewery_name}</div>
                     <div className="item-name">{item.product_name}</div>
-                    <div className="item-meta">
-                      {item.quantity}개 / {(item.price * item.quantity).toLocaleString()}원
-                    </div>
+                    <div className="item-meta">{item.quantity}개 / {(item.price * item.quantity).toLocaleString()}원</div>
                   </div>
                 </div>
               ))}

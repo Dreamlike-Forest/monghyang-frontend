@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import './CustomerInfoForm.css';
 
 interface CustomerInfo {
@@ -13,9 +13,7 @@ interface CustomerInfoFormProps {
   customerInfo: CustomerInfo;
   onCustomerInfoChange: (field: keyof CustomerInfo, value: string | number) => void;
   error?: string;
-  // [추가] 최대 인원수 제한 (기본값 20)
   maxHeadCount?: number;
-  // [추가] 인원수만 변경하는 모드인지 여부 (예약 내역 변경 모달용)
   onlyHeadCount?: boolean;
 }
 
@@ -23,32 +21,35 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
   customerInfo,
   onCustomerInfoChange,
   error,
-  maxHeadCount = 20, // 기본값 20
+  maxHeadCount = 20, // 기본값 (초기 로드 시)
   onlyHeadCount = false
 }) => {
+  // [핵심] 최대 인원이 줄어들면(예: 시간 변경 시), 현재 입력된 값을 최대값으로 자동 조정
+  useEffect(() => {
+    if (customerInfo.headCount > maxHeadCount) {
+      // 0명(마감)일 때는 1로 유지하거나 처리가 필요하지만, 상위에서 막으므로 maxHeadCount가 0보다 클 때만 조정
+      onCustomerInfoChange('headCount', maxHeadCount > 0 ? maxHeadCount : 1);
+    }
+  }, [maxHeadCount, customerInfo.headCount, onCustomerInfoChange]);
+
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onCustomerInfoChange('name', e.target.value);
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/[^0-9]/g, '');
-    
-    if (value.length <= 3) {
-      value = value;
-    } else if (value.length <= 7) {
-      value = `${value.slice(0, 3)}-${value.slice(3)}`;
-    } else {
-      value = `${value.slice(0, 3)}-${value.slice(3, 7)}-${value.slice(7, 11)}`;
-    }
-    
+    if (value.length <= 3) value = value;
+    else if (value.length <= 7) value = `${value.slice(0, 3)}-${value.slice(3)}`;
+    else value = `${value.slice(0, 3)}-${value.slice(3, 7)}-${value.slice(7, 11)}`;
     onCustomerInfoChange('phoneNumber', value);
   };
 
   const handleHeadCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value) || 1;
-    // 1 이상, 최대값(maxHeadCount) 이하로만 입력 가능
     if (value >= 1 && value <= maxHeadCount) {
       onCustomerInfoChange('headCount', value);
+    } else if (value > maxHeadCount) {
+      onCustomerInfoChange('headCount', maxHeadCount);
     }
   };
 
@@ -126,15 +127,17 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
             type="button"
             className="reservation-head-count-btn increase"
             onClick={incrementHeadCount}
-            // [중요] 최대 인원수에 도달하면 버튼 비활성화
-            disabled={customerInfo.headCount >= maxHeadCount}
+            // 최대 인원에 도달하거나 마감(0)이면 버튼 비활성화
+            disabled={customerInfo.headCount >= maxHeadCount || maxHeadCount === 0}
           >
             +
           </button>
         </div>
         {!onlyHeadCount && (
           <p className="reservation-head-count-note">
-            최소 1명, 최대 {maxHeadCount}명까지 예약 가능합니다.
+            {maxHeadCount === 0 
+              ? '선택하신 시간대는 예약이 마감되었습니다.'
+              : `최소 1명, 최대 ${maxHeadCount}명까지 예약 가능합니다.`}
           </p>
         )}
       </div>

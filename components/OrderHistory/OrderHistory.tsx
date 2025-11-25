@@ -8,7 +8,6 @@ import { getImageUrl as getShopImageUrl } from '../../utils/shopApi';
 import './OrderHistory.css';
 
 const OrderHistory: React.FC = () => {
-  const [orders, setOrders] = useState<Order[]>([]);
   const [ordersByDate, setOrdersByDate] = useState<OrdersByDate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -20,38 +19,30 @@ const OrderHistory: React.FC = () => {
     setIsLoading(true);
     try {
       let userId = 0;
-      const userInfo = await getUserInfo();
-      
-      if (userInfo) {
-        userId = userInfo.userId || userInfo.users_id || userInfo.id;
-      } else {
-        const localData = localStorage.getItem('userData');
-        if (localData) userId = JSON.parse(localData).userId;
+      const info = await getUserInfo();
+      if (info?.userId) userId = info.userId;
+      else {
+        const local = localStorage.getItem('userData');
+        if (local) userId = JSON.parse(local).userId;
       }
 
       if (!userId) return;
 
-      // [수정됨] 오직 서버 API 데이터만 사용
+      // 오직 서버 API 데이터만 사용
       const apiData = await getMyOrderHistoryApi(userId, 0);
-      console.log('주문 내역 데이터(서버):', apiData);
-
+      
       if (apiData && Array.isArray(apiData) && apiData.length > 0) {
-        setOrders(apiData);
         groupOrdersByDate(apiData);
       } else {
-        setOrders([]);
         setOrdersByDate([]);
       }
     } catch (error) {
       console.error('주문 내역 로드 실패:', error);
-      setOrders([]);
+      setOrdersByDate([]);
     } finally {
       setIsLoading(false);
     }
   };
-
-  // 나머지 렌더링 관련 함수들은 그대로 유지 (groupOrdersByDate, handleCancelOrder 등)
-  // 코드가 길어 핵심만 보여드리며, 아래 코드는 기존과 동일하게 사용하시면 됩니다.
 
   const groupOrdersByDate = (orderList: Order[]) => {
     const grouped: Record<string, Order[]> = {};
@@ -61,40 +52,36 @@ const OrderHistory: React.FC = () => {
       if (!grouped[date]) grouped[date] = [];
       grouped[date].push(order);
     });
-    const groupedArray: OrdersByDate[] = Object.entries(grouped)
+    
+    const sorted = Object.entries(grouped)
       .map(([date, orders]) => ({ date, orders }))
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    setOrdersByDate(groupedArray);
+      
+    setOrdersByDate(sorted);
   };
 
-  const formatDate = (dateString: string): string => {
-    try {
-      const date = new Date(dateString);
-      return `${date.getFullYear()}. ${date.getMonth() + 1}. ${date.getDate()} 주문`;
-    } catch (e) { return dateString; }
-  };
-
+  const formatDate = (s: string) => s.split('T')[0];
+  const getImageUrl = (k: string | null | undefined) => getShopImageUrl(k);
   const getFulfillmentStatusText = (status: string) => status;
   const getFulfillmentStatusClass = (status: string) => 'pending';
 
   const handleCancelOrder = async (orderItemId: number) => {
-    if (!window.confirm('정말로 주문을 취소하시겠습니까?')) return;
+    if (!window.confirm('주문을 취소하시겠습니까?')) return;
     try {
-      const userInfo = await getUserInfo();
-      const userId = userInfo?.userId || JSON.parse(localStorage.getItem('userData') || '{}').userId;
+      const userId = (await getUserInfo())?.userId; 
+      if (!userId) return;
       await cancelOrderItemApi(userId, orderItemId);
       alert('주문이 취소되었습니다.');
-      loadOrders(); 
-    } catch (error) {
-      alert('주문 취소에 실패했습니다.');
+      loadOrders();
+    } catch (e) {
+      alert('취소 실패');
     }
   };
+  
+  const handleAddToCart = (id: number) => window.location.href = `/?view=shop&product=${id}`;
+  const handleTrackingInfo = (no: string | null) => alert(`송장: ${no || '없음'}`);
 
-  const handleTrackingInfo = (no: string) => alert(no);
-  const handleAddToCart = (id: number) => { window.location.href = `/?view=shop&product=${id}`; };
-  const getImageUrl = (key: string) => getShopImageUrl(key);
-
-  if (isLoading) return <div className="order-history-loading"><div className="loading-spinner"></div></div>;
+  if (isLoading) return <div className="order-history-loading">로딩중...</div>;
 
   return (
     <div className="order-history-container">
@@ -103,7 +90,6 @@ const OrderHistory: React.FC = () => {
       </div>
       {ordersByDate.length === 0 ? (
         <div className="empty-orders">
-          <div className="empty-orders-icon">📦</div>
           <h2>주문 내역이 없습니다</h2>
           <button className="continue-shopping-btn" onClick={() => window.location.href = '/?view=shop'}>쇼핑하러 가기</button>
         </div>
@@ -111,7 +97,7 @@ const OrderHistory: React.FC = () => {
         <div className="orders-list">
           {ordersByDate.map((group) => (
             <div key={group.date} className="order-date-group">
-              <div className="order-date-header"><span className="order-date">{formatDate(group.date)}</span></div>
+              <div className="order-date-header">{formatDate(group.date)}</div>
               {group.orders.map((order) => (
                 <div key={order.order_id} className="order-block">
                   <div className="order-items-list">
@@ -121,22 +107,16 @@ const OrderHistory: React.FC = () => {
                           <img src={getImageUrl(item.product_image_key)} alt={item.product_name} onError={(e)=>{e.currentTarget.style.display='none'}} />
                         </div>
                         <div className="order-item-info">
-                          <div className="order-item-brewery">{item.provider_nickname}</div>
-                          <h3 className="order-item-name">{item.product_name}</h3>
-                          <div className="order-item-quantity">수량: {item.order_item_quantity}개</div>
-                        </div>
-                        <div className="order-item-price-section">
-                          <div className="order-item-price">{(item.order_item_amount).toLocaleString()}원</div>
-                          <span className="order-item-fulfillment-status">{item.order_item_fulfillment_status}</span>
+                          <h3>{item.product_name}</h3>
+                          <p>{item.order_item_quantity}개 / {item.order_item_amount.toLocaleString()}원</p>
                         </div>
                         <div className="order-item-actions">
-                           <button className="order-action-btn danger" onClick={() => handleCancelOrder(item.order_item_id)}>주문 취소</button>
+                          {item.order_item_fulfillment_status !== 'CANCELLED' && (
+                            <button className="order-action-btn danger" onClick={() => handleCancelOrder(item.order_item_id)}>주문 취소</button>
+                          )}
                         </div>
                       </div>
                     ))}
-                  </div>
-                  <div className="order-summary-section">
-                    <div className="order-total">총 결제금액: {(order.order_total_amount).toLocaleString()}원</div>
                   </div>
                 </div>
               ))}

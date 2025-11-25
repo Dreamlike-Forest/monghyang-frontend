@@ -3,10 +3,10 @@ import { getProductById, convertDetailToProductWithDetails } from '../../utils/s
 import { 
   getMyCart, 
   addToCartApi, 
-  increaseCartQuantity, 
-  decreaseCartQuantity, 
   updateCartQuantityApi, 
-  removeCartItemApi 
+  removeCartItemApi,
+  increaseCartQuantity,
+  decreaseCartQuantity
 } from '../../utils/cartApi';
 import { isLoggedIn } from '../../utils/authUtils';
 
@@ -32,19 +32,15 @@ export const fetchCartItems = async (): Promise<void> => {
     notifyCartChange();
     return;
   }
-
   if (isFetching) return;
   isFetching = true;
-
   try {
     const cartList = await getMyCart();
-    
     if (!cartList || cartList.length === 0) {
       globalCartItems = [];
       notifyCartChange();
       return;
     }
-
     const itemsWithDetails = await Promise.all(
       cartList.map(async (item) => {
         try {
@@ -63,26 +59,17 @@ export const fetchCartItems = async (): Promise<void> => {
         }
       })
     );
-
     globalCartItems = itemsWithDetails.filter((item): item is CartItem => item !== null);
     notifyCartChange();
   } catch (error) {
-    console.error('장바구니 동기화 실패:', error);
+    console.error(error);
   } finally {
     isFetching = false;
   }
 };
 
-export const addToCart = async (
-  product: ProductWithDetails, 
-  selectedOptionId?: number, 
-  quantity: number = 1
-): Promise<boolean> => {
-  if (!isLoggedIn()) {
-    alert('로그인이 필요한 서비스입니다.');
-    return false;
-  }
-
+export const addToCart = async (product: ProductWithDetails, selectedOptionId?: number, quantity: number = 1) => {
+  if (!isLoggedIn()) return false;
   try {
     await addToCartApi(product.product_id, quantity);
     await fetchCartItems();
@@ -94,69 +81,54 @@ export const addToCart = async (
         const targetItem = currentCartList.find(
           item => String(item.product_id) === String(product.product_id)
         );
-
         if (targetItem) {
           const newQuantity = targetItem.cart_quantity + quantity;
           await updateCartQuantityApi(targetItem.cart_id, newQuantity);
           await fetchCartItems();
           return true;
         }
-      } catch (retryError) {
-        return false;
-      }
+      } catch (retryError) { return false; }
     } 
     return false;
   }
 };
 
-export const updateCartItemQuantity = async (
-  cartId: number, 
-  currentQuantity: number,
-  newQuantity: number
-): Promise<boolean> => {
+export const updateCartItemQuantity = async (cartId: number, currentQuantity: number, newQuantity: number) => {
   try {
     await updateCartQuantityApi(cartId, newQuantity);
     await fetchCartItems();
     return true;
-  } catch (error) {
-    return false;
-  }
+  } catch (e) { return false; }
 };
 
-export const removeFromCart = async (cartId: number): Promise<boolean> => {
+export const removeFromCart = async (cartId: number) => {
   try {
     await removeCartItemApi(cartId);
     await fetchCartItems();
     return true;
-  } catch (error) {
-    return false;
-  }
+  } catch (e) { return false; }
 };
 
-// [수정됨] 강제 초기화 기능: API 실패해도 로컬 상태 비움
+// [수정됨] 장바구니 비우기
 export const clearCart = async (): Promise<void> => {
   try {
-    if (globalCartItems.length > 0) {
-      const ids = globalCartItems.map(item => item.cart_id);
+    const serverCart = await getMyCart();
+    if (serverCart && serverCart.length > 0) {
+      const ids = serverCart.map(item => item.cart_id);
       await Promise.allSettled(ids.map(id => removeCartItemApi(id)));
     }
   } catch (error) {
-    console.error('장바구니 서버 삭제 중 오류 (무시함):', error);
+    console.error('장바구니 비우기 API 실패:', error);
   } finally {
     globalCartItems = [];
     notifyCartChange();
   }
 };
 
-export const getCartItems = (): CartItem[] => [...globalCartItems];
-export const getCartItemCount = (): number => globalCartItems.reduce((total, item) => total + item.quantity, 0);
-export const subscribeToCart = (listener: () => void): (() => void) => {
-  cartListeners.push(listener);
-  return () => {
-    const index = cartListeners.indexOf(listener);
-    if (index > -1) cartListeners.splice(index, 1);
-  };
+export const getCartItems = () => [...globalCartItems];
+export const getCartItemCount = () => globalCartItems.reduce((t, i) => t + i.quantity, 0);
+export const subscribeToCart = (l: () => void) => {
+  cartListeners.push(l);
+  return () => { const i = cartListeners.indexOf(l); if(i>-1) cartListeners.splice(i, 1); };
 };
-export const initCart = () => {
-  if (globalCartItems.length === 0) fetchCartItems();
-};
+export const initCart = () => { if(globalCartItems.length === 0) fetchCartItems(); };
