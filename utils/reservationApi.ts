@@ -67,8 +67,9 @@ export const requestPayment = async (data: {
 };
 
 // 4. 예약 변경 (POST /api/joy-order/change) - FormData
+// 명세서(image_8310e6.png) 참고: id, reservation_date, reservation_time, count
 export const changeReservation = async (data: {
-  id: number;
+  id: number; // joy_order_id가 아니라 그냥 'id'로 전송
   reservation_date: string;
   reservation_time: string;
   count: number;
@@ -105,9 +106,10 @@ export const getUnavailableDates = async (joyId: number, year: number, month: nu
   return response.data.content?.joy_unavailable_reservation_date || [];
 };
 
-// 8. 시간대별 예약 가능 여부 조회 (GET /api/joy-order/calendar/info)
+// 8. 시간대별 예약 가능 여부 조회 (GET /api/joy-order/calendar/time-info)
+// 명세서(image_20d1d9.png) 참고
 export const getTimeSlotInfo = async (joyId: number, date: string) => {
-  const response = await apiClient.get(`/api/joy-order/calendar/info`, {
+  const response = await apiClient.get(`/api/joy-order/calendar/time-info`, {
     params: { joyId, date }
   });
   return response.data.content;

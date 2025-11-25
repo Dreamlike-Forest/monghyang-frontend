@@ -8,7 +8,7 @@ import {
   changeReservation, 
   deleteReservationHistory,
   getUnavailableDates,
-  getTimeSlotInfo
+  getTimeSlotInfo 
 } from '../../utils/reservationApi';
 import CustomerInfoForm from '../ExperienceReservation/CustomerInfoForm/CustomerInfoForm';
 import './ReservationHistory.css';
@@ -46,7 +46,7 @@ const ReservationHistory: React.FC = () => {
   
   // 예약 가능 정보 상태
   const [availableTimes, setAvailableTimes] = useState<string[]>([]);
-  const [unavailableDates, setUnavailableDates] = useState<string[]>([]);
+  const [unavailableDatesList, setUnavailableDatesList] = useState<string[]>([]); 
   
   // 시간대별 잔여 인원수 저장 (Key: "HH:mm", Value: 남은 인원)
   const [timeSlotCounts, setTimeSlotCounts] = useState<Record<string, number>>({});
@@ -57,9 +57,10 @@ const ReservationHistory: React.FC = () => {
 
   const fetchReservations = async () => {
     try {
-      setIsLoading(true);
+      if (reservations.length === 0) setIsLoading(true);
+      
       const data = await getMyReservations(0); 
-      console.log('📋 예약 내역 데이터:', data);
+      console.log('📋 예약 내역 데이터 로드:', data);
       setReservations(data); 
     } catch (error) {
       console.error('예약 내역 로드 실패:', error);
@@ -118,7 +119,7 @@ const ReservationHistory: React.FC = () => {
       
       // 예약 불가능 날짜 로드
       const dates = await getUnavailableDates(joyId, year, month);
-      setUnavailableDates(dates);
+      setUnavailableDatesList(dates);
       
       // 해당 날짜의 시간대 로드
       await loadTimeSlots(joyId, dateStr);
@@ -133,8 +134,6 @@ const ReservationHistory: React.FC = () => {
     setNewDate(date);
     setNewTime(''); 
     setTimeSlotCounts({}); 
-    
-    // 날짜가 변경되면 인원수도 1로 초기화 (안전하게)
     setNewCount(1);
     
     if (targetReservation) {
@@ -147,11 +146,11 @@ const ReservationHistory: React.FC = () => {
     try {
       const data = await getTimeSlotInfo(joyId, date);
       
-      // 시간대 목록 (HH:mm)
+      // 1. 시간대 목록 (HH:mm 포맷팅)
       const times = (data.time_info || []).map((t: string) => t.substring(0, 5));
       setAvailableTimes(times);
 
-      // 잔여석 정보 파싱
+      // 2. 잔여석 정보 파싱
       const counts: Record<string, number> = {};
       if (data.remaining_count_list) {
         data.remaining_count_list.forEach((slot: any) => {
@@ -168,20 +167,28 @@ const ReservationHistory: React.FC = () => {
     }
   };
 
+  // 시간 변경 핸들러
+  const handleTimeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const time = e.target.value;
+    setNewTime(time);
+    setNewCount(1);
+  };
+
+  // 인원수 변경 핸들러
   const handleCustomerInfoChange = (field: string, value: string | number) => {
     if (field === 'headCount') {
       setNewCount(Number(value));
     }
   };
 
+  // [수정됨] 예약 변경 제출 핸들러
   const handleSubmitChange = async () => {
     if (!targetReservation || !newDate || !newTime || newCount < 1) {
       alert('변경할 날짜, 시간, 인원을 모두 정확히 선택해주세요.');
       return;
     }
 
-    // 예약 불가능 날짜 체크
-    if (unavailableDates.includes(newDate)) {
+    if (unavailableDatesList.includes(newDate)) {
       alert('선택하신 날짜는 예약이 불가능합니다.');
       return;
     }
@@ -195,9 +202,35 @@ const ReservationHistory: React.FC = () => {
 
     try {
       await changeReservation(changeData);
-      alert('예약 정보가 변경되었습니다.');
+      
+      alert('예약 정보가 변경되었습니다.\n상태가 "예약 대기"로 변경됩니다.');
       setIsModalOpen(false);
-      fetchReservations();
+
+      // [핵심 수정] 화면의 데이터를 즉시 업데이트하고, 서버 재조회는 하지 않음
+      // (서버 데이터가 갱신되기 전에 덮어씌워지는 문제 방지)
+      setReservations(prevReservations => 
+        prevReservations.map(item => {
+          if (item.joy_order_id === targetReservation.joy_order_id) {
+            // 1인당 가격 추정
+            const unitPrice = item.joy_order_count > 0 
+              ? item.joy_total_price / item.joy_order_count 
+              : 0;
+            
+            return {
+              ...item,
+              // 변경된 정보 반영
+              joy_order_reservation: `${newDate}T${newTime}:00`,
+              joy_order_count: newCount,
+              joy_total_price: unitPrice * newCount,
+              joy_payment_status: 'PENDING' // 상태를 '예약 대기'로 강제 변경
+            };
+          }
+          return item;
+        })
+      );
+
+      // fetchReservations(); // <-- 이 부분을 제거하여 화면 깜빡임 및 롤백 방지
+
     } catch (error: any) {
       console.error('변경 실패:', error);
       const msg = error.response?.data?.message || '실패';
@@ -216,28 +249,21 @@ const ReservationHistory: React.FC = () => {
     }
   };
 
-  // [핵심 로직] 최대 인원수 계산
   const calculateMaxCount = () => {
-    // 1. 시간을 아직 선택하지 않았으면 0명 (변경 불가)
     if (!newTime || !targetReservation) return 0; 
 
     const slotRemaining = timeSlotCounts[newTime]; 
-    
-    // 잔여석 정보가 없으면 기본값 20
-    if (slotRemaining === undefined) return 20;
+    const availableInSlot = slotRemaining !== undefined ? slotRemaining : 20;
 
-    // 2. 기존 예약과 동일한 날짜/시간을 선택한 경우
     const originalDateObj = new Date(targetReservation.joy_order_reservation);
     const originalDate = originalDateObj.toISOString().split('T')[0];
     const originalTime = originalDateObj.toTimeString().slice(0, 5);
 
     if (newDate === originalDate && newTime === originalTime) {
-      // 내 자리는 확보된 상태이므로 "잔여석 + 내 기존 인원"까지 가능
-      return slotRemaining + targetReservation.joy_order_count;
+      return availableInSlot + targetReservation.joy_order_count;
     }
 
-    // 3. 다른 시간대로 변경하는 경우 -> 순수 잔여석만큼만 가능
-    return slotRemaining;
+    return availableInSlot;
   };
 
   const currentMaxCount = calculateMaxCount();
@@ -270,6 +296,7 @@ const ReservationHistory: React.FC = () => {
           {reservations.map((item) => {
             const statusInfo = getStatusInfo(item.joy_payment_status);
             const { fullDate, time, weekDay } = formatDisplayDate(item.joy_order_reservation);
+            
             const canCancel = ['PENDING', 'CONFIRMED', 'PAID'].includes(item.joy_payment_status);
             const canDelete = ['CANCELLED', 'COMPLETED'].includes(item.joy_payment_status);
 
@@ -325,7 +352,7 @@ const ReservationHistory: React.FC = () => {
                 onChange={handleDateChange} 
                 min={new Date().toISOString().split('T')[0]} 
               />
-              {unavailableDates.includes(newDate) && <p style={{color:'red', fontSize:'12px', marginTop:'4px'}}>⚠️ 예약 불가능한 날짜입니다.</p>}
+              {unavailableDatesList.includes(newDate) && <p style={{color:'red', fontSize:'12px', marginTop:'4px'}}>⚠️ 예약 불가능한 날짜입니다.</p>}
             </div>
 
             {/* 시간 선택 */}
@@ -334,26 +361,19 @@ const ReservationHistory: React.FC = () => {
               <select 
                 className="modal-input" 
                 value={newTime} 
-                onChange={(e) => {
-                  setNewTime(e.target.value);
-                  // 시간이 바뀌면 인원수를 1명으로 리셋 (새로운 기준 적용)
-                  setNewCount(1);
-                }}
+                onChange={handleTimeChange}
               >
                 <option value="">시간을 선택해주세요</option>
                 {availableTimes.length > 0 ? (
                   availableTimes.map(time => {
                     const remaining = timeSlotCounts[time];
                     
-                    // 잔여석이 0이라도, '내 기존 예약 시간'이면 선택 가능해야 함
                     const isMyTime = (
                       newDate === new Date(targetReservation.joy_order_reservation).toISOString().split('T')[0] &&
                       time === new Date(targetReservation.joy_order_reservation).toTimeString().slice(0, 5)
                     );
 
-                    // 비활성화 조건: 잔여석 0명 AND 내 예약 시간이 아님
                     const isDisabled = (remaining === 0) && !isMyTime;
-                    
                     const remainingText = remaining !== undefined ? ` (잔여 ${remaining}명)` : '';
                     const myTimeText = isMyTime ? ' (현재 예약중)' : '';
                     
@@ -377,9 +397,10 @@ const ReservationHistory: React.FC = () => {
                   headCount: newCount
                 }}
                 onCustomerInfoChange={handleCustomerInfoChange}
-                maxHeadCount={currentMaxCount} // 계산된 최대치 전달
+                maxHeadCount={currentMaxCount}
                 onlyHeadCount={true}
               />
+              
               {newTime ? (
                 <p style={{fontSize: '12px', color: '#888', marginTop: '8px'}}>
                   * 선택하신 시간의 예약 가능 인원은 최대 {currentMaxCount}명입니다.

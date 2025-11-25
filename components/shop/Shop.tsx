@@ -10,10 +10,14 @@ import { getProductsWithBrewery, mockFilterOptions, getBreweriesWithExperience }
 import { 
   searchProducts, 
   getLatestProducts, 
-  getProductById, // 추가됨
+  getProductById, 
   convertToProductWithDetails,
-  convertDetailToProductWithDetails // 추가됨
+  convertDetailToProductWithDetails 
 } from '../../utils/shopApi';
+import { 
+  getBreweryById, 
+  convertBreweryDetailToType 
+} from '../../utils/brewery';
 import { 
   hasActiveFilters as checkActiveFilters,
   buildSearchParams,
@@ -50,7 +54,6 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
     const view = searchParams.get('view');
     const productId = searchParams.get('product');
     
-    // URL에 productId가 있으면 상세 페이지 열기
     if (productId) {
       handleProductClick(parseInt(productId));
     }
@@ -115,50 +118,61 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
     window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
   };
 
-  // [수정] 상품 클릭 핸들러: 상세 API 호출 추가
   const handleProductClick = async (productId: number) => {
-    // 1. 리스트에 있는 기본 정보로 먼저 상세창 띄우기 (빠른 반응성)
     const basicProduct = filteredProducts.find(p => p.product_id === productId) || 
                          allProducts.find(p => p.product_id === productId);
 
-    // 리스트에도 정보가 없으면 API 호출 전까지는 null (이 경우 로딩 처리가 필요할 수 있음)
     if (basicProduct) {
       setSelectedProduct(basicProduct);
-      // 양조장 정보 찾기 (임시 Mock 매칭)
-      const brewery = allBreweries.find(b => b.brewery_id === basicProduct.brewery_id);
-      setSelectedProductBrewery(brewery || null);
       setIsProductDetailOpen(true);
     }
 
-    // 2. [핵심] 상세 API를 호출하여 이미지 등 추가 정보 가져오기
     try {
       const detailData = await getProductById(productId);
       
       if (detailData) {
-        // API 데이터를 UI 포맷으로 변환 (이미지 배열 포함)
         const fullProduct = convertDetailToProductWithDetails(detailData);
         
-        // 기존 정보와 상세 정보를 병합
         const mergedProduct = {
-          ...basicProduct, // 기존 리스트 정보
-          ...fullProduct,  // 상세 정보 (images, description 등) 덮어쓰기
-          // 평점, 리뷰 수 등은 리스트 정보가 더 정확할 수 있으므로 리스트 정보 우선 (없으면 상세 정보 사용)
+          ...basicProduct,
+          ...fullProduct,
           averageRating: basicProduct?.averageRating || fullProduct.averageRating,
           reviewCount: basicProduct?.reviewCount || fullProduct.reviewCount,
         };
 
-        console.log('상세 데이터 로드 완료:', mergedProduct);
+        console.log('상품 상세 로드 완료. Brewery ID:', mergedProduct.brewery_id);
         setSelectedProduct(mergedProduct);
         
-        // 만약 리스트에 없던 상품이었다면 여기서 상세창을 열어줌
+        // [핵심] owner_id로부터 추출한 brewery_id를 사용하여 양조장 상세 정보 조회
+        const breweryId = mergedProduct.brewery_id;
+        if (breweryId && breweryId > 0) {
+          try {
+            console.log(`양조장 정보 조회 시도 (ID: ${breweryId})`);
+            const breweryDetail = await getBreweryById(breweryId);
+            
+            if (breweryDetail) {
+              const breweryData = convertBreweryDetailToType(breweryDetail);
+              console.log('✅ 연결된 양조장 로드 완료:', breweryData);
+              setSelectedProductBrewery(breweryData);
+            } else {
+              console.warn(`⚠️ 양조장 상세 정보가 존재하지 않습니다 (ID: ${breweryId})`);
+              setSelectedProductBrewery(null);
+            }
+          } catch (breweryError) {
+            console.error('❌ 양조장 정보 로드 실패:', breweryError);
+            setSelectedProductBrewery(null);
+          }
+        } else {
+           console.warn('⚠️ 상품 정보에 양조장 ID(owner_id)가 없습니다.');
+           setSelectedProductBrewery(null);
+        }
+
         if (!basicProduct) {
-           // 양조장 정보는 여기서 추가로 fetch하거나 basicProduct 로직 사용
            setIsProductDetailOpen(true);
         }
       }
     } catch (error) {
       console.error('상세 정보 로드 실패:', error);
-      // 실패해도 기본 정보(basicProduct)는 보여짐
     }
 
     window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
@@ -230,7 +244,7 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
             totalPages={totalPages}
             onPageChange={handlePageChange}
             totalCount={totalElements}
-            onProductClick={handleProductClick} // 수정된 핸들러 전달
+            onProductClick={handleProductClick}
             onAddToCart={handleAddToCart}
             onToggleWishlist={handleToggleWishlist}
           />

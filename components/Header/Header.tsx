@@ -130,21 +130,20 @@ const Header: React.FC = () => {
     };
   }, []);
 
-  // [추가] 안전한 페이지 이동을 위한 헬퍼 함수
-  // 상세 페이지에 있을 때 다른 메뉴로 이동 시 충돌나는 파라미터들을 제거합니다.
+  // 안전한 페이지 이동을 위한 헬퍼 함수
   const handleNavigation = (viewName: string) => {
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href);
       
-      // 1. 상세 페이지 유발 파라미터 제거 (MainApp 로직 충돌 방지)
+      // 상세 페이지 유발 파라미터 제거
       url.searchParams.delete('product');
       url.searchParams.delete('brewery');
       
-      // 2. 검색 관련 파라미터 제거 (선택 사항, 깔끔한 이동을 위해 권장)
+      // 검색 관련 파라미터 제거
       url.searchParams.delete('search');
       url.searchParams.delete('searchType');
 
-      // 3. 목표 뷰 설정
+      // 목표 뷰 설정
       url.searchParams.set('view', viewName);
       
       window.location.href = url.toString();
@@ -170,7 +169,6 @@ const Header: React.FC = () => {
         sessionStorage.setItem('returnToProduct', productId);
       }
       
-      // 로그인 페이지로 이동 시에도 기존 파라미터 정리 후 이동
       handleNavigation('login');
     } catch (error) {
       console.error('로그인 페이지 이동 중 오류:', error);
@@ -293,10 +291,15 @@ const Header: React.FC = () => {
                   <div className="profile-dropdown">
                     <ul role="menu" className="profile-list">
                       <li role="menuitem">
-                        <button className="profile-option">👤 프로필 수정</button>
+                        {/* [수정] 프로필 수정 버튼 클릭 시 profile 뷰로 이동 */}
+                        <button 
+                          className="profile-option"
+                          onClick={() => handleNavigation('profile')}
+                        >
+                          👤 프로필 수정
+                        </button>
                       </li>
                       <li role="menuitem">
-                        {/* [수정] handleNavigation 사용하여 파라미터 충돌 방지 */}
                         <button 
                           className="profile-option"
                           onClick={() => handleNavigation('order-history')}
@@ -305,7 +308,6 @@ const Header: React.FC = () => {
                         </button>
                       </li>
                       <li role="menuitem">
-                        {/* [수정] handleNavigation 사용하여 파라미터 충돌 방지 */}
                         <button 
                           className="profile-option"
                           onClick={() => handleNavigation('reservation-history')}

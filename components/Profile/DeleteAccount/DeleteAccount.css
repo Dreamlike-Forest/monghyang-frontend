@@ -1,0 +1,112 @@
+/* components/Profile/DeleteAccount/DeleteAccount.css */
+
+.delete-account-container {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.profile-heading.error-color {
+  color: #dc2626;
+  border-bottom-color: #fecaca;
+}
+
+.warning-box {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  padding: 24px;
+  border-radius: 12px;
+  margin-bottom: 32px;
+}
+
+.warning-box h3 {
+  color: #991b1b;
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.warning-box ul {
+  padding-left: 20px;
+  margin: 0;
+  color: #b91c1c;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.warning-box li {
+  margin-bottom: 4px;
+}
+
+.confirmation-area {
+  background: #f9fafb;
+  padding: 32px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 32px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #374151;
+  font-size: 15px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.checkbox-label input {
+  width: 20px;
+  height: 20px;
+  accent-color: #dc2626;
+  margin-top: 2px;
+}
+
+.confirm-password-group {
+  margin-bottom: 24px;
+}
+
+.confirm-password-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.password-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 15px;
+  box-sizing: border-box;
+}
+
+.delete-btn {
+  width: 100%;
+  padding: 16px;
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  box-shadow: 0 4px 6px rgba(220, 38, 38, 0.2);
+}
+
+.delete-btn:hover {
+  background: #b91c1c;
+}
+
+.delete-btn:active {
+  transform: translateY(1px);
+}

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { getUnavailableDates } from '../../../utils/reservationApi';
 import './ReservationCalendar.css';
 
 interface ReservationCalendarProps {
@@ -8,9 +9,10 @@ interface ReservationCalendarProps {
   selectedTime: string | null;
   onDateSelect: (date: string) => void;
   onTimeSelect: (time: string | null) => void;
-  // [필수 추가] 부모 컴포넌트에서 전달하는 예약 가능 시간대 목록
   availableTimeSlots?: string[]; 
+  timeSlotCounts?: Record<string, number>; 
   error?: string;
+  joyId?: number; // [필수] 달력 데이터 조회를 위한 체험 ID
 }
 
 const ReservationCalendar: React.FC<ReservationCalendarProps> = ({
@@ -18,17 +20,43 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({
   selectedTime,
   onDateSelect,
   onTimeSelect,
-  availableTimeSlots = [], // 기본값 설정
-  error
+  availableTimeSlots = [], 
+  timeSlotCounts = {}, 
+  error,
+  joyId
 }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [calendarDays, setCalendarDays] = useState<Date[]>([]);
+  const [unavailableDates, setUnavailableDates] = useState<string[]>([]);
 
   const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
 
+  // 달력 생성
   useEffect(() => {
     generateCalendar();
   }, [currentDate]);
+
+  // 월이 변경되거나 체험 ID가 변경되면 예약 불가능 날짜 조회
+  useEffect(() => {
+    const fetchUnavailableDates = async () => {
+      if (!joyId) return;
+      
+      try {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth() + 1;
+        
+        // API 호출
+        const dates = await getUnavailableDates(joyId, year, month);
+        console.log(`📅 ${month}월 예약 불가 날짜:`, dates);
+        setUnavailableDates(dates);
+      } catch (e) {
+        console.error('예약 불가 날짜 조회 실패:', e);
+        setUnavailableDates([]);
+      }
+    };
+
+    fetchUnavailableDates();
+  }, [currentDate, joyId]);
 
   const generateCalendar = () => {
     const year = currentDate.getFullYear();
@@ -75,14 +103,14 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({
     return selectedDate === formatDateString(date);
   };
 
-  const isCurrentMonthView = (): boolean => {
-    const today = new Date();
-    return currentDate.getMonth() === today.getMonth() && 
-           currentDate.getFullYear() === today.getFullYear();
+  // 예약 불가능 날짜 확인
+  const isUnavailable = (date: Date): boolean => {
+    const dateStr = formatDateString(date);
+    return unavailableDates.includes(dateStr);
   };
 
   const handleDateClick = (date: Date) => {
-    if (isPastDate(date)) return;
+    if (isPastDate(date) || isUnavailable(date)) return;
     onDateSelect(formatDateString(date));
   };
 
@@ -93,9 +121,18 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({
   return (
     <div className="reservation-calendar">
       <div className="reservation-calendar-header">
-        <button className="reservation-calendar-nav-btn prev" onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))} type="button" disabled={isCurrentMonthView()}>◀</button>
+        <button 
+          className="reservation-calendar-nav-btn prev" 
+          onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))} 
+          type="button"
+          disabled={currentDate.getMonth() === new Date().getMonth() && currentDate.getFullYear() === new Date().getFullYear()}
+        >◀</button>
         <h3 className="reservation-calendar-title">{currentDate.getFullYear()}. {currentDate.getMonth() + 1}.</h3>
-        <button className="reservation-calendar-nav-btn next" onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))} type="button">▶</button>
+        <button 
+          className="reservation-calendar-nav-btn next" 
+          onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))} 
+          type="button"
+        >▶</button>
       </div>
 
       <div className="reservation-calendar-weekdays">
@@ -107,9 +144,15 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({
           <button
             key={index}
             type="button"
-            className={`reservation-calendar-day ${!isCurrentMonth(date) ? 'other-month' : ''} ${isPastDate(date) ? 'past-date' : ''} ${isToday(date) ? 'today' : ''} ${isSelected(date) ? 'selected' : ''}`}
+            className={`reservation-calendar-day 
+              ${!isCurrentMonth(date) ? 'other-month' : ''} 
+              ${isPastDate(date) ? 'past-date' : ''} 
+              ${isToday(date) ? 'today' : ''} 
+              ${isSelected(date) ? 'selected' : ''}
+              ${isUnavailable(date) ? 'disabled' : ''}
+            `}
             onClick={() => handleDateClick(date)}
-            disabled={isPastDate(date)}
+            disabled={isPastDate(date) || isUnavailable(date)}
           >
             {date.getDate()}
           </button>
@@ -123,12 +166,29 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({
           </h4>
           {availableTimeSlots.length > 0 ? (
             <div className="reservation-time-buttons">
-              {availableTimeSlots.map((time) => (
-                <button key={time} type="button" className={`reservation-time-option ${selectedTime === time ? 'selected' : ''}`} onClick={() => handleTimeClick(time)}>{time}</button>
-              ))}
+              {availableTimeSlots.map((time) => {
+                // 잔여석 정보가 있으면 가져오고, 없으면 예약자가 없는 것이므로 여유있음 (20)
+                const remaining = timeSlotCounts[time];
+                const isSoldOut = remaining === 0; // 0일 때만 마감
+                
+                return (
+                  <button 
+                    key={time} 
+                    type="button" 
+                    className={`reservation-time-option ${selectedTime === time ? 'selected' : ''} ${isSoldOut ? 'sold-out' : ''}`} 
+                    onClick={() => !isSoldOut && handleTimeClick(time)}
+                    disabled={isSoldOut}
+                  >
+                    {time}
+                    {isSoldOut ? ' (마감)' : (remaining !== undefined ? ` (${remaining}석)` : '')}
+                  </button>
+                );
+              })}
             </div>
           ) : (
-            <div style={{textAlign: 'center', padding: '20px', color: '#888', fontSize: '14px'}}>해당 날짜에는 예약 가능한 시간대가 없습니다.</div>
+            <div style={{textAlign: 'center', padding: '20px', color: '#888', fontSize: '14px'}}>
+              해당 날짜에는 예약 가능한 시간대가 없습니다.
+            </div>
           )}
         </div>
       )}

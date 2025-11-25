@@ -3,7 +3,7 @@ import {
   ApiResponse,
   PageResponse,
   ProductListItem,
-  ProductDetail,
+  ProductDetail as ProductDetailType, // 이름 충돌 방지
   ProductSearchParams,
 } from '../types/product';
 
@@ -20,22 +20,12 @@ const getImageUrl = (imageKey: string | null | undefined): string => {
 const createEmptyPageResponse = <T>(): PageResponse<T> => ({
   content: [],
   pageable: {
-    pageNumber: 0,
-    pageSize: 10,
-    sort: { empty: true, sorted: false, unsorted: true },
-    offset: 0,
-    paged: true,
-    unpaged: false,
+    pageNumber: 0, pageSize: 10, sort: { empty: true, sorted: false, unsorted: true },
+    offset: 0, paged: true, unpaged: false,
   },
-  totalPages: 0,
-  totalElements: 0,
-  last: true,
-  size: 10,
-  number: 0,
+  totalPages: 0, totalElements: 0, last: true, size: 10, number: 0,
   sort: { empty: true, sorted: false, unsorted: true },
-  numberOfElements: 0,
-  first: true,
-  empty: true,
+  numberOfElements: 0, first: true, empty: true,
 });
 
 const normalizePageResponse = <T>(response: any): PageResponse<T> => {
@@ -49,18 +39,57 @@ const normalizePageResponse = <T>(response: any): PageResponse<T> => {
       paged: true,
       unpaged: false,
     },
-    totalPages: response.totalPages || response.total_pages || response.total_page || 0,
-    totalElements: response.totalElements || response.total_elements || response.total || 0,
+    totalPages: response.totalPages || response.total_pages || 0,
+    totalElements: response.totalElements || response.total_elements || 0,
     last: response.last ?? true,
-    size: response.size || response.page_size || 10,
-    number: response.number || response.page_number || 0,
+    size: response.size || 10,
+    number: response.number || 0,
     sort: response.sort || { empty: true, sorted: false, unsorted: true },
-    numberOfElements: response.numberOfElements || response.number_of_elements || response.content?.length || 0,
+    numberOfElements: response.numberOfElements || 0,
     first: response.first ?? true,
     empty: response.empty ?? (response.content?.length === 0),
   };
 };
 
+// =================================================================
+// [수정됨] API 응답 타입 정의 (스크린샷 기반)
+// =================================================================
+export interface ProductImageDto {
+  product_image_image_key: string;
+  product_image_seq: number;
+}
+
+export interface ProductOwnerDto {
+  owner_id: number;
+  owner_role: 'ROLE_BREWERY' | 'ROLE_SELLER';
+  owner_region?: string;
+  image_key?: string;
+  tags_name?: string[];
+}
+
+// 상세 조회 응답 DTO
+export interface ProductDetailDto {
+  product_id: number;
+  product_name: string;
+  product_alcohol: number;
+  product_sales_volume: number;
+  product_volume: number;
+  product_description: string;
+  product_registered_at: string;
+  product_final_price: number;
+  product_discount_rate: number;
+  product_origin_price: number;
+  product_is_online_sell: boolean;
+  product_is_soldout: boolean;
+  user_nickname: string;
+  product_image_image_key: ProductImageDto[];
+  tags_name: string[];
+  owner: ProductOwnerDto;
+}
+
+// =================================================================
+// API 호출 함수들
+// =================================================================
 
 // 상품 필터링 검색
 export const searchProducts = async (
@@ -68,6 +97,7 @@ export const searchProducts = async (
 ): Promise<PageResponse<ProductListItem>> => {
   try {
     const { startOffset, ...queryParams } = params;
+    // 파라미터 전처리
     const filteredParams = Object.entries(queryParams).reduce((acc, [key, value]) => {
       if (value !== undefined && value !== null) {
         if (Array.isArray(value)) {
@@ -91,7 +121,6 @@ export const searchProducts = async (
     return normalizePageResponse<ProductListItem>(response.data.content);
   } catch (error: any) {
     console.error('상품 검색 실패:', error);
-    handleApiError(error, '상품 검색');
     return createEmptyPageResponse<ProductListItem>();
   }
 };
@@ -112,7 +141,6 @@ export const getLatestProducts = async (
     return normalizePageResponse<ProductListItem>(response.data.content);
   } catch (error: any) {
     console.error('최신 상품 조회 실패:', error);
-    handleApiError(error, '최신 상품 조회');
     return createEmptyPageResponse<ProductListItem>();
   }
 };
@@ -134,61 +162,40 @@ export const getProductsByUserId = async (
     return normalizePageResponse<ProductListItem>(response.data.content);
   } catch (error: any) {
     console.error('사용자별 상품 조회 실패:', error);
-    handleApiError(error, '사용자별 상품 조회');
     return createEmptyPageResponse<ProductListItem>();
   }
 };
 
-// 특정 상품 상세 조회
+// [수정됨] 특정 상품 상세 조회
 export const getProductById = async (
   productId: number
-): Promise<ProductDetail | null> => {
+): Promise<ProductDetailDto | null> => {
   try {
-    console.log('🔍 상품 상세 조회:', `/api/product/${productId}`);
-
-    const response = await apiClient.get<ApiResponse<ProductDetail>>(
+    console.log('🔍 상품 상세 조회 요청:', `/api/product/${productId}`);
+    const response = await apiClient.get<ApiResponse<ProductDetailDto>>(
       `/api/product/${productId}`
     );
-
-    console.log('✅ 상품 상세 조회 성공 (Raw Data):', response.data.content);
+    
+    // API 응답 로그 확인
+    // console.log('✅ 상품 상세 조회 성공 (Raw):', response.data.content);
     
     return response.data.content;
   } catch (error: any) {
     console.error('상품 상세 조회 실패:', error);
-    handleApiError(error, '상품 상세 조회');
     return null;
   }
 };
 
-// API 에러 처리 헬퍼 함수
-const handleApiError = (error: any, context: string) => {
-  if (error.response) {
-    const status = error.response.status;
-    console.error(`${context} 에러 (${status})`);
-  } else {
-    console.error(`${context} - 요청 설정 에러:`, error.message);
-  }
-};
+// =================================================================
+// 변환 함수들 (Converter)
+// =================================================================
 
-// 상품 목록 정렬
-export const sortProducts = (
-  products: ProductListItem[],
-  sortBy: string
-): ProductListItem[] => {
-  const sorted = [...products];
-  switch (sortBy) {
-    case 'popular': sorted.sort((a, b) => b.product_sales_volume - a.product_sales_volume); break;
-    case 'price_low': sorted.sort((a, b) => Number(a.product_final_price) - Number(b.product_final_price)); break;
-    case 'price_high': sorted.sort((a, b) => Number(b.product_final_price) - Number(a.product_final_price)); break;
-    case 'rating': sorted.sort((a, b) => b.product_review_star - a.product_review_star); break;
-    case 'review': sorted.sort((a, b) => b.product_review_count - a.product_review_count); break;
-    default: break; 
-  }
-  return sorted;
-};
-
-// ProductListItem을 ProductWithDetails로 변환
+// 리스트 아이템 변환
 export const convertToProductWithDetails = (item: ProductListItem): any => {
+  // 리스트에서는 owner_id 정보가 불확실할 수 있으므로 기본 처리
+  const breweryId = (item as any).owner_id || (item as any).brewery_id || 0;
+  const userId = (item as any).user_id || 0;
+
   return {
     product_id: item.product_id,
     name: item.product_name,
@@ -211,8 +218,8 @@ export const convertToProductWithDetails = (item: ProductListItem): any => {
     registered_at: new Date().toISOString(),
     is_sell: true,
     is_delete: false,
-    user_id: 0,
-    brewery_id: 0,
+    user_id: userId,
+    brewery_id: breweryId, 
     options: [{
         product_option_id: 1, 
         product_id: item.product_id, 
@@ -227,45 +234,45 @@ export const convertToProductWithDetails = (item: ProductListItem): any => {
   };
 };
 
-// [수정됨] 상세 API 응답(ProductDetail)을 UI 객체(ProductWithDetails)로 변환하는 함수
-export const convertDetailToProductWithDetails = (detail: ProductDetail): any => {
+// [핵심 수정] 상세 정보 변환 (스크린샷 명세 반영)
+export const convertDetailToProductWithDetails = (detail: ProductDetailDto): any => {
   
-  // 이미지 배열 처리 (안전장치 추가)
-  // images 매개변수의 타입을 any[]로 지정하여 내부에서 유연하게 처리
-  const processImages = (images: any[]) => {
+  // 1. 이미지 배열 처리
+  const processImages = (images: ProductImageDto[]) => {
     if (!images || !Array.isArray(images)) return [];
-    
-    return images.map((img: any, index: number) => {
-      // 백엔드에서 넘어올 수 있는 모든 가능한 이미지 키 속성명 검사
-      const rawKey = img.product_image_image_key || img.image_key || img.key;
-      const seq = img.product_image_seq || img.image_seq || img.seq || (index + 1);
-      
-      return {
-        product_image_id: index,
-        product_id: detail.product_id,
-        key: rawKey,  
-        image_key: getImageUrl(rawKey), // URL 변환
-        seq: seq
-      };
-    });
+    return images.map((img, index) => ({
+      product_image_id: index,
+      product_id: detail.product_id,
+      key: img.product_image_image_key,
+      image_key: getImageUrl(img.product_image_image_key),
+      seq: img.product_image_seq
+    }));
   };
 
-  // any로 캐스팅하여 타입 에러 회피 (API 응답이 타입 정의와 다를 수 있음)
-  const rawImages = (detail as any).product_image_image_key || (detail as any).images;
-  const processedImages = processImages(rawImages);
+  const processedImages = processImages(detail.product_image_image_key);
   
-  // 대표 이미지 (첫 번째 이미지의 키 사용)
-  const firstImage = rawImages?.[0];
-  
-  // [수정] TypeScript 에러 해결: (firstImage as any)를 사용하여 속성 접근 허용
-  const firstImageKey = firstImage 
-    ? ((firstImage as any).product_image_image_key || (firstImage as any).image_key || (firstImage as any).key) 
-    : null;
+  // 첫 번째 이미지를 대표 이미지로 사용
+  const firstImageKey = detail.product_image_image_key?.[0]?.product_image_image_key || null;
+
+  // 2. Owner 정보 처리 (Role 구분)
+  let breweryId = 0;
+  let breweryName = detail.user_nickname; // 기본값: 판매자 닉네임
+
+  if (detail.owner) {
+    // 양조장(ROLE_BREWERY)인 경우에만 brewery_id 설정
+    if (detail.owner.owner_role === 'ROLE_BREWERY') {
+      breweryId = detail.owner.owner_id;
+      // 양조장 이름이 별도로 있다면 좋겠지만, 현재는 user_nickname 사용
+    } else if (detail.owner.owner_role === 'ROLE_SELLER') {
+      // 판매자인 경우 brewery_id는 0으로 둠 (양조장 상세페이지 연결 방지)
+      breweryId = 0; 
+    }
+  }
 
   return {
     product_id: detail.product_id,
     name: detail.product_name,
-    brewery: detail.owner?.brewery_name || detail.user_nickname || detail.owner?.user_nickname || '', 
+    brewery: breweryName, 
     alcohol: detail.product_alcohol,
     volume: detail.product_volume,
     minPrice: Number(detail.product_final_price),
@@ -273,13 +280,13 @@ export const convertDetailToProductWithDetails = (detail: ProductDetail): any =>
     originalPrice: Number(detail.product_origin_price),
     discountRate: Number(detail.product_discount_rate),
     
+    // 리뷰 정보는 상세 API에 없으므로 0으로 초기화 (별도 조회 필요 시 추가 구현)
     averageRating: 0, 
     reviewCount: 0,   
     
-    image_key: getImageUrl(firstImageKey),
+    image_key: getImageUrl(firstImageKey), // 대표 이미지 URL
+    images: processedImages, // 전체 이미지 배열
     
-    images: processedImages,
-
     tags: (detail.tags_name || []).map((tag, index) => ({
       product_tag_id: index,
       product_tag_type_id: index,
@@ -288,21 +295,21 @@ export const convertDetailToProductWithDetails = (detail: ProductDetail): any =>
     })),
     
     registered_at: detail.product_registered_at,
-    is_sell: true,
+    is_sell: !detail.product_is_soldout && detail.product_is_online_sell,
     is_delete: false,
-    user_id: detail.owner?.user_id || 0,
-    brewery_id: detail.owner?.brewery_id || 0,
+    user_id: detail.owner?.owner_id || 0, // 판매자/양조장 ID
+    brewery_id: breweryId, // ROLE_BREWERY일 때만 유효한 ID
     
     options: [
       {
-        product_option_id: 1,
+        product_option_id: 1, // 단일 옵션 가정
         product_id: detail.product_id,
         volume: detail.product_volume,
         price: Number(detail.product_final_price)
       }
     ],
     reviews: [],
-    isBest: false,
+    isBest: false, // 별도 필드 없으므로 기본값
     isNew: false,
     info: {
       product_info_id: 0,
