@@ -10,8 +10,17 @@ import {
   getUnavailableDates,
   getTimeSlotInfo 
 } from '../../utils/reservationApi';
+import { 
+  getBreweryById, 
+  searchBreweries, 
+  convertBreweryDetailToType 
+} from '../../utils/brewery';
 import CustomerInfoForm from '../ExperienceReservation/CustomerInfoForm/CustomerInfoForm';
 import './ReservationHistory.css';
+
+interface ExtendedJoyOrder extends JoyOrder {
+  brewery_id?: number;
+}
 
 const formatDisplayDate = (dateString: string) => {
   if (!dateString) return { fullDate: '-', time: '-', weekDay: '' };
@@ -31,19 +40,24 @@ const formatDisplayDate = (dateString: string) => {
 };
 
 const ReservationHistory: React.FC = () => {
-  const [reservations, setReservations] = useState<JoyOrder[]>([]);
+  const [reservations, setReservations] = useState<ExtendedJoyOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [targetReservation, setTargetReservation] = useState<JoyOrder | null>(null);
+  const [targetReservation, setTargetReservation] = useState<ExtendedJoyOrder | null>(null);
   
   const [newDate, setNewDate] = useState('');
   const [newTime, setNewTime] = useState('');
   const [newCount, setNewCount] = useState(1);
   
+  // API 데이터 상태
   const [unavailableDatesList, setUnavailableDatesList] = useState<string[]>([]);
   const [availableTimes, setAvailableTimes] = useState<string[]>([]);
   const [timeSlotCounts, setTimeSlotCounts] = useState<Record<string, number>>({});
+  
+  // [핵심] 현재 변경 중인 체험의 최대 정원 (API joy_max_count 값)
+  // 초기값은 0으로 설정하여 데이터 로드 전에는 예약을 막음
+  const [currentJoyMaxCapacity, setCurrentJoyMaxCapacity] = useState<number>(0);
 
   useEffect(() => {
     fetchReservations();
@@ -52,8 +66,8 @@ const ReservationHistory: React.FC = () => {
   const fetchReservations = async () => {
     try {
       if (reservations.length === 0) setIsLoading(true);
-      const data = await getMyReservations(0); 
-      setReservations(data); 
+      const data = await getMyReservations(0);
+      setReservations(data as ExtendedJoyOrder[]); 
     } catch (error) {
       console.error('예약 내역 로드 실패:', error);
     } finally {
@@ -83,7 +97,58 @@ const ReservationHistory: React.FC = () => {
     }
   };
 
-  const openChangeModal = async (reservation: JoyOrder) => {
+  // [핵심 함수] 체험 예약 페이지와 동일한 방식으로 최대 인원을 가져오는 로직
+  const fetchJoyMaxCapacity = async (reservation: ExtendedJoyOrder) => {
+    let breweryId = reservation.brewery_id;
+
+    // 1. brewery_id가 없으면 체험 이름(혹은 양조장 이름)으로 양조장을 검색해서 ID를 찾음
+    // 예약 내역에 brewery_name이 있다면 그것을 사용, 없다면 joy_name으로 시도
+    const searchKeyword = reservation.brewery_name || reservation.joy_name;
+
+    if (!breweryId && searchKeyword) {
+      try {
+        const searchResult = await searchBreweries({
+          keyword: searchKeyword, 
+          startOffset: 0,
+          size: 5 
+        });
+        
+        // 검색 결과 중 첫 번째 양조장 선택 (가장 유사한 결과)
+        if (searchResult.content.length > 0) {
+          breweryId = searchResult.content[0].brewery_id;
+        }
+      } catch (e) {
+        console.error('양조장 검색 실패:', e);
+      }
+    }
+
+    // 2. ID를 구했으면 상세 정보 조회하여 joy_max_count 추출
+    // (이 부분이 체험 예약 페이지에서 brewery.joy를 쓰는 것과 동일한 효과)
+    if (breweryId) {
+      try {
+        const breweryDetail = await getBreweryById(breweryId);
+        if (breweryDetail) {
+          const convertedBrewery = convertBreweryDetailToType(breweryDetail);
+          // 해당 양조장의 체험 목록 중 내가 예약한 체험(joy_id) 찾기
+          const targetJoy = convertedBrewery.joy?.find((j: any) => j.joy_id === reservation.joy_id);
+          
+          if (targetJoy && targetJoy.joy_max_count) {
+            // API에서 받아온 joy_max_count 적용
+            setCurrentJoyMaxCapacity(targetJoy.joy_max_count);
+            return;
+          }
+        }
+      } catch (e) {
+        console.error('양조장 상세 조회 실패:', e);
+      }
+    }
+
+    // 3. 실패 시: 0으로 설정 (예약 불가 상태로 둠 -> 데이터 확인 필요)
+    console.warn('체험 최대 인원 정보를 가져오지 못했습니다.');
+    setCurrentJoyMaxCapacity(0);
+  };
+
+  const openChangeModal = async (reservation: ExtendedJoyOrder) => {
     setTargetReservation(reservation);
     
     const dateObj = new Date(reservation.joy_order_reservation);
@@ -93,8 +158,15 @@ const ReservationHistory: React.FC = () => {
     setNewDate(dateStr);
     setNewTime(timeStr);
     setNewCount(reservation.joy_order_count);
+    
+    // 초기화
+    setCurrentJoyMaxCapacity(0); 
     setIsModalOpen(true);
 
+    // 1. 최대 정원 정보 비동기 로드 (양조장 정보 조회 -> 체험 정보 찾기)
+    fetchJoyMaxCapacity(reservation);
+
+    // 2. 일정 및 잔여석 정보 로드
     try {
       const year = dateObj.getFullYear();
       const month = dateObj.getMonth() + 1;
@@ -112,14 +184,23 @@ const ReservationHistory: React.FC = () => {
     try {
       const data = await getTimeSlotInfo(joyId, date);
       
-      const times = (data.time_info || []).map((t: string) => t.substring(0, 5));
-      setAvailableTimes(times);
+      const rawTimes = data.time_info || [];
+      // 시간 포맷 파싱 (HH:mm:ss -> HH:mm)
+      const formattedTimes = rawTimes.map((t: string) => {
+        return t.length >= 5 ? t.substring(0, 5) : t;
+      });
+      setAvailableTimes(formattedTimes.sort()); 
 
       const counts: Record<string, number> = {};
-      if (data.remaining_count_list) {
+      if (data.remaining_count_list && Array.isArray(data.remaining_count_list)) {
         data.remaining_count_list.forEach((slot: any) => {
-          const timeKey = slot.joy_slot_reservation_time.substring(0, 5);
-          counts[timeKey] = slot.joy_slot_remaining_count;
+          const rawTime = slot.joy_slot_reservation_time || "";
+          // 시간 문자열 앞 5자리만 추출하여 키로 사용
+          const timeKey = rawTime.length >= 5 ? rawTime.substring(0, 5) : rawTime;
+          const count = slot.joy_slot_remaining_count;
+          if (timeKey) {
+            counts[timeKey] = count;
+          }
         });
       }
       setTimeSlotCounts(counts);
@@ -140,23 +221,25 @@ const ReservationHistory: React.FC = () => {
     }
   };
 
-  // [핵심 수정] 최대 인원 계산 (임의의 20명 제한 제거)
+  // [핵심 로직] 최대 인원 계산
   const calculateMaxCount = () => {
     if (!newTime || !targetReservation) return 1;
 
-    const remainingFromApi = timeSlotCounts[newTime];
-    // API 정보가 없으면 제한을 100으로 풀어줌 (임의의 20 제거)
-    const remaining = remainingFromApi !== undefined ? remainingFromApi : 100;
+    const remaining = timeSlotCounts[newTime];
     
-    // 내가 원래 예약했던 시간과 동일한 경우 (내 자리는 확보됨)
+    // 1. 잔여석 정보가 있으면 그 값 사용
+    // 2. 없으면(undefined, 예약자 0명), API에서 조회한 joy_max_count 사용
+    const maxCapacity = remaining !== undefined ? remaining : currentJoyMaxCapacity;
+    
+    // 3. 내 기존 예약 시간과 동일한 경우 (내 자리는 이미 확보됨) -> 추가 허용
     const originalDate = new Date(targetReservation.joy_order_reservation).toISOString().split('T')[0];
     const originalTime = new Date(targetReservation.joy_order_reservation).toTimeString().slice(0, 5);
 
     if (newDate === originalDate && newTime === originalTime) {
-      return remaining + targetReservation.joy_order_count;
+      return maxCapacity + targetReservation.joy_order_count;
     }
 
-    return remaining;
+    return maxCapacity;
   };
 
   const currentMaxCount = calculateMaxCount();
@@ -171,9 +254,9 @@ const ReservationHistory: React.FC = () => {
       return;
     }
     
-    // 0명이면 예약 불가
+    // 0명이면(마감 or 정보 로드 실패) 예약 불가
     if (currentMaxCount === 0) {
-        alert('선택하신 시간대는 예약이 불가능합니다.');
+        alert('선택하신 시간대는 예약이 불가능하거나 정보를 불러오는 중입니다.');
         return;
     }
     if (newCount > currentMaxCount) {
@@ -285,7 +368,7 @@ const ReservationHistory: React.FC = () => {
                 type="date" 
                 className="modal-input"
                 value={newDate}
-                min={new Date().toISOString().split('T')[0]} // 오늘 이전 날짜 선택 불가
+                min={new Date().toISOString().split('T')[0]}
                 onChange={handleDateChange}
               />
               {unavailableDatesList.includes(newDate) && <p className="error-text">예약 불가능한 날짜입니다.</p>}
@@ -300,20 +383,20 @@ const ReservationHistory: React.FC = () => {
               >
                 <option value="">시간 선택</option>
                 {availableTimes.map(time => {
-                  const remainingFromApi = timeSlotCounts[time];
-                  // 정보가 없으면 100명 (제한 없음)
-                  const remaining = remainingFromApi !== undefined ? remainingFromApi : 20;
+                  const remaining = timeSlotCounts[time];
+                  // 잔여석 없으면(undefined) joy_max_count 사용
+                  const maxCapacity = remaining !== undefined ? remaining : currentJoyMaxCapacity;
                   
                   const isOriginalSlot = (
                      newDate === new Date(targetReservation.joy_order_reservation).toISOString().split('T')[0] &&
                      time === new Date(targetReservation.joy_order_reservation).toTimeString().slice(0, 5)
                   );
-                  const isSoldOut = !isOriginalSlot && remaining <= 0;
+                  const isSoldOut = !isOriginalSlot && maxCapacity <= 0;
 
                   return (
                     <option key={time} value={time} disabled={isSoldOut}>
                       {time} 
-                      {isSoldOut ? ' (마감)' : (remainingFromApi !== undefined ? ` (${remaining}석)` : '')} 
+                      {isSoldOut ? ' (마감)' : (remaining !== undefined ? ` (${remaining}석)` : '')} 
                       {isOriginalSlot ? '- 현재 예약' : ''}
                     </option>
                   );
@@ -334,7 +417,7 @@ const ReservationHistory: React.FC = () => {
                 onlyHeadCount={true}
               />
               <p className="info-text" style={{fontSize:'12px', color:'#666', marginTop:'4px'}}>
-                {currentMaxCount === 0 ? '예약 불가' : `최대 ${currentMaxCount}명 가능`}
+                {currentMaxCount === 0 ? '예약 불가 (정보 확인 중...)' : `최대 ${currentMaxCount}명 가능`}
               </p>
             </div>
 

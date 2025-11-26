@@ -21,13 +21,13 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
   customerInfo,
   onCustomerInfoChange,
   error,
-  maxHeadCount = 20, // 기본값 (초기 로드 시)
+  maxHeadCount = 20, // 기본값
   onlyHeadCount = false
 }) => {
-  // [핵심] 최대 인원이 줄어들면(예: 시간 변경 시), 현재 입력된 값을 최대값으로 자동 조정
+  // [핵심 기능] 시간대 변경 등으로 최대 인원이 줄어들면, 현재 입력값도 자동으로 줄여줌
   useEffect(() => {
     if (customerInfo.headCount > maxHeadCount) {
-      // 0명(마감)일 때는 1로 유지하거나 처리가 필요하지만, 상위에서 막으므로 maxHeadCount가 0보다 클 때만 조정
+      // 0명(마감)인 경우 1로 두거나 0으로 둬야 하나, 상위에서 예약을 막으므로 여기선 maxHeadCount로 맞춤
       onCustomerInfoChange('headCount', maxHeadCount > 0 ? maxHeadCount : 1);
     }
   }, [maxHeadCount, customerInfo.headCount, onCustomerInfoChange]);

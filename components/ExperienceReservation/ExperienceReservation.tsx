@@ -22,9 +22,9 @@ interface CustomerInfo {
   headCount: number;
 }
 
-// Joy 인터페이스 확장 (최대 정원 필드가 있다고 가정)
+// Joy 인터페이스 확장 (API에 joy_max_count가 있다고 가정)
 interface ExtendedJoy extends Joy {
-  joy_max_people?: number;
+  joy_max_count?: number;
 }
 
 const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
@@ -47,30 +47,13 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showReservationModal, setShowReservationModal] = useState(true);
 
-  // 모달 스크롤 방지
   useEffect(() => {
     if (showSuccessModal || showReservationModal) {
-      const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
       document.body.classList.add('reservation-modal-open');
     } else {
-      const body = document.body;
-      const scrollY = body.style.top;
-      body.style.position = '';
-      body.style.top = '';
-      body.style.width = '';
-      body.classList.remove('reservation-modal-open');
-      if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY || '0') * -1);
-      }
-    }
-    return () => {
-      document.body.style.position = '';
-      document.body.style.top = '';
       document.body.classList.remove('reservation-modal-open');
-    };
+    }
+    return () => document.body.classList.remove('reservation-modal-open');
   }, [showSuccessModal, showReservationModal]);
 
   const selectedExperience = (brewery.joy?.find(exp => exp.joy_id === selectedExperienceId) as ExtendedJoy) || null;
@@ -79,6 +62,7 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
   const handleDateSelect = async (date: string) => {
     setSelectedDate(date);
     setSelectedTime(null);
+    setAvailableTimeSlots([]);
     setTimeSlotCounts({});
     setCustomerInfo(prev => ({ ...prev, headCount: 1 }));
 
@@ -87,13 +71,17 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
     try {
       const data = await getTimeSlotInfo(selectedExperienceId, date);
       
-      const times = (data.time_info || []).map((t: string) => t.substring(0, 5));
-      setAvailableTimeSlots(times.sort()); 
+      const rawTimes = data.time_info || [];
+      const formattedTimes = rawTimes.map((t: string) => {
+        return t.length >= 5 ? t.substring(0, 5) : t;
+      });
+      setAvailableTimeSlots(formattedTimes.sort()); 
 
       const counts: Record<string, number> = {};
       if (data.remaining_count_list && Array.isArray(data.remaining_count_list)) {
         data.remaining_count_list.forEach((slot: any) => {
-          const timeKey = slot.joy_slot_reservation_time?.substring(0, 5);
+          const rawTime = slot.joy_slot_reservation_time || "";
+          const timeKey = rawTime.length >= 5 ? rawTime.substring(0, 5) : rawTime;
           const count = slot.joy_slot_remaining_count;
           if (timeKey) {
             counts[timeKey] = count;
@@ -114,7 +102,7 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
     setCustomerInfo(prev => ({ ...prev, headCount: 1 })); 
   };
 
-  // [핵심 수정] 최대 인원 계산 로직
+  // [핵심 수정] 최대 인원 계산 로직 (임의값 제거)
   const getCurrentMaxHeadCount = () => {
     if (!selectedTime) return 1;
     
@@ -125,25 +113,30 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
       return remaining;
     }
     
-    // 2. 잔여석 정보가 없으면(아무도 예약 안 함) -> 체험의 최대 정원 사용
-    if (selectedExperience && selectedExperience.joy_max_people) {
-      return selectedExperience.joy_max_people;
+    // 2. 잔여석 정보가 없으면(아무도 예약 안 함) -> 체험의 최대 정원(joy_max_count) 사용
+    if (selectedExperience && selectedExperience.joy_max_count) {
+      return selectedExperience.joy_max_count;
     }
 
-    // 3. 정보가 아예 없으면 제한을 풀어줌 (임의의 20명 제한 제거 -> 100명)
-    return 100; 
+    // 3. 정원 정보도 없으면 0명 (임의의 값 20, 50 등 제거)
+    // 이렇게 하면 API에서 데이터를 제대로 안 주면 예약이 불가능해지므로 데이터 정합성 확보 가능
+    return 0; 
   };
 
   const currentMaxCount = getCurrentMaxHeadCount();
 
   const handleReservationSubmit = async () => {
-    if (!selectedDate || !selectedTime || !selectedExperienceId || customerInfo.headCount < 1) {
-       alert('모든 정보를 선택해주세요.');
+    if (!selectedDate || !selectedTime || !selectedExperienceId) {
+       alert('필수 정보를 모두 선택해주세요.');
        return;
+    }
+    if (customerInfo.headCount < 1) {
+      alert('인원은 최소 1명 이상이어야 합니다.');
+      return;
     }
 
     if (currentMaxCount === 0) {
-      alert('선택하신 시간대는 예약이 마감되었습니다.');
+      alert('선택하신 시간대는 예약이 마감되었거나 정보를 불러올 수 없습니다.');
       return;
     }
     if (customerInfo.headCount > currentMaxCount) {
@@ -219,7 +212,7 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
               <CustomerInfoForm
                 customerInfo={customerInfo}
                 onCustomerInfoChange={(field, value) => setCustomerInfo(prev => ({ ...prev, [field]: value }))}
-                maxHeadCount={currentMaxCount}
+                maxHeadCount={currentMaxCount} // 0이면 예약 불가
               />
               {selectedTime && (
                 <p className="max-count-info" style={{padding:'0 24px', color:'#666', fontSize:'14px', marginTop:'-10px'}}>

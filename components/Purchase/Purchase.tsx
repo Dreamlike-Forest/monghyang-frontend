@@ -54,10 +54,9 @@ const Purchase: React.FC = () => {
     fetchUserInfo();
   }, []);
 
-  // [수정] 배송비 로직 제거
   const totalProductPrice = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-  const shippingFee = 0; // 배송비 0원으로 고정
-  const finalAmount = totalProductPrice + shippingFee; // 최종 결제금액 = 상품금액
+  const shippingFee = 0; // 배송비 0원 고정
+  const finalAmount = totalProductPrice + shippingFee;
 
   const getUserId = () => {
     if (userInfo && (userInfo.userId || userInfo.users_id || userInfo.id)) {
@@ -75,12 +74,11 @@ const Purchase: React.FC = () => {
     return null;
   };
 
-  // [핵심] 외부 간섭 없는 순수 Fetch 함수
+  // 독립적인 fetch 함수 (FormData 자동 처리)
   const sendFormData = async (endpoint: string, formData: FormData) => {
     const sessionId = localStorage.getItem('sessionId');
     
     console.log(`[API 요청 시작] ${endpoint}`);
-    
     Array.from(formData.entries()).forEach(([key, value]) => {
       console.log(`   👉 Key: ${key}, Value: ${value}`);
     });
@@ -88,7 +86,6 @@ const Purchase: React.FC = () => {
     const response = await window.fetch(`${BASE_URL}${endpoint}`, {
       method: 'POST',
       headers: {
-        // Content-Type 생략 (브라우저가 boundary 자동 생성)
         ...(sessionId && { 'X-Session-Id': sessionId }),
       },
       body: formData,
@@ -132,7 +129,9 @@ const Purchase: React.FC = () => {
       
       let pgOrderId = '';
 
+      // ============================================================
       // 1단계: 주문 준비 (Prepare)
+      // ============================================================
       try {
         const prepareFormData = new FormData();
         
@@ -144,9 +143,14 @@ const Purchase: React.FC = () => {
         prepareFormData.append('payer_name', buyerName.trim());
         prepareFormData.append('payer_phone', sanitizedPhone.trim());
         prepareFormData.append('address', address.trim());
-        prepareFormData.append('address_detail', (addressDetail || ' ').trim());
+        
+        // [핵심 수정] 배송 메모를 상세 주소에 포함시켜 전송
+        const fullAddressDetail = deliveryMemo 
+          ? `${addressDetail} (배송메모: ${deliveryMemo})` 
+          : addressDetail;
+          
+        prepareFormData.append('address_detail', (fullAddressDetail || ' ').trim());
 
-        // userId는 Query Param으로 전달
         pgOrderId = await sendFormData(
           `/api/orders/prepare?userId=${userId}`,
           prepareFormData
@@ -176,9 +180,6 @@ const Purchase: React.FC = () => {
         
         approveFormData.append('pg_order_id', pgOrderId);
         approveFormData.append('pg_payment_key', `TEST_PAYMENT_${Date.now()}`);
-        
-        // [중요] 소수점 2자리 포맷팅 (서버 요구사항)
-        // 배송비가 0원이므로 상품 총액만 전송됩니다.
         approveFormData.append('total_amount', finalAmount.toFixed(2));
 
         await sendFormData(
@@ -188,12 +189,10 @@ const Purchase: React.FC = () => {
         
         console.log('✅ [2단계 성공] 결제 승인 완료');
         
-        // 성공 후처리
         sessionStorage.removeItem('checkoutItems');
         
         alert('주문이 정상적으로 완료되었습니다!');
         
-        // DB 반영 시간을 위해 0.5초 지연 후 이동
         setTimeout(() => {
           window.location.href = '/?view=order-history';
         }, 500);
@@ -239,7 +238,11 @@ const Purchase: React.FC = () => {
               <div className="info-row">
                  <span className="info-label">배송메모</span>
                  <select className="info-select" value={deliveryMemo} onChange={(e) => setDeliveryMemo(e.target.value)}>
-                    <option>문 앞</option><option>경비실</option><option>택배함</option>
+                    <option>문 앞</option>
+                    <option>경비실</option>
+                    <option>택배함</option>
+                    <option>부재시 문 앞</option>
+                    <option>배송 전 연락바랍니다</option>
                  </select>
               </div>
             </div>

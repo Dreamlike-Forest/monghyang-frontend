@@ -159,7 +159,7 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({
             <div className="reservation-time-buttons">
               {availableTimeSlots.map((time) => {
                 const remaining = timeSlotCounts[time];
-                // 잔여석이 0이면 마감 (undefined는 예약 가능)
+                // [핵심] 잔여석이 0인 경우에만 마감 처리 (undefined는 정보가 없는 것이므로 예약 가능)
                 const isSoldOut = remaining !== undefined && remaining === 0;
                 
                 return (
@@ -171,10 +171,10 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({
                     disabled={isSoldOut}
                   >
                     {time}
+                    {/* [수정] undefined가 아닐 때만 (잔여 00석) 표시 */}
                     {isSoldOut ? (
                       <span className="slot-count" style={{color: 'red'}}> (마감)</span>
                     ) : (
-                      // undefined가 아닐 때만 (잔여 00석) 표시, 없으면 그냥 시간만 표시
                       remaining !== undefined && (
                         <span className="slot-count"> ({remaining}석)</span>
                       )

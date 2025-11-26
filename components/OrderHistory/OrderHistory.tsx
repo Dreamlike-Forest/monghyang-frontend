@@ -15,7 +15,6 @@ const OrderHistory: React.FC = () => {
     loadOrders();
   }, []);
 
-  // [수정] 상태 텍스트 한글화 (CANCELED 대응)
   const getStatusText = (status: string) => {
     switch (status) {
       case 'PENDING': return '결제대기';
@@ -24,14 +23,13 @@ const OrderHistory: React.FC = () => {
       case 'ALLOCATED': return '상품준비중';
       case 'SHIPPED': return '배송중';
       case 'DELIVERED': return '배송완료';
-      case 'CANCELED': return '취소 완료'; // [핵심] 스펠링 수정 (L 한 개)
-      case 'CANCELLED': return '취소 완료'; // (혹시 몰라 둘 다 처리)
+      case 'CANCELED': return '취소 완료'; 
+      case 'CANCELLED': return '취소 완료'; 
       case 'FAILED': return '결제실패';
       default: return status;
     }
   };
 
-  // [수정] 상태별 색상 클래스
   const getStatusClass = (status: string) => {
     switch (status) {
       case 'PAID': 
@@ -40,7 +38,7 @@ const OrderHistory: React.FC = () => {
       case 'DELIVERED': return 'status-shipped';
       case 'CANCELED': 
       case 'CANCELLED':
-      case 'FAILED': return 'status-cancelled'; // 빨간색 처리
+      case 'FAILED': return 'status-cancelled';
       default: return 'status-default';
     }
   };
@@ -114,9 +112,18 @@ const OrderHistory: React.FC = () => {
   };
 
   const formatDate = (s: string) => s.split('T')[0];
-  
-  const getImageUrl = (k: string | null | undefined) => {
-    return getShopImageUrl(k);
+  const getImageUrl = (k: string | null | undefined) => getShopImageUrl(k);
+
+  // [핵심] 주소와 배송메모를 분리하는 파싱 함수
+  const parseAddressInfo = (fullDetail: string) => {
+    if (!fullDetail) return { detail: '', memo: '' };
+    
+    // "(배송메모: ...)" 패턴 찾기
+    const match = fullDetail.match(/^(.*?)\s*\(배송메모:\s*(.*)\)$/);
+    if (match) {
+      return { detail: match[1], memo: match[2] };
+    }
+    return { detail: fullDetail, memo: '' };
   };
 
   const handleCancelOrder = async (orderItemId: number) => {
@@ -193,78 +200,86 @@ const OrderHistory: React.FC = () => {
             <div key={group.date} className="order-date-group">
               <div className="order-date-header">{formatDate(group.date)}</div>
               
-              {group.orders.map((order) => (
-                <div key={order.order_id} className="order-block">
-                  <div className="order-items-list">
-                    {order.order_items.map((item) => (
-                      <div key={item.order_item_id} className="order-item">
-                        {/* 상품 이미지 */}
-                        <div className="order-item-image">
-                          <img 
-                            src={getImageUrl(item.product_image_key)} 
-                            alt={item.product_name} 
-                            onError={(e)=>{e.currentTarget.style.display='none'}} 
-                          />
-                        </div>
+              {group.orders.map((order) => {
+                // 주소와 메모 분리
+                const { detail, memo } = parseAddressInfo(order.order_address_detail || '');
 
-                        {/* 상품 정보 */}
-                        <div className="order-item-info">
-                          <h3 className="order-item-name">{item.product_name}</h3>
-                          <p className="order-item-specs">
-                            {item.order_item_quantity}개 / {item.order_item_amount.toLocaleString()}원
-                          </p>
-                          <div className="order-item-meta">
-                            {item.provider_nickname && (
-                              <span className="order-item-brewery">{item.provider_nickname}</span>
+                return (
+                  <div key={order.order_id} className="order-block">
+                    <div className="order-items-list">
+                      {order.order_items.map((item) => (
+                        <div key={item.order_item_id} className="order-item">
+                          <div className="order-item-image">
+                            <img 
+                              src={getImageUrl(item.product_image_key)} 
+                              alt={item.product_name} 
+                              onError={(e)=>{e.currentTarget.style.display='none'}} 
+                            />
+                          </div>
+
+                          <div className="order-item-info">
+                            <h3 className="order-item-name">{item.product_name}</h3>
+                            <p className="order-item-specs">
+                              {item.order_item_quantity}개 / {item.order_item_amount.toLocaleString()}원
+                            </p>
+                            <div className="order-item-meta">
+                              {item.provider_nickname && (
+                                <span className="order-item-brewery">{item.provider_nickname}</span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="order-item-actions">
+                            <span className={`status-text ${getStatusClass(item.order_item_fulfillment_status)}`}>
+                              {getStatusText(item.order_item_fulfillment_status)}
+                            </span>
+                            
+                            {item.order_item_fulfillment_status !== 'CANCELED' && 
+                             item.order_item_fulfillment_status !== 'CANCELLED' && 
+                             item.order_item_fulfillment_status !== 'FAILED' && (
+                              <button 
+                                className="order-action-btn danger" 
+                                onClick={() => handleCancelOrder(item.order_item_id)}
+                              >
+                                주문 취소
+                              </button>
                             )}
                           </div>
                         </div>
+                      ))}
+                    </div>
 
-                        {/* 상태 및 액션 버튼 */}
-                        <div className="order-item-actions">
-                          {/* 상태 텍스트 (취소 완료 등) */}
-                          <span className={`status-text ${getStatusClass(item.order_item_fulfillment_status)}`}>
-                            {getStatusText(item.order_item_fulfillment_status)}
-                          </span>
-                          
-                          {/* [핵심 수정] CANCELED 또는 CANCELLED 또는 FAILED 상태가 아닐 때만 버튼 표시 */}
-                          {item.order_item_fulfillment_status !== 'CANCELED' && 
-                           item.order_item_fulfillment_status !== 'CANCELLED' && 
-                           item.order_item_fulfillment_status !== 'FAILED' && (
-                            <button 
-                              className="order-action-btn danger" 
-                              onClick={() => handleCancelOrder(item.order_item_id)}
-                            >
-                              주문 취소
-                            </button>
-                          )}
+                    {/* 배송 정보 섹션 */}
+                    <div className="order-shipping-info">
+                      <h4 className="shipping-info-title">배송 정보</h4>
+                      <div className="shipping-info-grid">
+                        <div className="shipping-info-item">
+                          <span className="shipping-label">받는 분</span>
+                          <span className="shipping-value">{order.order_payer_name || '-'}</span>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* 배송 정보 섹션 */}
-                  <div className="order-shipping-info">
-                    <h4 className="shipping-info-title">배송 정보</h4>
-                    <div className="shipping-info-grid">
-                      <div className="shipping-info-item">
-                        <span className="shipping-label">받는 분</span>
-                        <span className="shipping-value">{order.order_payer_name || '-'}</span>
-                      </div>
-                      <div className="shipping-info-item">
-                        <span className="shipping-label">연락처</span>
-                        <span className="shipping-value">{order.order_payer_phone || '-'}</span>
-                      </div>
-                      <div className="shipping-info-item full-width">
-                        <span className="shipping-label">배송지</span>
-                        <span className="shipping-value">
-                          {order.order_address} {order.order_address_detail}
-                        </span>
+                        <div className="shipping-info-item">
+                          <span className="shipping-label">연락처</span>
+                          <span className="shipping-value">{order.order_payer_phone || '-'}</span>
+                        </div>
+                        <div className="shipping-info-item full-width">
+                          <span className="shipping-label">배송지</span>
+                          <span className="shipping-value">
+                            {order.order_address} {detail}
+                          </span>
+                        </div>
+                        
+                        {/* [추가] 배송 메모가 있을 경우 별도 표시 */}
+                        {memo && (
+                          <div className="shipping-info-item full-width">
+                            <span className="shipping-label">배송 메모</span>
+                            <span className="shipping-value">{memo}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ))}
         </div>
