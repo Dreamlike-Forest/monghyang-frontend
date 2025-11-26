@@ -24,13 +24,12 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
   reviews: propReviews,
   hideTitle = false
 }) => {
-  // [수정] useMemo를 사용하여 배열 참조값을 고정 (무한 루프 방지)
-  // 커뮤니티에서 해당 상품에 대한 리뷰만 가져오기
+  // useMemo를 사용하여 배열 참조값을 고정 (무한 루프 방지)
   const productReviews = useMemo(() => {
     return getProductReviews(productName);
   }, [productName]);
   
-  // [수정] Props로 받은 리뷰가 있으면 사용, 없으면 커뮤니티에서 가져온 리뷰 사용
+  // Props로 받은 리뷰가 있으면 사용, 없으면 커뮤니티에서 가져온 리뷰 사용
   const reviews = useMemo(() => {
     return propReviews || productReviews;
   }, [propReviews, productReviews]);
@@ -39,11 +38,10 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [localReviews, setLocalReviews] = useState<Post[]>(reviews); // 로컬 상태로 리뷰 관리
-  const reviewsPerPage = 3; // 페이지당 리뷰 개수
+  const [localReviews, setLocalReviews] = useState<Post[]>(reviews);
+  const reviewsPerPage = 3;
 
   // reviews가 변경되면 localReviews 업데이트
-  // (useMemo 덕분에 내용이 같으면 실행되지 않음)
   useEffect(() => {
     setLocalReviews(reviews);
   }, [reviews]);
@@ -52,7 +50,6 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
   useEffect(() => {
     const updateReviews = () => {
       const latestReviews = getProductReviews(productName);
-      // JSON 문자열 비교를 통해 내용이 바뀌었을 때만 업데이트하여 렌더링 최적화
       setLocalReviews(prev => {
         if (JSON.stringify(prev) !== JSON.stringify(latestReviews)) {
           return latestReviews;
@@ -61,10 +58,7 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
       });
     };
 
-    // 컴포넌트 마운트 시 한 번 실행
     updateReviews();
-    
-    // 5초마다 업데이트 (실제로는 이벤트 기반으로 처리하는 것이 좋음)
     const interval = setInterval(updateReviews, 5000);
     
     return () => clearInterval(interval);
@@ -90,7 +84,7 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
     }
   };
 
-  // PostCard.css의 rating-star 클래스 사용
+  // 별점 렌더링
   const renderRating = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
       <span key={i} className={`rating-star ${i < rating ? 'filled' : 'empty'}`}>
@@ -104,27 +98,16 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
     return content.slice(0, maxLength) + '...';
   };
 
-  // 리뷰 클릭 핸들러 - 로그인 확인 추가
+  // 리뷰 클릭 핸들러
   const handleReviewClick = (review: Post) => {
-    console.log('상품 리뷰 읽기 클릭 - 로그인 상태 확인');
-    
-    // 로그인 확인 및 유도
     const canProceed = checkAuthAndPrompt(
       '리뷰 읽기 기능',
-      () => {
-        console.log('리뷰 읽기 기능 - 로그인 페이지로 이동');
-      },
-      () => {
-        console.log('상품 리뷰 읽기 취소됨');
-      }
+      () => console.log('리뷰 읽기 기능 - 로그인 페이지로 이동'),
+      () => console.log('상품 리뷰 읽기 취소됨')
     );
 
-    if (!canProceed) {
-      return; // 로그인하지 않았거나 사용자가 취소한 경우
-    }
+    if (!canProceed) return;
 
-    // 로그인된 사용자만 여기에 도달
-    console.log('상품 리뷰 읽기 진행:', review.title);
     setSelectedReview(review);
   };
 
@@ -132,70 +115,80 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
     setSelectedReview(null);
   };
 
-  const handleLike = (postId: number) => {
-    console.log('좋아요:', postId);
-    
-    // 로컬 상태 업데이트
-    setLocalReviews(prev => 
-      prev.map(review => 
-        review.post_id === postId 
-          ? { ...review, like_count: review.like_count + 1 }
-          : review
-      )
-    );
-    
-    // 커뮤니티 전역 상태 업데이트
-    updateCommunityReview(postId, { like_count: localReviews.find(r => r.post_id === postId)!.like_count + 1 });
+  // PostDetail 컴포넌트 타입에 맞게 수정
+  const handleLike = async (postId: number, isLiked: boolean): Promise<boolean> => {
+    try {
+      const targetReview = localReviews.find(r => r.post_id === postId);
+      if (!targetReview) return false;
+
+      const newLikeCount = isLiked 
+        ? targetReview.like_count - 1 
+        : targetReview.like_count + 1;
+
+      // 로컬 상태 업데이트
+      setLocalReviews(prev => 
+        prev.map(review => 
+          review.post_id === postId 
+            ? { ...review, like_count: newLikeCount }
+            : review
+        )
+      );
+      
+      // 커뮤니티 전역 상태 업데이트
+      updateCommunityReview(postId, { like_count: newLikeCount });
+
+      return true;
+    } catch (error) {
+      console.error('좋아요 처리 실패:', error);
+      return false;
+    }
   };
 
-  const handleComment = (postId: number, comment: string) => {
-    console.log('댓글 작성:', postId, comment);
-    
-    // 로컬 상태 업데이트
-    setLocalReviews(prev => 
-      prev.map(review => 
-        review.post_id === postId 
-          ? { ...review, comment_count: review.comment_count + 1 }
-          : review
-      )
-    );
-    
-    // 커뮤니티 전역 상태 업데이트
-    updateCommunityReview(postId, { comment_count: localReviews.find(r => r.post_id === postId)!.comment_count + 1 });
+  // PostDetail 컴포넌트 타입에 맞게 수정
+  const handleComment = async (postId: number, content: string): Promise<boolean> => {
+    try {
+      const targetReview = localReviews.find(r => r.post_id === postId);
+      if (!targetReview) return false;
+
+      // 로컬 상태 업데이트
+      setLocalReviews(prev => 
+        prev.map(review => 
+          review.post_id === postId 
+            ? { ...review, comment_count: review.comment_count + 1 }
+            : review
+        )
+      );
+      
+      // 커뮤니티 전역 상태 업데이트
+      updateCommunityReview(postId, { 
+        comment_count: targetReview.comment_count + 1 
+      });
+
+      return true;
+    } catch (error) {
+      console.error('댓글 작성 실패:', error);
+      return false;
+    }
   };
 
-  // 리뷰 작성 핸들러 - 로그인 확인 추가
+  // 리뷰 작성 핸들러
   const handleWriteReview = () => {
-    console.log('상품 리뷰 작성 버튼 클릭 - 로그인 상태 확인');
-    
-    // 로그인 확인 및 유도
     const canProceed = checkAuthAndPrompt(
       '리뷰 작성 기능',
-      () => {
-        console.log('리뷰 작성 기능 - 로그인 페이지로 이동');
-      },
-      () => {
-        console.log('상품 리뷰 작성 취소됨');
-      }
+      () => console.log('리뷰 작성 기능 - 로그인 페이지로 이동'),
+      () => console.log('상품 리뷰 작성 취소됨')
     );
 
-    if (!canProceed) {
-      return; // 로그인하지 않았거나 사용자가 취소한 경우
-    }
+    if (!canProceed) return;
 
-    // 로그인된 사용자만 여기에 도달
-    console.log('상품 리뷰 작성 진행:', { productName, productId });
     setIsReviewModalOpen(true);
   };
 
   const handleReviewSubmit = async (reviewData: WritePostData) => {
     try {
-      console.log('상품 리뷰 제출:', reviewData);
+      const result = addCommunityReview(reviewData);
+      const newReview = result instanceof Promise ? await result : result;
       
-      // 커뮤니티 전역 상태에 새 리뷰 추가
-      const newReview = addCommunityReview(reviewData);
-      
-      // 로컬 상태에 새 리뷰 추가
       setLocalReviews(prev => [newReview, ...prev]);
       
       alert('리뷰가 성공적으로 작성되었습니다!');
@@ -208,9 +201,20 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
   };
 
   const handleCloseReviewModal = () => {
-    console.log('모달 닫기');
     setIsReviewModalOpen(false);
   };
+
+  // 페이지네이션 계산
+  const totalPages = Math.ceil(localReviews.length / reviewsPerPage);
+  const startIndex = (currentPage - 1) * reviewsPerPage;
+  const currentReviews = localReviews.slice(startIndex, startIndex + reviewsPerPage);
+
+  // 통계 계산
+  const averageRating = localReviews.length > 0
+    ? localReviews.reduce((sum, r) => sum + (r.rating || 0), 0) / localReviews.length
+    : 0;
+  const totalLikes = localReviews.reduce((sum, r) => sum + r.like_count, 0);
+  const totalViews = localReviews.reduce((sum, r) => sum + r.view_count, 0);
 
   if (isLoading) {
     return (
@@ -224,14 +228,12 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
   if (localReviews.length === 0) {
     return (
       <div className="product-reviews-section">
-        {/* 섹션 헤더 - hideTitle이 false일 때만 제목 표시 (버튼 없음) */}
         {!hideTitle && (
           <div className="product-reviews-section-header">
             <h2 className="product-reviews-section-title">술 리뷰</h2>
           </div>
         )}
 
-        {/* 빈 상태 */}
         <div className="product-reviews-empty">
           <div className="product-empty-icon">🍶</div>
           <h3 className="product-empty-title">술 리뷰가 존재하지 않습니다</h3>
@@ -239,17 +241,15 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
             아직 이 상품에 대한 리뷰가 없습니다.<br />
             첫 번째 리뷰를 작성해보세요!
           </p>
-          {/* 리뷰 작성 버튼 - 로그인 확인 포함 */}
           <button 
             className="product-write-review-btn" 
             onClick={handleWriteReview}
             type="button"
           >
-            📝 리뷰 작성하기
+            ✏️ 첫 리뷰 작성하기
           </button>
         </div>
 
-        {/* 리뷰 작성 모달 */}
         {isReviewModalOpen && (
           <ProductReviewModal
             isOpen={isReviewModalOpen}
@@ -263,20 +263,8 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
     );
   }
 
-  const averageRating = localReviews.reduce((sum, review) => sum + (review.rating || 0), 0) / localReviews.length;
-  const totalLikes = localReviews.reduce((sum, review) => sum + review.like_count, 0);
-  const totalViews = localReviews.reduce((sum, review) => sum + review.view_count, 0);
-
-  // 페이지네이션 계산
-  const totalPages = Math.ceil(localReviews.length / reviewsPerPage);
-  const currentReviews = localReviews.slice(
-    (currentPage - 1) * reviewsPerPage,
-    currentPage * reviewsPerPage
-  );
-
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    // 리뷰 섹션 상단으로 부드럽게 스크롤
     const reviewSection = document.querySelector('.product-reviews-list');
     if (reviewSection) {
       reviewSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -285,7 +273,6 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
 
   return (
     <div className="product-reviews-section">
-      {/* 섹션 헤더 - hideTitle이 false일 때만 제목 표시 (버튼 제거) */}
       {!hideTitle && (
         <div className="product-reviews-section-header">
           <h2 className="product-reviews-section-title">술 리뷰</h2>
@@ -320,12 +307,12 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
         </div>
       </div>
 
-      {/* 리뷰 목록 - PostCard 클래스명을 정확히 사용 */}
+      {/* 리뷰 목록 */}
       <div className="product-reviews-list">
         {currentReviews.map((review) => (
           <div 
             key={review.post_id}
-            className="post-card-grid"  // PostCard CSS 클래스 사용
+            className="post-card-grid"
             onClick={() => handleReviewClick(review)}
             tabIndex={0}
             role="button"
@@ -337,7 +324,7 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
               }
             }}
           >
-            {/* 썸네일 이미지 - PostCard와 동일한 구조 */}
+            {/* 썸네일 이미지 */}
             <div className="post-thumbnail-section">
               {review.images && review.images.length > 0 ? (
                 <div className="thumbnail-wrapper">
@@ -362,7 +349,7 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
               )}
             </div>
 
-            {/* 리뷰 내용 - PostCard와 동일한 구조 */}
+            {/* 리뷰 내용 */}
             <div className="post-content-section">
               <div className="post-header">
                 <span className="post-category category-drink">
@@ -372,7 +359,6 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
 
               <h3 className="post-title">{review.title}</h3>
 
-              {/* 별점 표시 - PostCard의 rating-star 클래스 사용 */}
               {review.rating && (
                 <div className="post-rating">
                   <div className="rating-stars">
@@ -382,25 +368,21 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
                 </div>
               )}
 
-              {/* 내용 미리보기 */}
               <div className="post-content-preview">
                 {truncateContent(review.content, 80)}
               </div>
 
-              {/* 메타 정보 */}
               <div className="post-meta">
                 <span className="post-author">{review.author}</span>
                 <span className="post-date">{formatDate(review.created_at)}</span>
               </div>
 
-              {/* 추가 정보 */}
               {review.product_name && (
                 <div className="post-extra-info">
                   <span>🍶 {review.product_name}</span>
                 </div>
               )}
 
-              {/* 통계 */}
               <div className="post-stats">
                 <div className="stat-item">
                   <span className="stat-icon">👁</span>
@@ -422,7 +404,6 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
                 </div>
               </div>
 
-              {/* 태그 */}
               {review.tags && review.tags.length > 0 && (
                 <div className="post-tags">
                   {review.tags.slice(0, 3).map((tag, index) => (
@@ -440,7 +421,7 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
         ))}
       </div>
 
-      {/* 페이지네이션 - 리뷰가 3개 이상일 때만 표시 */}
+      {/* 페이지네이션 */}
       {totalPages > 1 && (
         <div className="product-reviews-pagination">
           <button
@@ -479,9 +460,8 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
         </div>
       )}
 
-      {/* 하단 리뷰 작성 버튼 - "더 많은 리뷰 보기" 버튼 제거됨 */}
+      {/* 하단 리뷰 작성 버튼 */}
       <div className="product-reviews-actions">
-        {/* 리뷰 작성 버튼 - 로그인 확인 포함 */}
         <button 
           className="product-write-review-bottom-btn" 
           onClick={handleWriteReview}
@@ -491,7 +471,7 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
         </button>
       </div>
 
-      {/* PostDetail 모달 - 커뮤니티와 동일한 컴포넌트 사용 */}
+      {/* PostDetail 모달 */}
       {selectedReview && (
         <PostDetail
           post={selectedReview}
@@ -499,6 +479,7 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
           onLike={handleLike}
           onComment={handleComment}
           isOpen={!!selectedReview}
+          comments={[]}
         />
       )}
 

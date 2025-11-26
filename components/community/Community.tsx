@@ -4,211 +4,105 @@ import { useState, useEffect, useCallback } from 'react';
 import CommunityFilter from './CommunityFilter/CommunityFilter';
 import CommunityList from './CommunityList/CommunityList';
 import WritePost from './WritePost/WritePost';
-import { 
-  Post, 
-  PostFilter, 
-  PostCategory, 
-  CategoryConfig, 
-  WritePostData,
-  CommunityStats 
-} from '../../types/community';
+import communityApi, { Post as ApiPost, PageData, CreateCommunityRequest } from '../../utils/communityApi';
+import { PostFilter, PostCategory, CategoryConfig, WritePostData, Post } from '../../types/community';
 import './Community.css';
 
-// Mock 데이터 (이미지 포함) - 전역 상태로 관리
-let globalMockPosts: Post[] = [
-  {
-    post_id: 1,
-    title: '전주 양조장 투어 추천',
-    content: '전주에서 전통주 양조장 투어를 다녀왔는데 정말 좋았어요. 전통 누룩 만들기 체험도 할 수 있었습니다. 특히 전주의 깨끗한 물로 만든 술의 맛이 일품이었어요!',
-    author: '양조장탐험가',
-    author_id: 1,
-    category: 'brewery_review',
-    created_at: '2025-01-15T10:30:00Z',
-    view_count: 234,
-    like_count: 15,
-    comment_count: 8,
-    rating: 5,
-    brewery_name: '전주 양조장',
-    tags: ['전주', '양조장투어', '전통주'],
-    images: [
-      {
-        image_id: 1,
-        image_url: 'https://images.unsplash.com/photo-1571613316887-6f8d5cbf7ef7?w=400&h=300&fit=crop',
-        image_order: 1,
-        alt_text: '전주 양조장 외부 전경'
-      },
-      {
-        image_id: 2,
-        image_url: 'https://images.unsplash.com/photo-1582106245687-a2a4c81d5a65?w=400&h=300&fit=crop',
-        image_order: 2,
-        alt_text: '전통주 시음 모습'
-      },
-      {
-        image_id: 3,
-        image_url: 'https://images.unsplash.com/photo-1534354871393-df4a6e8a2ec3?w=400&h=300&fit=crop',
-        image_order: 3,
-        alt_text: '누룩 만들기 체험'
-      }
-    ]
-  },
-  {
-    post_id: 2,
-    title: '극찬 청명 드디어 마셔봤습니다!',
-    content: '오랫동안 찜해뒀던 극찬 청명을 드디어 주문해서 마셔봤어요. 정말 깔끔하고 부드러운 맛이 일품이네요. 특히 목 넘김이 정말 좋고, 뒷맛이 깔끔해서 술 초보자도 부담 없이 마실 수 있을 것 같아요.',
-    author: '술러버',
-    author_id: 2,
-    category: 'drink_review',
-    created_at: '2025-01-14T15:20:00Z',
-    view_count: 189,
-    like_count: 12,
-    comment_count: 6,
-    rating: 4,
-    product_name: '극찬 청명',
-    tags: ['청주', '극찬', '리뷰'],
-    images: [
-      {
-        image_id: 4,
-        image_url: 'https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=400&h=300&fit=crop',
-        image_order: 1,
-        alt_text: '극찬 청명 병과 잔'
-      },
-      {
-        image_id: 5,
-        image_url: 'https://images.unsplash.com/photo-1596556345922-67b7c4b6d5ce?w=400&h=300&fit=crop',
-        image_order: 2,
-        alt_text: '청명 따르는 모습'
-      }
-    ]
-  },
-  {
-    post_id: 3,
-    title: '[공지] 전통주 쇼핑몰 3월 리뉴얼 안내',
-    content: '안녕하세요. 몽향 운영진입니다. 더 나은 서비스 제공을 위해 3월 중순에 쇼핑몰 리뉴얼 작업을 진행할 예정입니다. 리뉴얼 기간 중에는 일시적으로 서비스 이용이 제한될 수 있으니 양해 부탁드립니다.',
-    author: '운영자',
-    author_id: 999,
-    category: 'notice',
-    created_at: '2025-01-13T09:00:00Z',
-    view_count: 456,
-    like_count: 23,
-    comment_count: 12,
-    is_notice: true,
-    tags: ['공지사항', '리뉴얼'],
-    images: []
-  },
-  {
-    post_id: 4,
-    title: '막걸리 처음 마시는 사람에게 추천할만한 제품?',
-    content: '친구가 막걸리에 관심을 가지기 시작했는데 어떤 걸 추천해야 할지 고민이에요. 너무 진하지 않고 달콤한 맛이 나는 초보자용 막걸리가 있을까요? 여러분의 추천 부탁드려요!',
-    author: '초보안내자',
-    author_id: 3,
-    category: 'free',
-    created_at: '2025-01-12T18:45:00Z',
-    view_count: 167,
-    like_count: 8,
-    comment_count: 15,
-    tags: ['막걸리', '초보', '추천'],
-    images: []
-  },
-  {
-    post_id: 5,
-    title: '안성 양조장 체험 프로그램 후기',
-    content: '지난 주말에 안성 양조장 체험 프로그램에 참여했는데 정말 유익한 시간이었어요. 전통 누룩 만들기부터 시작해서 발효 과정까지 직접 체험해볼 수 있었습니다.',
-    author: '체험러',
-    author_id: 4,
-    category: 'brewery_review',
-    created_at: '2025-01-11T14:15:00Z',
-    view_count: 145,
-    like_count: 7,
-    comment_count: 4,
-    rating: 4,
-    brewery_name: '안성 양조장',
-    tags: ['안성', '체험프로그램', '양조장'],
-    images: [
-      {
-        image_id: 6,
-        image_url: 'https://images.unsplash.com/photo-1544024994-f6e9e3f1b536?w=400&h=300&fit=crop',
-        image_order: 1,
-        alt_text: '안성 양조장 체험 프로그램'
-      }
-    ]
-  },
-  {
-    post_id: 6,
-    title: '복분자 막걸리 홈메이드 도전기',
-    content: '집에서 복분자 막걸리를 만들어봤어요. 생각보다 어렵지 않았지만 발효 시간 조절이 관건이더라고요. 며칠 더 숙성시키면 더 맛있어질 것 같아요.',
-    author: '홈브루어',
-    author_id: 5,
-    category: 'free',
-    created_at: '2025-01-10T20:30:00Z',
-    view_count: 203,
-    like_count: 18,
-    comment_count: 9,
-    tags: ['복분자', '막걸리', '홈메이드', 'DIY'],
-    images: [
-      {
-        image_id: 7,
-        image_url: 'https://images.unsplash.com/photo-1567696911980-2eed69a46042?w=400&h=300&fit=crop',
-        image_order: 1,
-        alt_text: '복분자 막걸리 만들기 과정'
-      },
-      {
-        image_id: 8,
-        image_url: 'https://images.unsplash.com/photo-1551218808-94e220e084d2?w=400&h=300&fit=crop',
-        image_order: 2,
-        alt_text: '완성된 복분자 막걸리'
-      }
-    ]
-  },
-  // 추가 상품 리뷰들
-  {
-    post_id: 8,
-    title: '복분자 막걸리와 안주 페어링 후기',
-    content: '복분자 막걸리 다양한 안주와 함께 마셔봤습니다. 특히 생선회와 정말 잘 어울리더라고요. 청주 특유의 깔끔함이 회의 비린내를 말끔히 잡아주고, 단맛이 회의 감칠맛을 더욱 살려줍니다. 치즈와도 의외로 잘 맞아서 놀랐어요.',
-    author: '페어링마스터',
-    author_id: 7,
-    category: 'drink_review',
-    created_at: '2025-01-09T19:30:00Z',
-    view_count: 156,
-    like_count: 9,
-    comment_count: 4,
-    rating: 5,
-    product_name: '복분자 막걸리',
-    tags: ['복분자', '페어링', '안주', '생선회'],
-    images: [
-      {
-        image_id: 9,
-        image_url: 'https://images.unsplash.com/photo-1551218808-94e220e084d2?w=400&h=300&fit=crop',
-        image_order: 1,
-        alt_text: '복분자 막걸리 생선회 페어링'
-      }
-    ]
-  },
-  {
-    post_id: 10,
-    title: '청주 초보자에게 추천하는 극찬 청명',
-    content: '청주를 처음 마시는 친구들에게 극찬 청명을 권해봤는데 반응이 정말 좋았어요. 알코올 도수가 적당하고 단맛이 있어서 거부감 없이 마실 수 있다고 하더라고요. 가격도 부담스럽지 않아서 청주 입문용으로 딱입니다.',
-    author: '청주전도사',
-    author_id: 8,
-    category: 'drink_review',
-    created_at: '2025-01-07T16:45:00Z',
-    view_count: 203,
-    like_count: 15,
-    comment_count: 8,
-    rating: 4,
-    product_name: '극찬 청명',
-    tags: ['극찬', '초보자', '추천', '입문용'],
-    images: []
+// 로컬 캐시
+let cachedReviews: Post[] = [];
+let lastFetchTime = 0;
+const CACHE_DURATION = 30000;
+
+// API Post -> Legacy Post 변환
+const convertApiToLegacyPost = (post: ApiPost): Post => ({
+  post_id: post.postId,
+  title: post.title,
+  content: post.content,
+  author: `사용자${post.userId}`,
+  author_id: post.userId,
+  category: post.category as PostCategory,
+  created_at: post.createdAt,
+  view_count: post.viewCount,
+  like_count: post.likeCount,
+  comment_count: post.commentCount,
+  rating: post.rating || undefined,
+  brewery_name: post.breweryName || undefined,
+  product_name: post.productName || undefined,
+  tags: post.tags,
+  images: post.images.map(img => ({
+    image_id: img.imageId,
+    image_url: img.imageUrl,
+    image_order: img.imageNum
+  })),
+  is_notice: post.category === 'notice'
+});
+
+// WritePostData -> CreateCommunityRequest 변환
+const convertWriteDataToRequest = (data: WritePostData): CreateCommunityRequest => {
+  return {
+    title: data.title,
+    category: data.category,
+    detail: data.content,
+    subCategory: data.subcategory || undefined,
+    productName: data.product_name || undefined,
+    breweryName: data.brewery_name || undefined,
+    star: data.rating || undefined,
+    tags: data.tags.length > 0 ? data.tags.join(',') : undefined,
+    images: data.images.length > 0 ? data.images : undefined
+  };
+};
+
+// 특정 상품의 리뷰 가져오기
+export const getProductReviews = (productName: string): Post[] => {
+  return cachedReviews.filter(
+    post => post.category === 'drink_review' && post.product_name === productName
+  );
+};
+
+// 모든 술 리뷰 가져오기
+export const getCommunityReviews = (): Post[] => {
+  return cachedReviews.filter(post => post.category === 'drink_review');
+};
+
+// 새 리뷰 추가
+export const addCommunityReview = async (reviewData: WritePostData): Promise<Post> => {
+  const request = convertWriteDataToRequest(reviewData);
+  const apiPost = await communityApi.createPost(request);
+  const newPost = convertApiToLegacyPost(apiPost);
+  cachedReviews.unshift(newPost);
+  return newPost;
+};
+
+// 리뷰 업데이트
+export const updateCommunityReview = (postId: number, updates: Partial<Post>): void => {
+  const index = cachedReviews.findIndex(post => post.post_id === postId);
+  if (index !== -1) {
+    cachedReviews[index] = { ...cachedReviews[index], ...updates };
   }
-];
+};
+
+// 캐시 갱신
+export const refreshReviewCache = async (): Promise<void> => {
+  const now = Date.now();
+  if (now - lastFetchTime < CACHE_DURATION) return;
+  
+  try {
+    const result = await communityApi.getPostsByCategory('drink_review');
+    cachedReviews = result.map(convertApiToLegacyPost);
+    lastFetchTime = now;
+  } catch (error) {
+    console.error('리뷰 캐시 갱신 실패:', error);
+  }
+};
 
 const categoryConfigs: CategoryConfig[] = [
   {
     id: 'notice',
     name: '공지사항',
     subcategories: [
-      { id: 'brewery_event', name: '양조장 이벤트', count: 12 },
-      { id: 'platform_event', name: '플랫폼 이벤트', count: 8 },
-      { id: 'announcement', name: '일반 공지', count: 15 }
+      { id: 'brewery_event', name: '양조장 이벤트', count: 0 },
+      { id: 'platform_event', name: '플랫폼 이벤트', count: 0 },
+      { id: 'announcement', name: '일반 공지', count: 0 }
     ],
     hasRating: false,
     placeholder: '공지사항 제목을 입력하세요',
@@ -219,9 +113,9 @@ const categoryConfigs: CategoryConfig[] = [
     id: 'free',
     name: '자유게시판',
     subcategories: [
-      { id: 'general', name: '일반', count: 67 },
-      { id: 'question', name: '질문', count: 23 },
-      { id: 'info', name: '정보공유', count: 18 }
+      { id: 'general', name: '일반', count: 0 },
+      { id: 'question', name: '질문', count: 0 },
+      { id: 'info', name: '정보공유', count: 0 }
     ],
     hasRating: false,
     placeholder: '자유롭게 이야기해보세요',
@@ -232,10 +126,10 @@ const categoryConfigs: CategoryConfig[] = [
     id: 'drink_review',
     name: '술 리뷰',
     subcategories: [
-      { id: 'makgeolli', name: '막걸리', count: 89 },
-      { id: 'soju', name: '소주', count: 45 },
-      { id: 'yakju', name: '약주', count: 34 },
-      { id: 'wine', name: '와인', count: 22 }
+      { id: 'makgeolli', name: '막걸리', count: 0 },
+      { id: 'soju', name: '소주', count: 0 },
+      { id: 'yakju', name: '약주', count: 0 },
+      { id: 'wine', name: '와인', count: 0 }
     ],
     hasRating: true,
     placeholder: '어떤 술을 리뷰하실건가요?',
@@ -246,9 +140,9 @@ const categoryConfigs: CategoryConfig[] = [
     id: 'brewery_review',
     name: '양조장 리뷰',
     subcategories: [
-      { id: 'experience', name: '체험프로그램', count: 67 },
-      { id: 'visit', name: '방문후기', count: 45 },
-      { id: 'tour', name: '투어', count: 23 }
+      { id: 'experience', name: '체험프로그램', count: 0 },
+      { id: 'visit', name: '방문후기', count: 0 },
+      { id: 'tour', name: '투어', count: 0 }
     ],
     hasRating: true,
     placeholder: '양조장 체험은 어떠셨나요?',
@@ -256,64 +150,6 @@ const categoryConfigs: CategoryConfig[] = [
     maxImages: 5
   }
 ];
-
-const mockStats: CommunityStats = {
-  totalPosts: 1247,
-  todayPosts: 23,
-  totalMembers: 3456,
-  onlineMembers: 127,
-  postsWithImages: 234
-};
-
-// 전역 함수: 상품 리뷰 가져오기
-export const getCommunityReviews = (): Post[] => {
-  return globalMockPosts.filter(post => post.category === 'drink_review');
-};
-
-// 전역 함수: 특정 상품의 리뷰 가져오기
-export const getProductReviews = (productName: string): Post[] => {
-  return globalMockPosts.filter(
-    post => post.category === 'drink_review' && post.product_name === productName
-  );
-};
-
-// 전역 함수: 새 리뷰 추가
-export const addCommunityReview = (reviewData: WritePostData): Post => {
-  const newPost: Post = {
-    post_id: Date.now(),
-    title: reviewData.title,
-    content: reviewData.content,
-    author: '현재사용자', // 실제로는 로그인한 사용자 정보
-    author_id: 999,
-    category: reviewData.category,
-    created_at: new Date().toISOString(),
-    view_count: 0,
-    like_count: 0,
-    comment_count: 0,
-    rating: reviewData.rating,
-    brewery_name: reviewData.brewery_name,
-    product_name: reviewData.product_name,
-    tags: reviewData.tags,
-    images: reviewData.images.map((file, index) => ({
-      image_id: Date.now() + index,
-      image_url: URL.createObjectURL(file), // 실제로는 서버 업로드 후 URL
-      image_order: index + 1,
-      alt_text: reviewData.imageDescriptions[index] || `${reviewData.title} 이미지 ${index + 1}`
-    }))
-  };
-
-  // 전역 배열에 추가
-  globalMockPosts.unshift(newPost);
-  return newPost;
-};
-
-// 전역 함수: 리뷰 업데이트
-export const updateCommunityReview = (postId: number, updates: Partial<Post>): void => {
-  const index = globalMockPosts.findIndex(post => post.post_id === postId);
-  if (index !== -1) {
-    globalMockPosts[index] = { ...globalMockPosts[index], ...updates };
-  }
-};
 
 interface CommunityProps {
   className?: string;
@@ -323,8 +159,13 @@ const Community: React.FC<CommunityProps> = ({ className }) => {
   const [currentView, setCurrentView] = useState<'list' | 'write'>('list');
   const [currentCategory, setCurrentCategory] = useState<PostCategory | 'all'>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [allPosts, setAllPosts] = useState<Post[]>(globalMockPosts);
-  const [filteredPosts, setFilteredPosts] = useState<Post[]>(globalMockPosts);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageData, setPageData] = useState<PageData<ApiPost> | null>(null);
+  
   const [filter, setFilter] = useState<PostFilter>({
     category: 'all',
     subcategory: '',
@@ -332,52 +173,61 @@ const Community: React.FC<CommunityProps> = ({ className }) => {
     sortBy: 'latest',
     hasImages: false
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const [stats] = useState<CommunityStats>(mockStats);
 
-  // 전역 상태 변경 감지
-  useEffect(() => {
-    setAllPosts([...globalMockPosts]);
-  }, []);
-
-  // 필터 적용 함수
-  const applyFilters = useCallback(() => {
+  // 게시글 목록 조회
+  const fetchPosts = useCallback(async () => {
     setIsLoading(true);
+    setError(null);
     
-    setTimeout(() => {
-      let filtered = [...allPosts];
-
-      // 카테고리 필터
-      if (currentCategory !== 'all') {
-        filtered = filtered.filter(post => post.category === currentCategory);
+    try {
+      let result: PageData<ApiPost>;
+      
+      if (currentCategory === 'all') {
+        result = await communityApi.getAllPostsWithPaging(currentPage);
+      } else {
+        result = await communityApi.getPostsByCategoryWithPaging(currentCategory, currentPage);
       }
-
-      // 이미지 필터
-      if (filter.hasImages) {
-        filtered = filtered.filter(post => post.images && post.images.length > 0);
+      
+      setPageData(result);
+      
+      // 각 게시글의 이미지 조회 (병렬 처리)
+      const postsWithImages = await Promise.all(
+        result.content.map(async (post) => {
+          try {
+            const images = await communityApi.getImages(post.postId);
+            return { ...post, images };
+          } catch {
+            return { ...post, images: [] };
+          }
+        })
+      );
+      
+      // 캐시 업데이트
+      if (currentCategory === 'drink_review' || currentCategory === 'all') {
+        const drinkReviews = postsWithImages.filter(p => p.category === 'drink_review');
+        drinkReviews.forEach(post => {
+          const existing = cachedReviews.findIndex(c => c.post_id === post.postId);
+          const converted = convertApiToLegacyPost(post);
+          if (existing === -1) {
+            cachedReviews.push(converted);
+          } else {
+            cachedReviews[existing] = converted;
+          }
+        });
       }
-
-      // 서브카테고리 필터
-      if (filter.subcategory) {
-        // 실제 구현에서는 post에 subcategory 필드가 있어야 함
-        // 여기서는 mock 데이터이므로 태그로 대체
-        filtered = filtered.filter(post => 
-          post.tags.some(tag => tag.includes(filter.subcategory))
-        );
-      }
-
-      // 검색 키워드 필터
+      
+      const convertedPosts = postsWithImages.map(convertApiToLegacyPost);
+      let filtered = [...convertedPosts];
+      
       if (filter.searchKeyword) {
         const keyword = filter.searchKeyword.toLowerCase();
         filtered = filtered.filter(post =>
           post.title.toLowerCase().includes(keyword) ||
           post.content.toLowerCase().includes(keyword) ||
-          post.author.toLowerCase().includes(keyword) ||
-          post.tags.some(tag => tag.toLowerCase().includes(keyword))
+          post.tags.some((tag: string) => tag.toLowerCase().includes(keyword))
         );
       }
-
-      // 정렬
+      
       switch (filter.sortBy) {
         case 'latest':
           filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
@@ -392,20 +242,27 @@ const Community: React.FC<CommunityProps> = ({ className }) => {
           filtered.sort((a, b) => b.like_count - a.like_count);
           break;
       }
-
-      // 공지사항을 맨 위로
+      
       const notices = filtered.filter(post => post.is_notice);
       const normalPosts = filtered.filter(post => !post.is_notice);
       
-      setFilteredPosts([...notices, ...normalPosts]);
+      setPosts([...notices, ...normalPosts]);
+    } catch (err: any) {
+      console.error('게시글 조회 실패:', err);
+      setError(err?.response?.data?.message || '게시글을 불러오는데 실패했습니다.');
+      setPosts([]);
+    } finally {
       setIsLoading(false);
-    }, 300);
-  }, [allPosts, currentCategory, filter]);
+    }
+  }, [currentCategory, currentPage, filter.searchKeyword, filter.sortBy]);
 
-  // 필터 변경 시 적용
   useEffect(() => {
-    applyFilters();
-  }, [applyFilters]);
+    fetchPosts();
+  }, [fetchPosts]);
+
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [currentCategory]);
 
   const handleFilterChange = (newFilter: Partial<PostFilter>) => {
     setFilter(prev => ({ ...prev, ...newFilter }));
@@ -413,16 +270,78 @@ const Community: React.FC<CommunityProps> = ({ className }) => {
 
   const handleCategoryChange = (category: PostCategory | 'all') => {
     setCurrentCategory(category);
-    setFilter(prev => ({ 
-      ...prev, 
-      category,
-      subcategory: '' // 카테고리 변경 시 서브카테고리 초기화
-    }));
+    setFilter(prev => ({ ...prev, category, subcategory: '' }));
   };
 
-  const handlePostClick = (postId: number) => {
-    console.log('게시글 상세 페이지로 이동:', postId);
-    // TODO: 게시글 상세 페이지 라우팅
+  // 게시글 상세 조회 핸들러
+  const handlePostClick = async (postId: number): Promise<Post | null> => {
+    try {
+      const apiPost = await communityApi.getPostDetail(postId);
+      return convertApiToLegacyPost(apiPost);
+    } catch (err) {
+      console.error('게시글 상세 조회 실패:', err);
+      return null;
+    }
+  };
+
+  // 좋아요 핸들러
+  const handleLike = async (postId: number, isLiked: boolean): Promise<boolean> => {
+    try {
+      if (isLiked) {
+        await communityApi.unlikePost(postId);
+      } else {
+        await communityApi.likePost(postId);
+      }
+      
+      // 로컬 상태 업데이트
+      setPosts(prev => prev.map(post => {
+        if (post.post_id === postId) {
+          return {
+            ...post,
+            like_count: isLiked ? post.like_count - 1 : post.like_count + 1
+          };
+        }
+        return post;
+      }));
+      
+      return true;
+    } catch (err) {
+      console.error('좋아요 처리 실패:', err);
+      return false;
+    }
+  };
+
+  // 댓글 작성 핸들러
+  const handleComment = async (postId: number, content: string): Promise<boolean> => {
+    try {
+      await communityApi.createComment({
+        communityId: postId,
+        content
+      });
+      
+      // 댓글 수 업데이트
+      setPosts(prev => prev.map(post => {
+        if (post.post_id === postId) {
+          return { ...post, comment_count: post.comment_count + 1 };
+        }
+        return post;
+      }));
+      
+      return true;
+    } catch (err) {
+      console.error('댓글 작성 실패:', err);
+      return false;
+    }
+  };
+
+  // 댓글 목록 조회 핸들러
+  const handleGetComments = async (postId: number) => {
+    try {
+      return await communityApi.getComments(postId);
+    } catch (err) {
+      console.error('댓글 조회 실패:', err);
+      return [];
+    }
   };
 
   const handleWriteClick = () => {
@@ -430,20 +349,15 @@ const Community: React.FC<CommunityProps> = ({ className }) => {
   };
 
   const handleWriteSubmit = async (data: WritePostData) => {
-    console.log('새 게시글 작성:', data);
-    
     try {
-      // 전역 상태에 새 게시글 추가
-      const newPost = addCommunityReview(data);
-      
-      // 로컬 상태 업데이트
-      setAllPosts(prev => [newPost, ...prev]);
-      
+      await addCommunityReview(data);
       setCurrentView('list');
+      await fetchPosts();
       alert('게시글이 작성되었습니다!');
-    } catch (error) {
-      console.error('게시글 작성 실패:', error);
-      alert('게시글 작성에 실패했습니다. 다시 시도해주세요.');
+    } catch (err: any) {
+      console.error('게시글 작성 실패:', err);
+      const errorMsg = err?.response?.data?.message || '게시글 작성에 실패했습니다.';
+      alert(errorMsg);
     }
   };
 
@@ -488,7 +402,6 @@ const Community: React.FC<CommunityProps> = ({ className }) => {
         </div>
         
         <div className="community-main">
-          {/* 커뮤니티 헤더 */}
           <div className="community-header">
             <h1 className="community-title">{getCategoryName(currentCategory)}</h1>
             <p className="community-description">
@@ -496,33 +409,19 @@ const Community: React.FC<CommunityProps> = ({ className }) => {
             </p>
           </div>
 
-          {/* 카테고리 탭 */}
-          <div className="category-tabs">
-            <button
-              className={`category-tab ${currentCategory === 'all' ? 'active' : ''}`}
-              onClick={() => handleCategoryChange('all')}
-            >
-              전체
-            </button>
-            {categoryConfigs.map(category => (
-              <button
-                key={category.id}
-                className={`category-tab ${currentCategory === category.id ? 'active' : ''}`}
-                onClick={() => handleCategoryChange(category.id)}
-              >
-                {category.name}
-              </button>
-            ))}
-          </div>
-
-          {/* 글쓰기 버튼 */}
           <button className="write-button" onClick={handleWriteClick}>
             ✏️ 새 게시글 작성
           </button>
 
-          {/* 게시글 목록 */}
+          {error && (
+            <div className="error-message">
+              {error}
+              <button onClick={fetchPosts} className="retry-button">다시 시도</button>
+            </div>
+          )}
+
           <CommunityList
-            posts={filteredPosts}
+            posts={posts}
             isLoading={isLoading}
             currentCategory={currentCategory}
             filter={filter}
@@ -531,7 +430,32 @@ const Community: React.FC<CommunityProps> = ({ className }) => {
             onWriteClick={handleWriteClick}
             viewMode={viewMode}
             onViewModeChange={handleViewModeChange}
+            onLike={handleLike}
+            onComment={handleComment}
+            onGetComments={handleGetComments}
           />
+
+          {pageData && pageData.totalPages > 1 && (
+            <div className="pagination">
+              <button 
+                disabled={pageData.isFirst}
+                onClick={() => setCurrentPage(prev => prev - 1)}
+                className="pagination-btn"
+              >
+                이전
+              </button>
+              <span className="pagination-info">
+                {pageData.pageNumber + 1} / {pageData.totalPages}
+              </span>
+              <button 
+                disabled={pageData.isLast}
+                onClick={() => setCurrentPage(prev => prev + 1)}
+                className="pagination-btn"
+              >
+                다음
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

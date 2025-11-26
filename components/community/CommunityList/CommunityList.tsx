@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import PostCard from '../PostCard/PostCard';
 import PostDetail from '../PostDetail/PostDetail';
 import { Post, PostFilter, PostCategory } from '../../../types/community';
+import { Comment } from '../../../utils/communityApi';
 import './CommunityList.css';
 
 interface CommunityListProps {
@@ -12,10 +13,13 @@ interface CommunityListProps {
   currentCategory: PostCategory | 'all';
   filter: PostFilter;
   onFilterChange: (filter: Partial<PostFilter>) => void;
-  onPostClick: (postId: number) => void;
+  onPostClick: (postId: number) => Promise<Post | null>;
   onWriteClick: () => void;
   viewMode: 'grid' | 'list';
   onViewModeChange: (mode: 'grid' | 'list') => void;
+  onLike: (postId: number, isLiked: boolean) => Promise<boolean>;
+  onComment: (postId: number, content: string) => Promise<boolean>;
+  onGetComments: (postId: number) => Promise<Comment[]>;
 }
 
 const CommunityList: React.FC<CommunityListProps> = ({
@@ -27,10 +31,15 @@ const CommunityList: React.FC<CommunityListProps> = ({
   onPostClick,
   onWriteClick,
   viewMode,
-  onViewModeChange
+  onViewModeChange,
+  onLike,
+  onComment,
+  onGetComments
 }) => {
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [showImageOnly, setShowImageOnly] = useState(false);
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+  const [comments, setComments] = useState<Comment[]>([]);
 
   const sortOptions = [
     { value: 'latest', label: '최신순' },
@@ -43,25 +52,74 @@ const CommunityList: React.FC<CommunityListProps> = ({
     onFilterChange({ sortBy: sortBy as PostFilter['sortBy'] });
   };
 
-  const handlePostClick = (postId: number) => {
-    const post = posts.find(p => p.post_id === postId);
-    if (post) {
-      setSelectedPost(post);
+  // 게시글 클릭 시 상세 데이터 + 댓글 조회
+  const handlePostClick = useCallback(async (postId: number) => {
+    setIsLoadingDetail(true);
+    
+    try {
+      const [detailPost, postComments] = await Promise.all([
+        onPostClick(postId),
+        onGetComments(postId)
+      ]);
+      
+      if (detailPost) {
+        setSelectedPost(detailPost);
+        setComments(postComments);
+      }
+    } catch (err) {
+      console.error('게시글 상세 조회 실패:', err);
+      // 기존 목록에서 찾아서 표시
+      const post = posts.find(p => p.post_id === postId);
+      if (post) {
+        setSelectedPost(post);
+        setComments([]);
+      }
+    } finally {
+      setIsLoadingDetail(false);
     }
-  };
+  }, [posts, onPostClick, onGetComments]);
 
   const handleCloseDetail = () => {
     setSelectedPost(null);
+    setComments([]);
   };
 
-  const handleLike = (postId: number) => {
-    console.log('좋아요:', postId);
-    // TODO: API 호출
+  // 좋아요 처리
+  const handleLike = async (postId: number, currentLiked: boolean) => {
+    const success = await onLike(postId, currentLiked);
+    
+    if (success && selectedPost && selectedPost.post_id === postId) {
+      setSelectedPost(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          like_count: currentLiked ? prev.like_count - 1 : prev.like_count + 1
+        };
+      });
+    }
+    
+    return success;
   };
 
-  const handleComment = (postId: number, comment: string) => {
-    console.log('댓글 작성:', postId, comment);
-    // TODO: API 호출
+  // 댓글 작성
+  const handleComment = async (postId: number, content: string) => {
+    const success = await onComment(postId, content);
+    
+    if (success) {
+      // 댓글 목록 새로고침
+      const updatedComments = await onGetComments(postId);
+      setComments(updatedComments);
+      
+      // 선택된 게시글 댓글 수 업데이트
+      if (selectedPost && selectedPost.post_id === postId) {
+        setSelectedPost(prev => {
+          if (!prev) return null;
+          return { ...prev, comment_count: prev.comment_count + 1 };
+        });
+      }
+    }
+    
+    return success;
   };
 
   const handleImageOnlyToggle = (checked: boolean) => {
@@ -93,7 +151,6 @@ const CommunityList: React.FC<CommunityListProps> = ({
             총 <span className="post-count-number">{posts.length}</span>개의 게시글
           </div>
           
-          {/* 뷰 모드 토글 */}
           <div className="view-mode-toggle">
             <button
               className={`view-mode-button ${viewMode === 'grid' ? 'active' : ''}`}
@@ -115,7 +172,6 @@ const CommunityList: React.FC<CommunityListProps> = ({
         </div>
         
         <div className="header-right">
-          {/* 필터 토글 */}
           <div className="filter-toggle">
             <button
               className={`filter-option ${!showImageOnly ? 'active' : ''}`}
@@ -211,10 +267,18 @@ const CommunityList: React.FC<CommunityListProps> = ({
         </div>
       )}
 
+      {/* 상세 로딩 오버레이 */}
+      {isLoadingDetail && (
+        <div className="detail-loading-overlay">
+          <div className="loading-spinner"></div>
+        </div>
+      )}
+
       {/* 게시글 상세 모달 */}
       {selectedPost && (
         <PostDetail
           post={selectedPost}
+          comments={comments}
           onClose={handleCloseDetail}
           onLike={handleLike}
           onComment={handleComment}

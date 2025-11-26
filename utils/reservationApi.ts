@@ -1,4 +1,5 @@
 import apiClient from './api';
+import { JoyOrder } from '../types/reservation';
 
 // 사용자 ID 추출 헬퍼
 const getUserId = (): number | null => {

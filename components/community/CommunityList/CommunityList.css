@@ -1,5 +1,6 @@
 .community-list-container {
   flex: 1;
+  position: relative;
 }
 
 .community-list-header {
@@ -256,6 +257,26 @@
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* 상세 로딩 오버레이 */
+.detail-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.detail-loading-overlay .loading-spinner {
+  width: 40px;
+  height: 40px;
+  border-width: 4px;
 }
 
 /* 빈 상태 */

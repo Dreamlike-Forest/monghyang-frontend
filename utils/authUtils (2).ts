@@ -1,7 +1,7 @@
 export interface User {
-  id: string;
   nickname: string;
   email: string;
+  role: string;
 }
 
 // 로그인 상태 확인
@@ -41,7 +41,6 @@ export const getCurrentUser = (): User | null => {
 // 커스텀 확인 다이얼로그 생성
 const showCustomConfirm = (message: string): Promise<boolean> => {
   return new Promise((resolve) => {
-    // 기존 모달이 있으면 제거
     const existingModal = document.getElementById('custom-confirm-modal');
     if (existingModal) {
       existingModal.remove();
@@ -235,7 +234,6 @@ const showCustomConfirm = (message: string): Promise<boolean> => {
     cancelButton.addEventListener('click', () => closeModal(false));
     confirmButton.addEventListener('click', () => closeModal(true));
     
-    // ESC 키로 닫기
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         document.removeEventListener('keydown', handleKeyDown);
@@ -244,14 +242,12 @@ const showCustomConfirm = (message: string): Promise<boolean> => {
     };
     document.addEventListener('keydown', handleKeyDown);
 
-    // 오버레이 클릭으로 닫기
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) {
         closeModal(false);
       }
     });
 
-    // DOM에 추가
     iconContainer.appendChild(icon);
     buttonContainer.appendChild(cancelButton);
     buttonContainer.appendChild(confirmButton);
@@ -261,7 +257,6 @@ const showCustomConfirm = (message: string): Promise<boolean> => {
     modal.appendChild(buttonContainer);
     overlay.appendChild(modal);
 
-    // 개선된 애니메이션 CSS 추가
     const style = document.createElement('style');
     style.id = 'custom-modal-styles';
     style.textContent = `
@@ -318,7 +313,6 @@ const showCustomConfirm = (message: string): Promise<boolean> => {
     document.head.appendChild(style);
     document.body.appendChild(overlay);
 
-    // 접근성: 첫 번째 버튼에 포커스
     setTimeout(() => {
       confirmButton.focus();
       confirmButton.style.outline = '2px solid #f59e0b';
@@ -327,14 +321,12 @@ const showCustomConfirm = (message: string): Promise<boolean> => {
   });
 };
 
-// 로그인 페이지로 리다이렉트
 export const redirectToLogin = (returnUrl?: string): void => {
   if (typeof window === 'undefined') {
     return;
   }
   
   try {
-    // 현재 페이지 정보 저장 (로그인 후 돌아올 페이지)
     if (returnUrl) {
       sessionStorage.setItem('returnUrl', returnUrl);
     } else {
@@ -342,7 +334,6 @@ export const redirectToLogin = (returnUrl?: string): void => {
       sessionStorage.setItem('returnUrl', currentPath);
     }
     
-    // 로그인 페이지로 이동
     const loginUrl = new URL(window.location.pathname, window.location.origin);
     loginUrl.searchParams.set('view', 'login');
     
@@ -353,7 +344,6 @@ export const redirectToLogin = (returnUrl?: string): void => {
   }
 };
 
-// 로그인 확인 및 유도 다이얼로그 - 커스텀 모달 사용
 export const checkAuthAndPrompt = (
   actionName: string = '이 기능',
   onConfirm?: () => void,
@@ -363,7 +353,6 @@ export const checkAuthAndPrompt = (
     return true;
   }
   
-  // 커스텀 모달을 사용하여 비동기적으로 처리
   showCustomConfirm(
     `${actionName}을 이용하려면 로그인이 필요합니다.\n로그인 페이지로 이동하시겠습니까?`
   ).then((confirmed) => {
@@ -382,7 +371,6 @@ export const checkAuthAndPrompt = (
   return false;
 };
 
-// 커스텀 다이얼로그용 Promise 기반 함수
 export const showLoginPrompt = (
   actionName: string = '이 기능'
 ): Promise<boolean> => {
