@@ -15,9 +15,7 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
   product, 
   forwardRef 
 }) => {
-  // 이미지 배열 상태 (0번 인덱스: 대표 이미지, 1~4번: 썸네일)
   const [images, setImages] = useState<string[]>([]);
-  // 로드 실패한 이미지 관리
   const [imageLoadErrors, setImageLoadErrors] = useState<Set<string>>(new Set());
 
   // 토스트 메시지 표시 함수
@@ -41,13 +39,11 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
 
     document.body.appendChild(toast);
     
-    // 애니메이션 트리거
     setTimeout(() => {
       toast.style.opacity = '1';
       toast.style.transform = 'translateY(0)';
     }, 10);
 
-    // 3초 후 제거
     setTimeout(() => {
       toast.style.opacity = '0';
       toast.style.transform = 'translateY(-20px)';
@@ -55,7 +51,7 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
     }, 3000);
   };
 
-  // 이미지 URL 유효성 검사 함수
+  // 이미지 URL 유효성 검사
   const isValidImageUrl = (url: string): boolean => {
     if (!url || url.trim() === '') return false;
     
@@ -70,16 +66,14 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
     return !invalidPatterns.some(pattern => url.toLowerCase().includes(pattern.toLowerCase()));
   };
 
-  // 상품 이미지 수집 및 처리 (최대 5장으로 제한)
+  // 상품 이미지 수집
   const getProductImages = (): string[] => {
     const allImages: string[] = [];
     
-    // 1. 메인 이미지 추가
     if (product.image_key && isValidImageUrl(product.image_key)) {
       allImages.push(product.image_key);
     }
     
-    // 2. 추가 이미지들 처리
     if (product.images && product.images.length > 0) {
       const sortedImages = [...product.images].sort((a, b) => {
         const getSeq = (image: any): number => {
@@ -98,55 +92,45 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
         };
         
         const imageUrl = getImageUrl(image);
-        // 중복 제외하고 추가
         if (isValidImageUrl(imageUrl) && !allImages.includes(imageUrl)) {
           allImages.push(imageUrl);
         }
       });
     }
     
-    // 3. 이미지가 없을 경우 샘플 이미지 추가 (테스트용, 필요시 제거 가능)
     if (allImages.length === 0) {
       const sampleImages = [
-        'https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=800&h=800&fit=crop',
-        'https://images.unsplash.com/photo-1571613316887-6f8d5cbf7ef7?w=800&h=800&fit=crop',
-        'https://images.unsplash.com/photo-1582106245687-a2a4c81d5a65?w=800&h=800&fit=crop'
+        
       ];
       allImages.push(...sampleImages);
     }
     
-    // [핵심] 최대 5장까지만 반환 (대표 1 + 썸네일 4)
     return allImages.slice(0, 5);
   };
 
-  // product가 바뀔 때마다 이미지 배열 초기화
   useEffect(() => {
     setImages(getProductImages());
     setImageLoadErrors(new Set());
   }, [product]);
 
-  // 이미지 로드 에러 처리
   const handleImageError = (url: string) => {
     setImageLoadErrors(prev => new Set(prev).add(url));
   };
 
-  // [핵심 기능] 썸네일 클릭 시 대표 이미지와 자리 교체 (Swap)
   const handleThumbnailClick = (clickedGlobalIndex: number) => {
     setImages(prev => {
       const next = [...prev];
-      const temp = next[0]; // 현재 대표 이미지
-      next[0] = next[clickedGlobalIndex]; // 클릭한 썸네일을 대표 자리로
-      next[clickedGlobalIndex] = temp; // 원래 대표 이미지를 썸네일 자리로
+      const temp = next[0];
+      next[0] = next[clickedGlobalIndex];
+      next[clickedGlobalIndex] = temp;
       return next;
     });
   };
 
-  // 가격 포맷팅
   const formatPrice = (price: number): string => {
     return price.toLocaleString();
   };
 
-  // 할인율 계산
   const getDiscountRate = (): number => {
     if (product.originalPrice && product.minPrice < product.originalPrice) {
       return Math.round(((product.originalPrice - product.minPrice) / product.originalPrice) * 100);
@@ -154,7 +138,7 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
     return product.discountRate || 0;
   };
 
-  // 장바구니 추가 함수
+  // 장바구니 추가
   const handleAddToCart = () => {
     const canProceed = checkAuthAndPrompt(
       '장바구니 기능',
@@ -177,40 +161,19 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
     }
   };
 
-  // 구매하기 함수
-  const handleBuyNow = () => {
-    const canProceed = checkAuthAndPrompt(
-      '구매 기능',
-      () => console.log('로그인 페이지로 이동'),
-      () => console.log('취소됨')
-    );
-
-    if (!canProceed) return;
-
-    try {
-      alert(`${product.name} 구매 페이지는 준비중입니다.`);
-    } catch (error) {
-      console.error('구매 처리 중 오류:', error);
-      alert('구매 처리 중 오류가 발생했습니다.');
-    }
-  };
+  // [삭제됨] handleBuyNow 함수 제거
 
   const discountRate = getDiscountRate();
   const hasImages = images.length > 0;
-  
-  // 대표 이미지 (0번 인덱스)
   const mainImage = images[0];
-  // 썸네일 이미지들 (1번부터 끝까지)
   const thumbnails = images.slice(1);
 
   return (
     <div ref={forwardRef} className="productdetail-product-section-container" id="productdetail-overview">
       <div className="productdetail-product-overview-layout">
         
-        {/* [왼쪽] 이미지 섹션: 대표 이미지 + 2열 그리드 썸네일 */}
+        {/* 이미지 섹션 */}
         <div className="productdetail-product-image-section">
-          
-          {/* 1. 대표 이미지 영역 */}
           <div className="productdetail-product-main-image-container">
             {hasImages && !imageLoadErrors.has(mainImage) ? (
               <img 
@@ -230,11 +193,9 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
             )}
           </div>
           
-          {/* 2. 썸네일 그리드 영역 (2열) */}
           {thumbnails.length > 0 && (
             <div className="productdetail-product-thumbnails-grid">
               {thumbnails.map((imgUrl, index) => {
-                // 실제 images 배열 내의 인덱스는 index + 1
                 const globalIndex = index + 1; 
                 const hasError = imageLoadErrors.has(imgUrl);
 
@@ -263,7 +224,7 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
           )}
         </div>
 
-        {/* [오른쪽] 상품 정보 섹션 (기존 유지) */}
+        {/* 상품 정보 섹션 */}
         <div className="productdetail-product-info-section">
           <div className="productdetail-product-title-section">
             <h1 className="productdetail-product-name">{product.name}</h1>
@@ -374,13 +335,14 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
 
           <div className="productdetail-add-to-cart-section">
             <div className="productdetail-product-action-buttons">
-              <button className="productdetail-add-to-cart-button" onClick={handleAddToCart}>
+              {/* [수정] 구매하기 버튼 제거하고 장바구니 버튼만 남김 */}
+              <button 
+                className="productdetail-add-to-cart-button" 
+                onClick={handleAddToCart}
+                style={{ width: '100%' }} // 버튼 하나만 남으므로 너비 100%로 설정
+              >
                 <span className="productdetail-cart-icon">🛒</span>
-                <span>장바구니</span>
-              </button>
-              <button className="productdetail-buy-now-button" onClick={handleBuyNow}>
-                <span className="productdetail-buy-icon">💳</span>
-                <span>구매하기</span>
+                <span>장바구니 담기</span>
               </button>
             </div>
           </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   getCartItems, 
   subscribeToCart, 
@@ -59,11 +59,11 @@ const Cart: React.FC = () => {
       return sum + (price * item.quantity);
     }, 0);
     
-    const shipping = subtotal >= 50000 ? 0 : 3000;
-    const finalShipping = subtotal === 0 ? 0 : shipping;
-    const total = subtotal + finalShipping;
+    // [수정] 배송비 무조건 0원으로 고정
+    const shipping = 0; 
+    const total = subtotal + shipping;
 
-    setOrderSummary({ subtotal, shipping: finalShipping, total });
+    setOrderSummary({ subtotal, shipping, total });
   }, [cartItems]);
 
   const handleUpdateQuantity = async (item: CartItem, newQuantity: number) => {
@@ -86,14 +86,12 @@ const Cart: React.FC = () => {
     }
   };
 
-  // [수정됨] 주문하기 버튼 핸들러
   const handleCheckout = () => {
     if (cartItems.length === 0) {
       alert('장바구니에 상품이 없습니다.');
       return;
     }
     
-    // 1. 구매 페이지로 넘길 데이터 구성
     const checkoutData = cartItems.map(item => ({
       cart_id: item.cart_id,
       product_id: item.product.product_id,
@@ -104,10 +102,7 @@ const Cart: React.FC = () => {
       brewery_name: item.product.brewery
     }));
 
-    // 2. 세션 스토리지에 저장
     sessionStorage.setItem('checkoutItems', JSON.stringify(checkoutData));
-
-    // 3. 구매 페이지로 이동
     window.location.href = '/?view=purchase';
   };
 
@@ -239,7 +234,8 @@ const Cart: React.FC = () => {
               <div className="summary-row">
                 <span className="summary-label">배송비</span>
                 <span className="summary-value">
-                  {orderSummary.shipping === 0 ? '무료배송' : `${orderSummary.shipping.toLocaleString()}원`}
+                  {/* [수정] 배송비 0원 고정 표시 */}
+                  0원
                 </span>
               </div>
 
@@ -248,18 +244,15 @@ const Cart: React.FC = () => {
                 <span className="summary-value">{orderSummary.total.toLocaleString()}원</span>
               </div>
 
-              {orderSummary.subtotal < 50000 && orderSummary.subtotal > 0 && (
-                <div className="free-shipping-notice">
-                  {(50000 - orderSummary.subtotal).toLocaleString()}원 더 주문하시면 무료배송입니다!
-                </div>
-              )}
+              {/* [수정] 무료 배송 알림 문구 제거 */}
 
               <button className="checkout-btn" onClick={handleCheckout}>
                 주문하기
               </button>
 
               <div className="cart-notice">
-                <div>• 50,000원이상 주문시 무료배송입니다.</div>
+                {/* [수정] 안내 문구 변경 */}
+                <div>• 전 상품 무료배송입니다.</div>
                 <div>• 전통주는 19세 이상만 구매 가능합니다</div>
                 <div>• 파손 위험이 있어 안전포장 후 배송됩니다</div>
               </div>

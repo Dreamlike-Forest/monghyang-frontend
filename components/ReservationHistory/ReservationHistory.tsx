@@ -302,7 +302,7 @@ const ReservationHistory: React.FC = () => {
                 {availableTimes.map(time => {
                   const remainingFromApi = timeSlotCounts[time];
                   // 정보가 없으면 100명 (제한 없음)
-                  const remaining = remainingFromApi !== undefined ? remainingFromApi : 100;
+                  const remaining = remainingFromApi !== undefined ? remainingFromApi : 20;
                   
                   const isOriginalSlot = (
                      newDate === new Date(targetReservation.joy_order_reservation).toISOString().split('T')[0] &&

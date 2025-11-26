@@ -15,20 +15,68 @@ const OrderHistory: React.FC = () => {
     loadOrders();
   }, []);
 
+  // [수정] 상태 텍스트 한글화 (CANCELED 대응)
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'PENDING': return '결제대기';
+      case 'PAID': return '결제완료';
+      case 'CREATED': return '주문접수';
+      case 'ALLOCATED': return '상품준비중';
+      case 'SHIPPED': return '배송중';
+      case 'DELIVERED': return '배송완료';
+      case 'CANCELED': return '취소 완료'; // [핵심] 스펠링 수정 (L 한 개)
+      case 'CANCELLED': return '취소 완료'; // (혹시 몰라 둘 다 처리)
+      case 'FAILED': return '결제실패';
+      default: return status;
+    }
+  };
+
+  // [수정] 상태별 색상 클래스
+  const getStatusClass = (status: string) => {
+    switch (status) {
+      case 'PAID': 
+      case 'CREATED': return 'status-paid';
+      case 'SHIPPED': 
+      case 'DELIVERED': return 'status-shipped';
+      case 'CANCELED': 
+      case 'CANCELLED':
+      case 'FAILED': return 'status-cancelled'; // 빨간색 처리
+      default: return 'status-default';
+    }
+  };
+
+  const extractUserId = (data: any): number | null => {
+    if (!data) return null;
+    return data.userId || data.user_id || data.users_id || data.id || data.no || null;
+  };
+
   const loadOrders = async () => {
     setIsLoading(true);
     try {
-      let userId = 0;
-      const info = await getUserInfo();
-      if (info?.userId) userId = info.userId;
-      else {
-        const local = localStorage.getItem('userData');
-        if (local) userId = JSON.parse(local).userId;
+      let userId: number | null = null;
+
+      try {
+        const localData = localStorage.getItem('userData');
+        if (localData) {
+          const parsed = JSON.parse(localData);
+          userId = extractUserId(parsed);
+        }
+      } catch (e) {
+        console.error('LocalStorage parsing error', e);
       }
 
-      if (!userId) return;
+      if (!userId) {
+        const userInfo = await getUserInfo();
+        userId = extractUserId(userInfo);
+      }
 
-      // 오직 서버 API 데이터만 사용
+      if (!userId) {
+        alert('로그인 정보를 불러올 수 없습니다. 다시 로그인해주세요.');
+        window.location.href = '/?view=login';
+        setIsLoading(false);
+        return;
+      }
+
       const apiData = await getMyOrderHistoryApi(userId, 0);
       
       if (apiData && Array.isArray(apiData) && apiData.length > 0) {
@@ -46,77 +94,174 @@ const OrderHistory: React.FC = () => {
 
   const groupOrdersByDate = (orderList: Order[]) => {
     const grouped: Record<string, Order[]> = {};
+    
     orderList.forEach(order => {
       const dateStr = order.order_created_at || new Date().toISOString();
       const date = dateStr.split('T')[0];
+      
       if (!grouped[date]) grouped[date] = [];
       grouped[date].push(order);
     });
     
     const sorted = Object.entries(grouped)
-      .map(([date, orders]) => ({ date, orders }))
+      .map(([date, orders]) => ({ 
+        date, 
+        orders: orders.sort((a, b) => b.order_id - a.order_id) 
+      }))
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       
     setOrdersByDate(sorted);
   };
 
   const formatDate = (s: string) => s.split('T')[0];
-  const getImageUrl = (k: string | null | undefined) => getShopImageUrl(k);
-  const getFulfillmentStatusText = (status: string) => status;
-  const getFulfillmentStatusClass = (status: string) => 'pending';
+  
+  const getImageUrl = (k: string | null | undefined) => {
+    return getShopImageUrl(k);
+  };
 
   const handleCancelOrder = async (orderItemId: number) => {
-    if (!window.confirm('주문을 취소하시겠습니까?')) return;
+    if (!window.confirm('정말로 이 상품의 주문을 취소하시겠습니까?')) return;
+    
     try {
-      const userId = (await getUserInfo())?.userId; 
-      if (!userId) return;
-      await cancelOrderItemApi(userId, orderItemId);
-      alert('주문이 취소되었습니다.');
-      loadOrders();
-    } catch (e) {
-      alert('취소 실패');
+      const localData = localStorage.getItem('userData');
+      let userId = localData ? extractUserId(JSON.parse(localData)) : null;
+      
+      if (!userId) {
+         const info = await getUserInfo();
+         userId = extractUserId(info);
+      }
+
+      if (!userId) {
+        alert('사용자 정보를 찾을 수 없어 취소할 수 없습니다.');
+        return;
+      }
+
+      const response = await cancelOrderItemApi(userId, orderItemId);
+      
+      if (response && response.message) {
+          alert(response.message);
+      } else {
+          alert('주문이 정상적으로 취소되었습니다.');
+      }
+      
+      loadOrders(); 
+
+    } catch (error: any) {
+      console.error('주문 취소 에러:', error);
+      if (error.message && error.message.includes('404')) {
+        alert('이미 취소되었거나 존재하지 않는 주문입니다. 목록을 갱신합니다.');
+        loadOrders();
+      } else {
+        const errorMsg = error.response?.data?.message || '취소 요청 처리 중 오류가 발생했습니다.';
+        alert(`취소 실패: ${errorMsg}`);
+      }
     }
   };
-  
-  const handleAddToCart = (id: number) => window.location.href = `/?view=shop&product=${id}`;
-  const handleTrackingInfo = (no: string | null) => alert(`송장: ${no || '없음'}`);
 
-  if (isLoading) return <div className="order-history-loading">로딩중...</div>;
+  if (isLoading) {
+    return (
+      <div className="order-history-container">
+        <div className="order-history-loading">
+          <div className="loading-spinner"></div>
+          <p>주문 내역을 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="order-history-container">
       <div className="order-history-header">
         <h1 className="order-history-title">주문 내역</h1>
       </div>
+      
       {ordersByDate.length === 0 ? (
         <div className="empty-orders">
-          <h2>주문 내역이 없습니다</h2>
-          <button className="continue-shopping-btn" onClick={() => window.location.href = '/?view=shop'}>쇼핑하러 가기</button>
+          <div className="empty-orders-icon">📦</div>
+          <h2 className="empty-orders-title">주문 내역이 없습니다</h2>
+          <p className="empty-orders-description">
+            아직 주문하신 상품이 없습니다.<br />
+            맛있는 전통주를 찾아보세요!
+          </p>
+          <button className="continue-shopping-btn" onClick={() => window.location.href = '/?view=shop'}>
+            쇼핑하러 가기
+          </button>
         </div>
       ) : (
         <div className="orders-list">
           {ordersByDate.map((group) => (
             <div key={group.date} className="order-date-group">
               <div className="order-date-header">{formatDate(group.date)}</div>
+              
               {group.orders.map((order) => (
                 <div key={order.order_id} className="order-block">
                   <div className="order-items-list">
-                    {order.order_items && order.order_items.map((item) => (
+                    {order.order_items.map((item) => (
                       <div key={item.order_item_id} className="order-item">
+                        {/* 상품 이미지 */}
                         <div className="order-item-image">
-                          <img src={getImageUrl(item.product_image_key)} alt={item.product_name} onError={(e)=>{e.currentTarget.style.display='none'}} />
+                          <img 
+                            src={getImageUrl(item.product_image_key)} 
+                            alt={item.product_name} 
+                            onError={(e)=>{e.currentTarget.style.display='none'}} 
+                          />
                         </div>
+
+                        {/* 상품 정보 */}
                         <div className="order-item-info">
-                          <h3>{item.product_name}</h3>
-                          <p>{item.order_item_quantity}개 / {item.order_item_amount.toLocaleString()}원</p>
+                          <h3 className="order-item-name">{item.product_name}</h3>
+                          <p className="order-item-specs">
+                            {item.order_item_quantity}개 / {item.order_item_amount.toLocaleString()}원
+                          </p>
+                          <div className="order-item-meta">
+                            {item.provider_nickname && (
+                              <span className="order-item-brewery">{item.provider_nickname}</span>
+                            )}
+                          </div>
                         </div>
+
+                        {/* 상태 및 액션 버튼 */}
                         <div className="order-item-actions">
-                          {item.order_item_fulfillment_status !== 'CANCELLED' && (
-                            <button className="order-action-btn danger" onClick={() => handleCancelOrder(item.order_item_id)}>주문 취소</button>
+                          {/* 상태 텍스트 (취소 완료 등) */}
+                          <span className={`status-text ${getStatusClass(item.order_item_fulfillment_status)}`}>
+                            {getStatusText(item.order_item_fulfillment_status)}
+                          </span>
+                          
+                          {/* [핵심 수정] CANCELED 또는 CANCELLED 또는 FAILED 상태가 아닐 때만 버튼 표시 */}
+                          {item.order_item_fulfillment_status !== 'CANCELED' && 
+                           item.order_item_fulfillment_status !== 'CANCELLED' && 
+                           item.order_item_fulfillment_status !== 'FAILED' && (
+                            <button 
+                              className="order-action-btn danger" 
+                              onClick={() => handleCancelOrder(item.order_item_id)}
+                            >
+                              주문 취소
+                            </button>
                           )}
                         </div>
                       </div>
                     ))}
+                  </div>
+
+                  {/* 배송 정보 섹션 */}
+                  <div className="order-shipping-info">
+                    <h4 className="shipping-info-title">배송 정보</h4>
+                    <div className="shipping-info-grid">
+                      <div className="shipping-info-item">
+                        <span className="shipping-label">받는 분</span>
+                        <span className="shipping-value">{order.order_payer_name || '-'}</span>
+                      </div>
+                      <div className="shipping-info-item">
+                        <span className="shipping-label">연락처</span>
+                        <span className="shipping-value">{order.order_payer_phone || '-'}</span>
+                      </div>
+                      <div className="shipping-info-item full-width">
+                        <span className="shipping-label">배송지</span>
+                        <span className="shipping-value">
+                          {order.order_address} {order.order_address_detail}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
