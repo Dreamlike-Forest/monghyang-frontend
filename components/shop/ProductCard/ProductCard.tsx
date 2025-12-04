@@ -205,7 +205,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
           <span className="badge-discount">{discountRate}%</span>
         )}
 
-        {/* 위시리스트 버튼 - 로그인 확인 포함 */}
+        {/* 위시리스트 버튼 주석 처리 */}
+        {/*
         <button
           className={`wishlist-button ${isWishlisted ? 'active' : ''}`}
           onClick={handleToggleWishlist}
@@ -213,6 +214,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         >
           {isWishlisted ? '♥' : '♡'}
         </button>
+        */}
       </div>
 
       {/* 상품 정보 */}
