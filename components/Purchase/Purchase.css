@@ -88,19 +88,57 @@
   border-bottom: 1px solid #e5e5e5;
 }
 
+/* [수정됨] 구매 아이템 컨테이너: flex 정렬 및 간격 추가 */
 .purchase-item {
   padding: 20px 0;
   border-bottom: 1px solid #f5f5f5;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start; /* 왼쪽 정렬 */
+  align-items: center; /* 수직 중앙 정렬 */
+  gap: 16px; /* 이미지와 텍스트 사이 간격 */
+}
+
+/* [추가됨] 이미지 영역 크기 고정 */
+.purchase-item-img {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #f8f9fa;
+  flex-shrink: 0; /* 화면이 줄어들어도 찌그러지지 않음 */
+  border: 1px solid #eee;
+}
+
+/* [추가됨] 이미지 태그 스타일: 영역 꽉 채우기 */
+.purchase-item-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* [추가됨] 상품 정보 영역: 남은 공간 차지 */
+.purchase-item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* 상품 텍스트 스타일 */
+.item-brewery {
+  font-size: 12px;
+  color: #8b5a3c;
+  margin-bottom: 2px;
 }
 
 .item-name {
   font-weight: 500;
   color: #333;
+  font-size: 16px;
 }
 
-.item-detail {
+.item-meta {
   color: #666;
   font-size: 14px;
 }
