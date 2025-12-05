@@ -1,7 +1,7 @@
 import apiClient from './api';
 import axios from 'axios';
 
-// ... (인터페이스 정의는 기존과 동일하므로 생략, 파일 상단에 유지) ...
+// 인터페이스 정의
 export interface LoginRequest { email: string; password: string; }
 export interface LoginResponse { status: number; nickname: string; role: string; [key: string]: any; }
 export interface UserData { userId: number; nickname: string; email: string; role: string; }
@@ -35,7 +35,6 @@ export const login = async (email: string, password: string): Promise<{ success:
       localStorage.setItem('isLoggedIn', 'true');
       
       const rawData = response.data;
-      // ID 추출 로직 유지
       let foundId = rawData.userId || rawData.user_id || rawData.users_id || rawData.id || rawData.no;
       if (!foundId && rawData.content) foundId = rawData.content.userId || rawData.content.id;
       if (!foundId && rawData.data) foundId = rawData.data.userId || rawData.data.id;
@@ -83,21 +82,27 @@ export const checkUserByEmail = async (email: string): Promise<boolean> => {
   } catch (error) { return false; }
 };
 
-// [수정됨] 비밀번호 초기화 (헤더 제거)
+// [수정됨] 비밀번호 초기화 (POST /api/auth/reset-pw)
 export const resetPassword = async (email: string, newPassword: string): Promise<{ success: boolean; message: string }> => {
   try {
     const formData = new FormData();
     formData.append('email', email);
     formData.append('newPassword', newPassword);
 
-    const response = await apiClient.post('/api/auth/reset-pw', formData);
+    // [핵심] Content-Type을 undefined로 설정하여 브라우저가 boundary를 자동으로 설정하게 함
+    const response = await apiClient.post('/api/auth/reset-pw', formData, {
+      headers: {
+        'Content-Type': undefined 
+      }
+    });
     return { success: response.status === 200, message: '비밀번호가 초기화되었습니다.' };
   } catch (error: any) {
+    console.error('비밀번호 초기화 에러:', error);
     return { success: false, message: error.response?.data?.message || '오류 발생' };
   }
 };
 
-// [수정됨] 일반 회원가입 (헤더 제거)
+// [수정됨] 일반 회원가입
 export const signupCommonUser = async (data: CommonSignupData): Promise<SignupResponse> => {
   try {
     const formData = new FormData();
@@ -108,7 +113,10 @@ export const signupCommonUser = async (data: CommonSignupData): Promise<SignupRe
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL || 'http://16.184.16.198:61234'}/api/auth/common-join`,
       formData,
-      { withCredentials: true } // Content-Type 제거
+      { withCredentials: true } 
+      // axios 직접 호출 시에는 기본적으로 header 설정이 없으므로 자동 처리되지만, 
+      // 만약 axios.create로 만든 인스턴스를 쓴다면 여기서도 헤더를 지워줘야 합니다.
+      // 현재는 axios를 직접 import해서 쓰고 있으므로 별도 설정 불필요하나 안전을 위해 유지
     );
     return { success: true, message: response.data.message };
   } catch (error: any) {
@@ -116,7 +124,7 @@ export const signupCommonUser = async (data: CommonSignupData): Promise<SignupRe
   }
 };
 
-// [수정됨] 판매자 회원가입 (헤더 제거, 파일 처리)
+// [수정됨] 판매자 회원가입
 export const signupSeller = async (data: SellerSignupData): Promise<SignupResponse> => {
   try {
     const formData = new FormData();
@@ -143,7 +151,7 @@ export const signupSeller = async (data: SellerSignupData): Promise<SignupRespon
   }
 };
 
-// [수정됨] 양조장 회원가입 (헤더 제거, 파일 처리)
+// [수정됨] 양조장 회원가입
 export const signupBrewery = async (data: BrewerySignupData): Promise<SignupResponse> => {
   try {
     const formData = new FormData();

@@ -24,7 +24,9 @@ const PasswordVerification: React.FC<PasswordVerificationProps> = ({ onSuccess, 
     setIsLoading(true);
     setError('');
 
+    // verifyPassword API 호출 (FormData로 전송됨)
     const isValid = await verifyPassword(password);
+    
     if (isValid) {
       onSuccess();
     } else {
@@ -48,6 +50,7 @@ const PasswordVerification: React.FC<PasswordVerificationProps> = ({ onSuccess, 
             placeholder="비밀번호 입력"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            disabled={isLoading}
           />
           {error && <p className="error-text">{error}</p>}
           

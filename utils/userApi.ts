@@ -12,16 +12,22 @@ export const getUserInfo = async (): Promise<any> => {
   }
 };
 
-// [수정됨] 비밀번호 검증
+// [수정됨] 비밀번호 검증 (POST /api/auth/verify-pw)
 export const verifyPassword = async (password: string): Promise<boolean> => {
   try {
     const formData = new FormData();
     formData.append('password', password);
 
-    // headers 제거
-    const response = await apiClient.post('/api/auth/verify-pw', formData);
+    // [핵심] Content-Type: undefined 설정
+    const response = await apiClient.post('/api/auth/verify-pw', formData, {
+      headers: {
+        'Content-Type': undefined 
+      }
+    });
+    
     return response.status === 200;
-  } catch (error) {
+  } catch (error: any) {
+    console.error('비밀번호 검증 실패:', error.response?.status);
     return false;
   }
 };
@@ -42,8 +48,12 @@ export const updateUserProfile = async (data: UserUpdateData): Promise<{ success
       }
     });
 
-    // headers 제거
-    const response = await apiClient.post('/api/user/update', formData);
+    // [핵심] Content-Type: undefined 설정
+    const response = await apiClient.post('/api/user/update', formData, {
+      headers: {
+        'Content-Type': undefined
+      }
+    });
 
     if (response.status === 200 && typeof window !== 'undefined') {
       const currentUser = JSON.parse(localStorage.getItem('userData') || '{}');

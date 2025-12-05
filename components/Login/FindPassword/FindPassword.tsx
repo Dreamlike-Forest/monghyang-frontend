@@ -56,6 +56,7 @@ const FindPassword: React.FC<FindPasswordProps> = ({ onBack }) => {
       }
 
       // 3. 비밀번호 초기화 API 호출
+      // API 문서에 따라 email과 newPassword를 전송합니다.
       const result = await resetPassword(email, newPassword);
       
       if (result.success) {
@@ -90,6 +91,7 @@ const FindPassword: React.FC<FindPasswordProps> = ({ onBack }) => {
             placeholder="가입 시 등록한 이메일"
             value={formData.email}
             onChange={handleInputChange}
+            disabled={isLoading}
           />
         </div>
 
@@ -102,6 +104,7 @@ const FindPassword: React.FC<FindPasswordProps> = ({ onBack }) => {
             placeholder="8자 이상 입력"
             value={formData.newPassword}
             onChange={handleInputChange}
+            disabled={isLoading}
           />
         </div>
 
@@ -114,6 +117,7 @@ const FindPassword: React.FC<FindPasswordProps> = ({ onBack }) => {
             placeholder="비밀번호 다시 입력"
             value={formData.confirmPassword}
             onChange={handleInputChange}
+            disabled={isLoading}
           />
         </div>
 

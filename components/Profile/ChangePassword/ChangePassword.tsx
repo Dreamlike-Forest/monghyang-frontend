@@ -40,16 +40,25 @@ const ChangePassword: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // 1. 필수 입력 확인
     if (!formData.curPassword || !formData.newPassword || !formData.newPasswordConfirm) {
       alert('모든 필드를 입력해주세요.');
       return;
     }
 
+    // [추가된 로직] 2. 비밀번호 길이 확인 (8자 이상)
+    if (formData.newPassword.length < 8) {
+      alert('새 비밀번호는 8자 이상이어야 합니다.');
+      return;
+    }
+
+    // 3. 비밀번호 일치 확인
     if (formData.newPassword !== formData.newPasswordConfirm) {
       alert('새 비밀번호가 일치하지 않습니다.');
       return;
     }
 
+    // 4. 현재 비밀번호와 다른지 확인
     if (formData.curPassword === formData.newPassword) {
       alert('새 비밀번호는 현재 비밀번호와 달라야 합니다.');
       return;
@@ -64,7 +73,7 @@ const ChangePassword: React.FC = () => {
     if (result.success) {
       alert('비밀번호가 변경되었습니다. 보안을 위해 다시 로그인해주세요.');
       
-      // [수정됨] 로그아웃 처리 및 로그인 페이지로 이동
+      // 로그아웃 처리 및 로그인 페이지로 이동
       if (typeof window !== 'undefined') {
         localStorage.removeItem('isLoggedIn');
         localStorage.removeItem('userData');
@@ -101,7 +110,7 @@ const ChangePassword: React.FC = () => {
             name="newPassword"
             value={formData.newPassword}
             onChange={handleInputChange}
-            placeholder="새 비밀번호를 입력하세요"
+            placeholder="새 비밀번호를 입력하세요 (8자 이상)"
             className="password-input"
           />
         </div>

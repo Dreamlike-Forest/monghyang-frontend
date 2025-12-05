@@ -1,5 +1,6 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
+
 const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://16.184.16.198:61234',
   timeout: 10000,
@@ -7,10 +8,6 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  // [중요] 배열 파라미터 직렬화 설정 (Spring Boot 호환: key=value&key=value)
-  paramsSerializer: {
-    indexes: null 
-  }
 });
 
 apiClient.interceptors.request.use(
@@ -67,7 +64,9 @@ async function refreshSession(): Promise<boolean> {
     if (typeof window === 'undefined') return false;
 
     const refreshToken = localStorage.getItem('refreshToken');
-    if (!refreshToken) return false;
+    const sessionId = localStorage.getItem('sessionId');
+    
+    if (!refreshToken || !sessionId) return false;
 
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL || 'http://16.184.16.198:61234'}/api/auth/refresh`,
@@ -75,6 +74,7 @@ async function refreshSession(): Promise<boolean> {
       {
         headers: {
           'X-Refresh-Token': refreshToken,
+          'X-Session-Id': sessionId,
         },
         withCredentials: true,
       }
