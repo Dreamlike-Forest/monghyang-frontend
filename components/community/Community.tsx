@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation'; // [추가] URL 파라미터 감지용
 import CommunityFilter from './CommunityFilter/CommunityFilter';
 import CommunityList from './CommunityList/CommunityList';
 import WritePost from './WritePost/WritePost';
@@ -156,6 +157,7 @@ interface CommunityProps {
 }
 
 const Community: React.FC<CommunityProps> = ({ className }) => {
+  const searchParams = useSearchParams(); // [추가] URL 파라미터 훅
   const [currentView, setCurrentView] = useState<'list' | 'write'>('list');
   const [currentCategory, setCurrentCategory] = useState<PostCategory | 'all'>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -173,6 +175,20 @@ const Community: React.FC<CommunityProps> = ({ className }) => {
     sortBy: 'latest',
     hasImages: false
   });
+
+  // [추가됨] URL 파라미터 감지 및 카테고리 설정
+  useEffect(() => {
+    const categoryParam = searchParams.get('category');
+    if (categoryParam) {
+      // 유효한 카테고리인지 확인
+      const validCategories = ['notice', 'free', 'drink_review', 'brewery_review'];
+      if (validCategories.includes(categoryParam)) {
+        const targetCategory = categoryParam as PostCategory;
+        setCurrentCategory(targetCategory);
+        setFilter(prev => ({ ...prev, category: targetCategory }));
+      }
+    }
+  }, [searchParams]);
 
   // 게시글 목록 조회
   const fetchPosts = useCallback(async () => {

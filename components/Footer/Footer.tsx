@@ -6,7 +6,7 @@ import './Footer.css';
 // 타입 정의
 interface MenuItem {
   label: string;
-  href: string;
+  href: string; // id로 활용됨
 }
 
 interface MenuSection {
@@ -36,18 +36,18 @@ const MENU_SECTIONS: MenuSection[] = [
   {
     title: '서비스 소개',
     items: [
-      { label: '몽항 소개', href: '/about' },
-      { label: '이용 안내', href: '/guide' },
-      { label: '공지사항', href: '/notices' }
+      { label: '몽향 소개', href: 'about' },
+      { label: '이용 안내', href: 'guide' },
+      { label: '공지사항', href: 'notice' }
     ]
   },
   {
     title: '고객 지원',
     items: [
-      { label: '자주 묻는 질문', href: '/faq' },
-      { label: '1:1 문의', href: '/inquiry' },
-      { label: '이용약관', href: '/terms' },
-      { label: '개인정보처리방침', href: '/privacy' }
+      { label: '자주 묻는 질문', href: 'faq' },
+      { label: '1:1 문의', href: 'inquiry' },
+      { label: '이용약관', href: 'terms' },
+      { label: '개인정보처리방침', href: 'privacy' }
     ]
   }
 ];
@@ -80,7 +80,7 @@ const SOCIAL_LINKS: SocialLink[] = [
 ];
 
 const COMPANY_INFO: CompanyInfo = {
-  name: '(주)몽항',
+  name: '(주)몽향',
   ceo: '최재현',
   businessNumber: '123-45-67890',
   address: '부산광역시 수제로 47, 동서대학교',
@@ -89,16 +89,28 @@ const COMPANY_INFO: CompanyInfo = {
   copyright: '2025 Monghyang Inc. All rights reserved.'
 };
 
-// 서브 컴포넌트들
-const MenuSection: React.FC<{ section: MenuSection }> = ({ section }) => (
+// [수정됨] MenuSection 컴포넌트: 클릭 핸들러 추가 및 버튼으로 변경
+const MenuSection: React.FC<{ section: MenuSection, onItemClick: (item: MenuItem) => void }> = ({ section, onItemClick }) => (
   <div className="footer-section">
     <h3 className="footer-section-title">{section.title}</h3>
     <ul className="footer-menu-list">
       {section.items.map((item) => (
         <li key={item.href}>
-          <a href={item.href} className="footer-menu-link">
+          <button 
+            type="button" 
+            className="footer-menu-link" 
+            onClick={() => onItemClick(item)}
+            style={{ 
+              background: 'none', 
+              border: 'none', 
+              padding: 0, 
+              cursor: 'pointer', 
+              fontFamily: 'inherit',
+              textAlign: 'left'
+            }}
+          >
             {item.label}
-          </a>
+          </button>
         </li>
       ))}
     </ul>
@@ -152,6 +164,42 @@ const Footer: React.FC = () => {
     console.log('현재 관리자 페이지를 준비중입니다.');
     alert('현재 관리자 페이지를 준비중입니다.');
   };
+
+  // [수정됨] 네비게이션 핸들러
+  const handleNavigation = (viewName: string, category?: string) => {
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      
+      // 불필요한 파라미터 정리
+      url.searchParams.delete('product');
+      url.searchParams.delete('brewery');
+      url.searchParams.delete('search');
+      url.searchParams.delete('searchType');
+      
+      // 뷰 설정
+      url.searchParams.set('view', viewName);
+      
+      // 카테고리가 있으면 설정, 없으면 제거
+      if (category) {
+        url.searchParams.set('category', category);
+      } else {
+        url.searchParams.delete('category');
+      }
+      
+      window.location.href = url.toString();
+    }
+  };
+
+  const handleMenuClick = (item: MenuItem) => {
+    if (item.label === '몽향 소개') {
+      handleNavigation('about');
+    } else if (item.label === '공지사항') {
+      handleNavigation('community', 'notice');
+    } else {
+      alert('준비 중인 페이지입니다.');
+    }
+  };
+
   return (
     <footer className="footer">
       <div className="footer-container">
@@ -171,7 +219,11 @@ const Footer: React.FC = () => {
           {/* 메뉴 섹션들 */}
           <div className="footer-sections">
             {MENU_SECTIONS.map((section) => (
-              <MenuSection key={section.title} section={section} />
+              <MenuSection 
+                key={section.title} 
+                section={section} 
+                onItemClick={handleMenuClick}
+              />
             ))}
             <SocialMediaSection />
           </div>
