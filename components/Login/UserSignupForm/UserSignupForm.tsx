@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import TermsAgreement from '../TermsAgreement/TermsAgreement';
 import AddressSearch from '../AddressSearch/AddressSearch';
-import { checkEmailAvailability, signupCommonUser } from '../../../utils/authApi';
+import { checkEmailAvailability, checkPhoneAvailability, signupCommonUser } from '../../../utils/authApi';
 import './UserSignupForm.css';
 
 interface UserSignupFormProps {
@@ -12,7 +12,6 @@ interface UserSignupFormProps {
 
 const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
   const [formData, setFormData] = useState({
-    // 회원 테이블 필드
     email: '',
     password: '',
     passwordConfirm: '',
@@ -23,12 +22,14 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
     gender: '',
     address: '',
     address_detail: '',
-    zonecode: '', // 우편번호 추가
+    zonecode: '',
     is_agreed: false
   });
 
   const [emailChecked, setEmailChecked] = useState(false);
+  const [phoneChecked, setPhoneChecked] = useState(false);
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [isCheckingPhone, setIsCheckingPhone] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [is_agreed, setIsAgreed] = useState(false); 
 
@@ -44,6 +45,11 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
     // 이메일이 변경되면 중복확인을 다시 해야 함
     if (name === 'email') {
       setEmailChecked(false);
+    }
+    
+    // 전화번호가 변경되면 중복확인을 다시 해야 함
+    if (name === 'phone') {
+      setPhoneChecked(false);
     }
 
     // 에러 초기화
@@ -63,7 +69,6 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
       zonecode: zonecode
     }));
 
-    // 주소 관련 에러 초기화
     if (errors.address) {
       setErrors(prev => ({
         ...prev,
@@ -104,6 +109,40 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
       setIsCheckingEmail(false);
     }
   };
+  
+  // 전화번호 중복 확인 추가
+  const handlePhoneCheck = async () => {
+    if (!formData.phone) {
+      setErrors(prev => ({ ...prev, phone: '전화번호를 입력해주세요.' }));
+      return;
+    }
+
+    const phoneRegex = /^010-?\d{4}-?\d{4}$/;
+    if (!phoneRegex.test(formData.phone.replace(/-/g, ''))) {
+      setErrors(prev => ({ ...prev, phone: '올바른 전화번호 형식을 입력해주세요.' }));
+      return;
+    }
+
+    setIsCheckingPhone(true);
+    
+    try {
+      const isAvailable = await checkPhoneAvailability(formData.phone);
+      
+      if (isAvailable) {
+        setPhoneChecked(true);
+        setErrors(prev => ({ ...prev, phone: '' }));
+      } else {
+        setErrors(prev => ({ ...prev, phone: '이미 사용 중인 전화번호입니다.' }));
+        setPhoneChecked(false);
+      }
+    } catch (error) {
+      console.error('전화번호 중복 확인 오류:', error);
+      setErrors(prev => ({ ...prev, phone: '전화번호 확인 중 오류가 발생했습니다.' }));
+      setPhoneChecked(false);
+    } finally {
+      setIsCheckingPhone(false);
+    }
+  };
 
   // 약관 동의 핸들러 
   const handleAgreementChange = (agreed: boolean) => {
@@ -116,7 +155,6 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {};
 
-    // 회원 필드 검증
     if (!formData.email) newErrors.email = '이메일을 입력해주세요.';
     if (!emailChecked) newErrors.email = '이메일 중복확인을 해주세요.';
     if (!formData.password) newErrors.password = '비밀번호를 입력해주세요.';
@@ -126,6 +164,7 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
     if (!formData.nickname) newErrors.nickname = '닉네임을 입력해주세요.';
     if (!formData.name) newErrors.name = '실명을 입력해주세요.';
     if (!formData.phone) newErrors.phone = '전화번호를 입력해주세요.';
+    if (!phoneChecked) newErrors.phone = '전화번호 중복확인을 해주세요.';
     if (!formData.birth) newErrors.birth = '생년월일을 입력해주세요.';
     if (!formData.gender) newErrors.gender = '성별을 선택해주세요.';
     if (!formData.address) newErrors.address = '주소를 입력해주세요.';
@@ -169,7 +208,7 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
       
       if (response.success) {
         alert(response.message || '회원가입이 완료되었습니다!');
-        onBack(); // 로그인 페이지로 돌아가기
+        onBack();
       } else {
         alert(response.message || '회원가입에 실패했습니다.');
       }
@@ -280,19 +319,30 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
             {errors.name && <span className="user-error-message">{errors.name}</span>}
           </div>
 
-          {/* 전화번호 */}
+          {/* 전화번호 - 중복확인 추가 */}
           <div className="user-form-group">
             <label htmlFor="phone" className="user-form-label">전화번호 *</label>
-            <input
-              type="tel"
-              id="phone"
-              name="phone"
-              className={`user-form-input ${errors.phone ? 'error' : ''}`}
-              placeholder="010-1234-5678"
-              value={formData.phone}
-              onChange={handleInputChange}
-            />
+            <div className="user-email-input-group">
+              <input
+                type="tel"
+                id="phone"
+                name="phone"
+                className={`user-form-input ${errors.phone ? 'error' : ''} ${phoneChecked ? 'success' : ''}`}
+                placeholder="010-1234-5678"
+                value={formData.phone}
+                onChange={handleInputChange}
+              />
+              <button
+                type="button"
+                onClick={handlePhoneCheck}
+                disabled={isCheckingPhone || phoneChecked}
+                className="user-email-check-btn"
+              >
+                {isCheckingPhone ? '확인중...' : phoneChecked ? '확인완료' : '중복확인'}
+              </button>
+            </div>
             {errors.phone && <span className="user-error-message">{errors.phone}</span>}
+            {phoneChecked && !errors.phone && <span className="user-success-message">사용 가능한 전화번호입니다.</span>}
           </div>
 
           {/* 생년월일 */}
@@ -326,7 +376,7 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
             {errors.gender && <span className="user-error-message">{errors.gender}</span>}
           </div>
 
-          {/* 주소 - 주소 검색 기능 추가 */}
+          {/* 주소 */}
           <div className="user-form-group">
             <label htmlFor="address" className="user-form-label">주소 *</label>
             <div className="user-address-input-group">
@@ -362,7 +412,7 @@ const UserSignupForm: React.FC<UserSignupFormProps> = ({ onBack }) => {
             {errors.address_detail && <span className="user-error-message">{errors.address_detail}</span>}
           </div>
 
-          {/* 약관 동의 컴포넌트 추가 */}
+          {/* 약관 동의 */}
           <TermsAgreement
             isAgreed={is_agreed}
             onAgreementChange={handleAgreementChange}
