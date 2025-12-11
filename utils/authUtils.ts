@@ -1,14 +1,31 @@
+export type UserRole = 'ROLE_ADMIN' | 'ROLE_BREWERY' | 'ROLE_SELLER' | 'ROLE_USER';
+
+// 역할 계층 (숫자가 높을수록 더 많은 권한)
+const ROLE_HIERARCHY: Record<UserRole, number> = {
+  ROLE_ADMIN: 4,
+  ROLE_BREWERY: 3,
+  ROLE_SELLER: 2,
+  ROLE_USER: 1,
+};
+
+// 역할 한글 표시
+export const ROLE_LABELS: Record<UserRole, string> = {
+  ROLE_ADMIN: '관리자',
+  ROLE_BREWERY: '양조장',
+  ROLE_SELLER: '판매자',
+  ROLE_USER: '일반 사용자',
+};
+
 export interface User {
   id: string;
   nickname: string;
   email: string;
+  role: UserRole;
 }
 
 // 로그인 상태 확인
 export const isLoggedIn = (): boolean => {
-  if (typeof window === 'undefined') {
-    return false;
-  }
+  if (typeof window === 'undefined') return false;
   
   try {
     const isAuthenticated = localStorage.getItem('isLoggedIn') === 'true';
@@ -20,17 +37,37 @@ export const isLoggedIn = (): boolean => {
   }
 };
 
-// 현재 사용자 정보 가져오기
+// 현재 사용자 정보 가져오기 (수정됨: 백엔드 필드명 + loginInfo 우선 사용)
 export const getCurrentUser = (): User | null => {
-  if (typeof window === 'undefined') {
-    return null;
-  }
+  if (typeof window === 'undefined') return null;
   
   try {
+    // 1. 먼저 loginInfo에서 빠르게 가져오기 (로그인 응답 body)
+    const loginInfo = localStorage.getItem('loginInfo');
     const userData = localStorage.getItem('userData');
-    if (userData) {
-      return JSON.parse(userData);
+    
+    if (loginInfo) {
+      const loginParsed = JSON.parse(loginInfo);
+      // loginInfo가 있으면 이걸 우선 사용 (가장 빠름)
+      return {
+        id: '', // loginInfo에는 id가 없음
+        nickname: loginParsed.nickname || '',
+        email: '', // loginInfo에는 email이 없음
+        role: normalizeRole(loginParsed.role),
+      };
     }
+    
+    // 2. userData에서 상세 정보 가져오기 (백엔드 필드명 맞춤)
+    if (userData) {
+      const parsed = JSON.parse(userData);
+      return {
+        id: parsed.users_id?.toString() || parsed.userId?.toString() || parsed.id?.toString() || '',
+        nickname: parsed.users_nickname || parsed.nickname || '',
+        email: parsed.users_email || parsed.email || '',
+        role: normalizeRole(parsed.role_name || parsed.role),
+      };
+    }
+    
     return null;
   } catch (error) {
     console.error('사용자 정보 조회 오류:', error);
@@ -38,16 +75,137 @@ export const getCurrentUser = (): User | null => {
   }
 };
 
+// 빠른 nickname 조회 (신규 추가)
+export const getCurrentUserNickname = (): string => {
+  if (typeof window === 'undefined') return '';
+  
+  try {
+    // loginInfo에서 먼저 확인 (가장 빠름)
+    const loginInfo = localStorage.getItem('loginInfo');
+    if (loginInfo) {
+      const parsed = JSON.parse(loginInfo);
+      if (parsed.nickname) return parsed.nickname;
+    }
+    
+    // userData에서 확인 (백엔드 필드명)
+    const userData = localStorage.getItem('userData');
+    if (userData) {
+      const parsed = JSON.parse(userData);
+      return parsed.users_nickname || parsed.nickname || '';
+    }
+    
+    return '';
+  } catch (error) {
+    console.error('nickname 조회 오류:', error);
+    return '';
+  }
+};
+
+// 역할 문자열 정규화
+const normalizeRole = (role?: string): UserRole => {
+  if (!role) return 'ROLE_USER';
+  
+  const upperRole = role.toUpperCase();
+  
+  if (upperRole.includes('ADMIN')) return 'ROLE_ADMIN';
+  if (upperRole.includes('BREWERY')) return 'ROLE_BREWERY';
+  if (upperRole.includes('SELLER')) return 'ROLE_SELLER';
+  return 'ROLE_USER';
+};
+
+// 현재 사용자 역할 가져오기
+export const getCurrentUserRole = (): UserRole | null => {
+  if (typeof window === 'undefined') return null;
+  
+  try {
+    // loginInfo에서 먼저 확인 (가장 빠름)
+    const loginInfo = localStorage.getItem('loginInfo');
+    if (loginInfo) {
+      const parsed = JSON.parse(loginInfo);
+      if (parsed.role) return normalizeRole(parsed.role);
+    }
+    
+    // userData에서 확인
+    const userData = localStorage.getItem('userData');
+    if (userData) {
+      const parsed = JSON.parse(userData);
+      return normalizeRole(parsed.role_name || parsed.role);
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('role 조회 오류:', error);
+    return null;
+  }
+};
+
+// 특정 역할 이상인지 확인
+export const hasRole = (requiredRole: UserRole): boolean => {
+  const currentRole = getCurrentUserRole();
+  if (!currentRole) return false;
+  
+  return ROLE_HIERARCHY[currentRole] >= ROLE_HIERARCHY[requiredRole];
+};
+
+// 특정 역할과 정확히 일치하는지 확인
+export const hasExactRole = (role: UserRole): boolean => {
+  return getCurrentUserRole() === role;
+};
+
+// 관리자 여부
+export const isAdmin = (): boolean => hasExactRole('ROLE_ADMIN');
+
+// 양조장 관리자 여부
+export const isBrewery = (): boolean => hasExactRole('ROLE_BREWERY');
+
+// 판매자 여부
+export const isSeller = (): boolean => hasExactRole('ROLE_SELLER');
+
+// 일반 사용자 여부
+export const isUser = (): boolean => hasExactRole('ROLE_USER');
+
+// 역할 한글명 가져오기
+export const getRoleLabel = (role?: UserRole): string => {
+  if (!role) return '비회원';
+  return ROLE_LABELS[role] || '알 수 없음';
+};
+
+// 현재 사용자 역할 한글명
+export const getCurrentUserRoleLabel = (): string => {
+  const role = getCurrentUserRole();
+  return getRoleLabel(role || undefined);
+};
+
+// 권한 체크 후 액션 실행
+export const withPermission = <T>(
+  requiredRole: UserRole,
+  action: () => T,
+  onDenied?: () => void
+): T | null => {
+  if (hasRole(requiredRole)) {
+    return action();
+  }
+  
+  if (onDenied) {
+    onDenied();
+  } else {
+    showPermissionDeniedAlert(requiredRole);
+  }
+  return null;
+};
+
+// 권한 부족 알림
+const showPermissionDeniedAlert = (requiredRole: UserRole): void => {
+  const roleLabel = ROLE_LABELS[requiredRole];
+  alert(`이 기능은 ${roleLabel} 이상만 이용할 수 있습니다.`);
+};
+
 // 커스텀 확인 다이얼로그 생성
 const showCustomConfirm = (message: string): Promise<boolean> => {
   return new Promise((resolve) => {
-    // 기존 모달이 있으면 제거
     const existingModal = document.getElementById('custom-confirm-modal');
-    if (existingModal) {
-      existingModal.remove();
-    }
+    if (existingModal) existingModal.remove();
 
-    // 모달 오버레이 생성
     const overlay = document.createElement('div');
     overlay.id = 'custom-confirm-modal';
     overlay.style.cssText = `
@@ -66,7 +224,6 @@ const showCustomConfirm = (message: string): Promise<boolean> => {
       animation: overlayFadeIn 0.3s ease-out;
     `;
 
-    // 모달 컨테이너 생성
     const modal = document.createElement('div');
     modal.style.cssText = `
       background: linear-gradient(145deg, #ffffff, #f8fafc);
@@ -84,7 +241,6 @@ const showCustomConfirm = (message: string): Promise<boolean> => {
       overflow: hidden;
     `;
 
-    // 장식용 상단 그라데이션 바
     const topBar = document.createElement('div');
     topBar.style.cssText = `
       position: absolute;
@@ -96,7 +252,6 @@ const showCustomConfirm = (message: string): Promise<boolean> => {
       border-radius: 20px 20px 0 0;
     `;
 
-    // 아이콘 컨테이너
     const iconContainer = document.createElement('div');
     iconContainer.style.cssText = `
       width: 56px;
@@ -108,18 +263,12 @@ const showCustomConfirm = (message: string): Promise<boolean> => {
       justify-content: center;
       margin: 0 auto 20px auto;
       box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
-      position: relative;
     `;
 
-    // 아이콘
     const icon = document.createElement('div');
     icon.innerHTML = '🔐';
-    icon.style.cssText = `
-      font-size: 24px;
-      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
-    `;
+    icon.style.cssText = `font-size: 24px; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));`;
 
-    // 메시지 텍스트
     const messageElement = document.createElement('div');
     messageElement.style.cssText = `
       font-size: 17px;
@@ -132,15 +281,9 @@ const showCustomConfirm = (message: string): Promise<boolean> => {
     `;
     messageElement.textContent = message;
 
-    // 버튼 컨테이너
     const buttonContainer = document.createElement('div');
-    buttonContainer.style.cssText = `
-      display: flex;
-      gap: 14px;
-      justify-content: center;
-    `;
+    buttonContainer.style.cssText = `display: flex; gap: 14px; justify-content: center;`;
 
-    // 취소 버튼
     const cancelButton = document.createElement('button');
     cancelButton.textContent = '취소';
     cancelButton.style.cssText = `
@@ -153,12 +296,9 @@ const showCustomConfirm = (message: string): Promise<boolean> => {
       font-size: 15px;
       font-weight: 600;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-      overflow: hidden;
       min-width: 100px;
     `;
 
-    // 확인 버튼
     const confirmButton = document.createElement('button');
     confirmButton.textContent = '로그인하기';
     confirmButton.style.cssText = `
@@ -171,63 +311,17 @@ const showCustomConfirm = (message: string): Promise<boolean> => {
       font-size: 15px;
       font-weight: 600;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-      overflow: hidden;
       box-shadow: 0 6px 20px rgba(139, 90, 60, 0.3);
       min-width: 120px;
     `;
 
-    // 버튼 호버 효과
-    const addButtonEffects = (button: HTMLElement, isConfirm: boolean) => {
-      button.addEventListener('mouseenter', () => {
-        if (isConfirm) {
-          button.style.background = 'linear-gradient(135deg, #7c4d34, #6d3d26)';
-          button.style.transform = 'translateY(-2px)';
-          button.style.boxShadow = '0 8px 25px rgba(139, 90, 60, 0.4)';
-        } else {
-          button.style.background = 'linear-gradient(145deg, #f9fafb, #f3f4f6)';
-          button.style.borderColor = '#d1d5db';
-          button.style.color = '#374151';
-          button.style.transform = 'translateY(-1px)';
-        }
-      });
-      
-      button.addEventListener('mouseleave', () => {
-        if (isConfirm) {
-          button.style.background = 'linear-gradient(135deg, #8b5a3c, #7c4d34)';
-          button.style.transform = 'translateY(0)';
-          button.style.boxShadow = '0 6px 20px rgba(139, 90, 60, 0.3)';
-        } else {
-          button.style.background = 'linear-gradient(145deg, #ffffff, #f9fafb)';
-          button.style.borderColor = '#e5e7eb';
-          button.style.color = '#6b7280';
-          button.style.transform = 'translateY(0)';
-        }
-      });
-
-      button.addEventListener('mousedown', () => {
-        button.style.transform = isConfirm ? 'translateY(-1px) scale(0.98)' : 'translateY(0) scale(0.98)';
-      });
-
-      button.addEventListener('mouseup', () => {
-        button.style.transform = isConfirm ? 'translateY(-2px) scale(1)' : 'translateY(-1px) scale(1)';
-      });
-    };
-
-    addButtonEffects(cancelButton, false);
-    addButtonEffects(confirmButton, true);
-
-    // 이벤트 리스너
     const closeModal = (result: boolean) => {
       overlay.style.animation = 'overlayFadeOut 0.3s ease-in';
       modal.style.animation = 'modalSlideOut 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53)';
       setTimeout(() => {
         overlay.remove();
-        // 스타일 태그도 정리
         const styleElement = document.getElementById('custom-modal-styles');
-        if (styleElement) {
-          styleElement.remove();
-        }
+        if (styleElement) styleElement.remove();
         resolve(result);
       }, 300);
     };
@@ -235,7 +329,6 @@ const showCustomConfirm = (message: string): Promise<boolean> => {
     cancelButton.addEventListener('click', () => closeModal(false));
     confirmButton.addEventListener('click', () => closeModal(true));
     
-    // ESC 키로 닫기
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         document.removeEventListener('keydown', handleKeyDown);
@@ -244,14 +337,10 @@ const showCustomConfirm = (message: string): Promise<boolean> => {
     };
     document.addEventListener('keydown', handleKeyDown);
 
-    // 오버레이 클릭으로 닫기
     overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) {
-        closeModal(false);
-      }
+      if (e.target === overlay) closeModal(false);
     });
 
-    // DOM에 추가
     iconContainer.appendChild(icon);
     buttonContainer.appendChild(cancelButton);
     buttonContainer.appendChild(confirmButton);
@@ -261,52 +350,20 @@ const showCustomConfirm = (message: string): Promise<boolean> => {
     modal.appendChild(buttonContainer);
     overlay.appendChild(modal);
 
-    // 개선된 애니메이션 CSS 추가
     const style = document.createElement('style');
     style.id = 'custom-modal-styles';
     style.textContent = `
-      @keyframes overlayFadeIn {
-        from {
-          opacity: 0;
-        }
-        to {
-          opacity: 1;
-        }
-      }
-      @keyframes overlayFadeOut {
-        from {
-          opacity: 1;
-        }
-        to {
-          opacity: 0;
-        }
-      }
+      @keyframes overlayFadeIn { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes overlayFadeOut { from { opacity: 1; } to { opacity: 0; } }
       @keyframes modalSlideIn {
-        0% {
-          opacity: 0;
-          transform: scale(0.7) translateY(-50px);
-        }
-        50% {
-          opacity: 0.8;
-          transform: scale(1.05) translateY(-10px);
-        }
-        100% {
-          opacity: 1;
-          transform: scale(1) translateY(0);
-        }
+        0% { opacity: 0; transform: scale(0.7) translateY(-50px); }
+        50% { opacity: 0.8; transform: scale(1.05) translateY(-10px); }
+        100% { opacity: 1; transform: scale(1) translateY(0); }
       }
       @keyframes modalSlideOut {
-        from {
-          opacity: 1;
-          transform: scale(1) translateY(0);
-        }
-        to {
-          opacity: 0;
-          transform: scale(0.8) translateY(-30px);
-        }
+        from { opacity: 1; transform: scale(1) translateY(0); }
+        to { opacity: 0; transform: scale(0.8) translateY(-30px); }
       }
-      
-      /* 반응형 스타일 */
       @media (max-width: 480px) {
         #custom-confirm-modal > div {
           padding: 28px 24px !important;
@@ -318,7 +375,6 @@ const showCustomConfirm = (message: string): Promise<boolean> => {
     document.head.appendChild(style);
     document.body.appendChild(overlay);
 
-    // 접근성: 첫 번째 버튼에 포커스
     setTimeout(() => {
       confirmButton.focus();
       confirmButton.style.outline = '2px solid #f59e0b';
@@ -329,12 +385,9 @@ const showCustomConfirm = (message: string): Promise<boolean> => {
 
 // 로그인 페이지로 리다이렉트
 export const redirectToLogin = (returnUrl?: string): void => {
-  if (typeof window === 'undefined') {
-    return;
-  }
+  if (typeof window === 'undefined') return;
   
   try {
-    // 현재 페이지 정보 저장 (로그인 후 돌아올 페이지)
     if (returnUrl) {
       sessionStorage.setItem('returnUrl', returnUrl);
     } else {
@@ -342,7 +395,6 @@ export const redirectToLogin = (returnUrl?: string): void => {
       sessionStorage.setItem('returnUrl', currentPath);
     }
     
-    // 로그인 페이지로 이동
     const loginUrl = new URL(window.location.pathname, window.location.origin);
     loginUrl.searchParams.set('view', 'login');
     
@@ -353,39 +405,49 @@ export const redirectToLogin = (returnUrl?: string): void => {
   }
 };
 
-// 로그인 확인 및 유도 다이얼로그 - 커스텀 모달 사용
+// 로그인 확인 및 유도 다이얼로그
 export const checkAuthAndPrompt = (
   actionName: string = '이 기능',
   onConfirm?: () => void,
   onCancel?: () => void
 ): boolean => {
-  if (isLoggedIn()) {
-    return true;
-  }
+  if (isLoggedIn()) return true;
   
-  // 커스텀 모달을 사용하여 비동기적으로 처리
   showCustomConfirm(
     `${actionName}을 이용하려면 로그인이 필요합니다.\n로그인 페이지로 이동하시겠습니까?`
   ).then((confirmed) => {
     if (confirmed) {
-      if (onConfirm) {
-        onConfirm();
-      }
+      if (onConfirm) onConfirm();
       redirectToLogin();
     } else {
-      if (onCancel) {
-        onCancel();
-      }
+      if (onCancel) onCancel();
     }
   });
   
   return false;
 };
 
-// 커스텀 다이얼로그용 Promise 기반 함수
-export const showLoginPrompt = (
+// 권한 확인 및 유도 다이얼로그
+export const checkRoleAndPrompt = (
+  requiredRole: UserRole,
   actionName: string = '이 기능'
-): Promise<boolean> => {
+): boolean => {
+  if (!isLoggedIn()) {
+    checkAuthAndPrompt(actionName);
+    return false;
+  }
+  
+  if (!hasRole(requiredRole)) {
+    const roleLabel = ROLE_LABELS[requiredRole];
+    alert(`${actionName}은 ${roleLabel} 이상만 이용할 수 있습니다.`);
+    return false;
+  }
+  
+  return true;
+};
+
+// Promise 기반 로그인 프롬프트
+export const showLoginPrompt = (actionName: string = '이 기능'): Promise<boolean> => {
   return new Promise((resolve) => {
     if (isLoggedIn()) {
       resolve(true);

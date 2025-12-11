@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Brewery, Joy } from '../../types/mockData';
+import { Brewery, Joy } from '../../types/shop';
 import ReservationCalendar from './ReservationCalendar/ReservationCalendar';
 import ExperienceSelector from './ExperienceSelector/ExperienceSelector';
 import CustomerInfoForm from './CustomerInfoForm/CustomerInfoForm';

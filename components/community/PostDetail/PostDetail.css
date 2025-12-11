@@ -277,18 +277,35 @@
   cursor: not-allowed;
 }
 
+/* 좋아요 애니메이션 */
+@keyframes heartBeat {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.15); }
+  50% { transform: scale(0.95); }
+  75% { transform: scale(1.05); }
+}
+
 .like-button {
   background: #f3f4f6;
   color: #374151;
 }
 
 .like-button:hover:not(:disabled) {
-  background: #e5e7eb;
+  background: #ffe0e0;
+  color: #ff4444;
+  transform: scale(1.02);
 }
 
 .like-button.liked {
-  background: #fef2f2;
-  color: #dc2626;
+  background: #ff4444;
+  color: white;
+  animation: heartBeat 0.5s ease;
+  border: 2px solid #ff2222;
+}
+
+.like-button.liked:hover:not(:disabled) {
+  background: #ff2222;
+  transform: scale(1.02);
 }
 
 .comment-button {

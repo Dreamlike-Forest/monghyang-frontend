@@ -55,11 +55,10 @@ const Cart: React.FC = () => {
 
   useEffect(() => {
     const subtotal = cartItems.reduce((sum, item) => {
-      const price = item.product.minPrice || 0; 
+      const price = item.product.finalPrice || 0; 
       return sum + (price * item.quantity);
     }, 0);
     
-    // [수정] 배송비 무조건 0원으로 고정
     const shipping = 0; 
     const total = subtotal + shipping;
 
@@ -98,7 +97,7 @@ const Cart: React.FC = () => {
       product_name: item.product.name,
       image_key: item.product.image_key,
       quantity: item.quantity,
-      price: item.product.minPrice || 0,
+      price: item.product.finalPrice || 0,
       brewery_name: item.product.brewery
     }));
 
@@ -149,7 +148,7 @@ const Cart: React.FC = () => {
 
             <div className="cart-items-list">
               {cartItems.map((item) => {
-                const itemPrice = item.product.minPrice || 0;
+                const itemPrice = item.product.finalPrice || 0;
                 const itemVolume = item.product.volume;
 
                 return (
@@ -233,10 +232,7 @@ const Cart: React.FC = () => {
 
               <div className="summary-row">
                 <span className="summary-label">배송비</span>
-                <span className="summary-value">
-                  {/* [수정] 배송비 0원 고정 표시 */}
-                  0원
-                </span>
+                <span className="summary-value">0원</span>
               </div>
 
               <div className="summary-row summary-total">
@@ -244,14 +240,11 @@ const Cart: React.FC = () => {
                 <span className="summary-value">{orderSummary.total.toLocaleString()}원</span>
               </div>
 
-              {/* [수정] 무료 배송 알림 문구 제거 */}
-
               <button className="checkout-btn" onClick={handleCheckout}>
                 주문하기
               </button>
 
               <div className="cart-notice">
-                {/* [수정] 안내 문구 변경 */}
                 <div>• 전 상품 무료배송입니다.</div>
                 <div>• 전통주는 19세 이상만 구매 가능합니다</div>
                 <div>• 파손 위험이 있어 안전포장 후 배송됩니다</div>

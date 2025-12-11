@@ -6,12 +6,10 @@ import SignupContainer from './SignupContainer/SignupContainer';
 import FindPassword from './FindPassword/FindPassword';
 import { login as loginApi } from '../../utils/authApi';
 
-// 화면 상태 타입 정의
 type LoginView = 'login' | 'signup' | 'findPassword';
 
 const Login: React.FC = () => {
   const [currentView, setCurrentView] = useState<LoginView>('login');
-  
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [formData, setFormData] = useState({
@@ -25,17 +23,32 @@ const Login: React.FC = () => {
       ...prev,
       [name]: value
     }));
+    if (error) setError('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    
+    if (!formData.email.trim()) {
+      setError('이메일을 입력해주세요.');
+      return;
+    }
+    
+    if (!formData.password.trim()) {
+      setError('비밀번호를 입력해주세요.');
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
-      const result = await loginApi(formData.email, formData.password);
+      const result = await loginApi(formData.email.trim(), formData.password);
 
+      // 로그인 성공 처리
       if (result.success && result.data) {
+        console.log('로그인 성공:', result.data);
+        
         if (typeof window !== 'undefined') {
           const url = new URL(window.location.href);
           url.searchParams.delete('view');
@@ -43,11 +56,12 @@ const Login: React.FC = () => {
           window.location.href = url.toString();
         }
       } else {
-        setError(result.error || '로그인에 실패했습니다.');
+        // 로그인 실패 처리 - result.message 사용 (result.error 아님!)
+        setError(result.message || '로그인에 실패했습니다.');
       }
     } catch (err) {
       console.error('로그인 오류:', err);
-      setError('로그인 중 오류가 발생했습니다. 다시 시도해주세요.');
+      setError('서버 연결에 실패했습니다. 네트워크 연결을 확인해주세요.');
     } finally {
       setIsLoading(false);
     }
@@ -88,6 +102,7 @@ const Login: React.FC = () => {
             padding: '8px'
           }}
           title="뒤로가기"
+          aria-label="뒤로가기"
         >
           ←
         </button>
@@ -95,16 +110,19 @@ const Login: React.FC = () => {
         <h1 className="login-title">로그인</h1>
         
         {error && (
-          <div style={{
-            backgroundColor: '#fee2e2',
-            border: '1px solid #fca5a5',
-            borderRadius: '8px',
-            padding: '12px',
-            marginBottom: '16px',
-            color: '#dc2626',
-            fontSize: '14px',
-            textAlign: 'center'
-          }}>
+          <div 
+            role="alert"
+            style={{
+              backgroundColor: '#fee2e2',
+              border: '1px solid #fca5a5',
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '16px',
+              color: '#dc2626',
+              fontSize: '14px',
+              textAlign: 'center'
+            }}
+          >
             {error}
           </div>
         )}
@@ -119,7 +137,9 @@ const Login: React.FC = () => {
             placeholder="이메일 주소를 입력하세요"
             value={formData.email}
             onChange={handleInputChange}
+            disabled={isLoading}
             required
+            autoComplete="email"
           />
         </div>
 
@@ -133,16 +153,18 @@ const Login: React.FC = () => {
             placeholder="비밀번호를 입력하세요"
             value={formData.password}
             onChange={handleInputChange}
+            disabled={isLoading}
             required
+            autoComplete="current-password"
           />
         </div>
 
         <div className="login-options" style={{ justifyContent: 'flex-end' }}>
-          {/* 로그인 상태 유지 체크박스 제거됨 */}
           <button
             type="button"
             className="forgot-password"
             onClick={() => setCurrentView('findPassword')}
+            disabled={isLoading}
           >
             비밀번호 찾기
           </button>
@@ -155,16 +177,21 @@ const Login: React.FC = () => {
           style={{
             opacity: isLoading ? 0.7 : 1,
             cursor: isLoading ? 'not-allowed' : 'pointer',
-            marginBottom: '24px' // 하단 여백 조정
+            marginBottom: '24px'
           }}
         >
           {isLoading ? '로그인 중...' : '로그인'}
         </button>
 
-        {/* 구분선 및 소셜 로그인 버튼 제거됨 */}
-
         <div className="signup-link">
-          아직 계정이 없으신가요? <button type="button" onClick={() => setCurrentView('signup')}>회원가입</button>
+          아직 계정이 없으신가요?{' '}
+          <button 
+            type="button" 
+            onClick={() => setCurrentView('signup')}
+            disabled={isLoading}
+          >
+            회원가입
+          </button>
         </div>
       </form>
     </div>

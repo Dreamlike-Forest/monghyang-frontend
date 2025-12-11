@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ProductWithDetails } from '../../../types/mockData';
+import { ProductWithDetails } from '../../../types/shop';
 import { addToCart } from '../../Cart/CartStore';
 import { checkAuthAndPrompt } from '../../../utils/authUtils';
 import './ProductOverviewSection.css';
@@ -18,7 +18,6 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
   const [images, setImages] = useState<string[]>([]);
   const [imageLoadErrors, setImageLoadErrors] = useState<Set<string>>(new Set());
 
-  // 토스트 메시지 표시 함수
   const showToastMessage = (message: string) => {
     const toast = document.createElement('div');
     toast.textContent = message;
@@ -51,7 +50,6 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
     }, 3000);
   };
 
-  // 이미지 URL 유효성 검사
   const isValidImageUrl = (url: string): boolean => {
     if (!url || url.trim() === '') return false;
     
@@ -66,7 +64,6 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
     return !invalidPatterns.some(pattern => url.toLowerCase().includes(pattern.toLowerCase()));
   };
 
-  // 상품 이미지 수집
   const getProductImages = (): string[] => {
     const allImages: string[] = [];
     
@@ -99,9 +96,7 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
     }
     
     if (allImages.length === 0) {
-      const sampleImages = [
-        
-      ];
+      const sampleImages: string[] = [];
       allImages.push(...sampleImages);
     }
     
@@ -132,13 +127,9 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
   };
 
   const getDiscountRate = (): number => {
-    if (product.originalPrice && product.minPrice < product.originalPrice) {
-      return Math.round(((product.originalPrice - product.minPrice) / product.originalPrice) * 100);
-    }
     return product.discountRate || 0;
   };
 
-  // 장바구니 추가
   const handleAddToCart = () => {
     const canProceed = checkAuthAndPrompt(
       '장바구니 기능',
@@ -161,8 +152,6 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
     }
   };
 
-  // [삭제됨] handleBuyNow 함수 제거
-
   const discountRate = getDiscountRate();
   const hasImages = images.length > 0;
   const mainImage = images[0];
@@ -172,7 +161,6 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
     <div ref={forwardRef} className="productdetail-product-section-container" id="productdetail-overview">
       <div className="productdetail-product-overview-layout">
         
-        {/* 이미지 섹션 */}
         <div className="productdetail-product-image-section">
           <div className="productdetail-product-main-image-container">
             {hasImages && !imageLoadErrors.has(mainImage) ? (
@@ -224,7 +212,6 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
           )}
         </div>
 
-        {/* 상품 정보 섹션 */}
         <div className="productdetail-product-info-section">
           <div className="productdetail-product-title-section">
             <h1 className="productdetail-product-name">{product.name}</h1>
@@ -263,13 +250,13 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
             </p>
           </div>
 
-          {product.tags && product.tags.length > 0 && (
+          {product.tags && product.tags.length > 0 && Array.isArray(product.tags) && typeof product.tags[0] === 'object' && (
             <div className="productdetail-product-tags">
               <h4 className="productdetail-tags-title">태그</h4>
               <div className="productdetail-tags-list">
-                {product.tags.map((tag, index) => (
+                {product.tags.map((tag: any, index) => (
                   <span key={index} className="productdetail-product-tag">
-                    #{tag.tagType.name}
+                    #{tag.tagType?.name || tag}
                   </span>
                 ))}
               </div>
@@ -295,11 +282,11 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
           </div>
 
           <div className="productdetail-product-price-section">
-            {product.originalPrice && product.originalPrice > product.minPrice && (
+            {discountRate > 0 && product.originPrice > product.finalPrice && (
               <div className="productdetail-original-price-container">
                 <span className="productdetail-original-price-label">정가</span>
                 <span className="productdetail-original-price">
-                  {formatPrice(product.originalPrice)}원
+                  {formatPrice(product.originPrice)}원
                 </span>
               </div>
             )}
@@ -307,10 +294,7 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
             <div className="productdetail-current-price-container">
               <div className="productdetail-price-info">
                 <span className={`productdetail-current-price ${discountRate > 0 ? 'discount-price' : ''}`}>
-                  {product.minPrice === product.maxPrice 
-                    ? `${formatPrice(product.minPrice)}원`
-                    : `${formatPrice(product.minPrice)}원 ~ ${formatPrice(product.maxPrice)}원`
-                  }
+                  {formatPrice(product.finalPrice)}원
                 </span>
                 {discountRate > 0 && (
                   <span className="productdetail-discount-badge">{discountRate}% 할인</span>
@@ -318,7 +302,7 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
               </div>
             </div>
 
-            {product.options.length > 1 && (
+            {product.options && product.options.length > 1 && (
               <div className="productdetail-price-options-info">
                 <span className="productdetail-price-note">용량별 가격이 다를 수 있습니다</span>
                 <div className="productdetail-price-options-list">
@@ -335,11 +319,10 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
 
           <div className="productdetail-add-to-cart-section">
             <div className="productdetail-product-action-buttons">
-              {/* [수정] 구매하기 버튼 제거하고 장바구니 버튼만 남김 */}
               <button 
                 className="productdetail-add-to-cart-button" 
                 onClick={handleAddToCart}
-                style={{ width: '100%' }} // 버튼 하나만 남으므로 너비 100%로 설정
+                style={{ width: '100%' }}
               >
                 <span className="productdetail-cart-icon">🛒</span>
                 <span>장바구니 담기</span>

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import ImageCarousel from '../../community/ImageCarousel/ImageCarousel';
-import { ProductWithDetails, ProductOption } from '../../../types/mockData';
+import { ProductWithDetails, ProductOption } from '../../../types/shop';
 import { PostImage } from '../../../types/community';
 import { addToCart } from '../../Cart/CartStore';
 import { getMyCart } from '../../../utils/cartApi';
@@ -61,7 +61,6 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
     };
   }, [isOpen, onClose]);
 
-  // [수정됨] handleOverlayClick 함수를 여기서 명확하게 정의합니다.
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === overlayRef.current) {
       onClose();
@@ -88,18 +87,15 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
     if (!selectedOption) return;
 
     try {
-      // 1. 장바구니에 담기
       const success = await addToCart(product, selectedOption.product_option_id, quantity);
       if (!success) return;
 
-      // 2. 최신 장바구니 목록 조회
       const cartList = await getMyCart();
       const targetItem = cartList.find(item => 
         String(item.product_id) === String(product.product_id)
       );
 
       if (targetItem) {
-        // 3. 데이터 구성
         const checkoutItem = [{
           cart_id: targetItem.cart_id,
           product_id: product.product_id,
@@ -110,7 +106,6 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
           brewery_name: product.brewery
         }];
         
-        // 4. 저장 및 이동
         sessionStorage.setItem('checkoutItems', JSON.stringify(checkoutItem));
         window.location.href = '/?view=purchase';
       } else {
@@ -161,11 +156,8 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
 
   const hasImages = product.images && product.images.length > 0;
   const productImages = hasImages ? convertToPostImages(product.images) : [];
-  const discount = product.originalPrice && product.minPrice < product.originalPrice 
-    ? Math.round(((product.originalPrice - product.minPrice) / product.originalPrice) * 100)
-    : product.discountRate || 0;
+  const discount = product.discountRate || 0;
 
-  // 공통 렌더링 콘텐츠
   const content = (
     <>
       <div className="product-detail-header">
@@ -209,11 +201,11 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
 
           <div className="product-pricing">
             <div className="price-container">
-              {product.originalPrice && product.originalPrice > product.minPrice && (
-                <span className="original-price">{formatPrice(product.originalPrice)}원</span>
+              {discount > 0 && product.originPrice > product.finalPrice && (
+                <span className="original-price">{formatPrice(product.originPrice)}원</span>
               )}
               <span className={`current-price ${discount > 0 ? 'discount-price' : ''}`}>
-                {formatPrice(selectedOption?.price || product.minPrice)}원
+                {formatPrice(selectedOption?.price || product.finalPrice)}원
               </span>
               {discount > 0 && <span className="discount-badge">{discount}% 할인</span>}
             </div>
@@ -275,7 +267,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
     <div 
       className="product-detail-overlay" 
       ref={overlayRef} 
-      onClick={handleOverlayClick} // 이제 정상적으로 인식됩니다.
+      onClick={handleOverlayClick}
     >
       <div className="product-detail-container">
         {content}

@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useSearchParams } from 'next/navigation'; // [추가] URL 파라미터 감지용
+import { useSearchParams } from 'next/navigation'; 
 import CommunityFilter from './CommunityFilter/CommunityFilter';
 import CommunityList from './CommunityList/CommunityList';
 import WritePost from './WritePost/WritePost';
-import communityApi, { Post as ApiPost, PageData, CreateCommunityRequest } from '../../utils/communityApi';
+import communityApi, { PageData, CreateCommunityRequest } from '../../utils/communityApi';
 import { PostFilter, PostCategory, CategoryConfig, WritePostData, Post } from '../../types/community';
 import './Community.css';
 
@@ -14,31 +14,7 @@ let cachedReviews: Post[] = [];
 let lastFetchTime = 0;
 const CACHE_DURATION = 30000;
 
-// API Post -> Legacy Post 변환
-const convertApiToLegacyPost = (post: ApiPost): Post => ({
-  post_id: post.postId,
-  title: post.title,
-  content: post.content,
-  author: `사용자${post.userId}`,
-  author_id: post.userId,
-  category: post.category as PostCategory,
-  created_at: post.createdAt,
-  view_count: post.viewCount,
-  like_count: post.likeCount,
-  comment_count: post.commentCount,
-  rating: post.rating || undefined,
-  brewery_name: post.breweryName || undefined,
-  product_name: post.productName || undefined,
-  tags: post.tags,
-  images: post.images.map(img => ({
-    image_id: img.imageId,
-    image_url: img.imageUrl,
-    image_order: img.imageNum
-  })),
-  is_notice: post.category === 'notice'
-});
 
-// WritePostData -> CreateCommunityRequest 변환
 const convertWriteDataToRequest = (data: WritePostData): CreateCommunityRequest => {
   return {
     title: data.title,
@@ -68,8 +44,8 @@ export const getCommunityReviews = (): Post[] => {
 // 새 리뷰 추가
 export const addCommunityReview = async (reviewData: WritePostData): Promise<Post> => {
   const request = convertWriteDataToRequest(reviewData);
-  const apiPost = await communityApi.createPost(request);
-  const newPost = convertApiToLegacyPost(apiPost);
+  
+  const newPost = await communityApi.createPost(request);
   cachedReviews.unshift(newPost);
   return newPost;
 };
@@ -89,7 +65,7 @@ export const refreshReviewCache = async (): Promise<void> => {
   
   try {
     const result = await communityApi.getPostsByCategory('drink_review');
-    cachedReviews = result.map(convertApiToLegacyPost);
+    cachedReviews = result;
     lastFetchTime = now;
   } catch (error) {
     console.error('리뷰 캐시 갱신 실패:', error);
@@ -166,7 +142,7 @@ const Community: React.FC<CommunityProps> = ({ className }) => {
   const [error, setError] = useState<string | null>(null);
   
   const [currentPage, setCurrentPage] = useState(0);
-  const [pageData, setPageData] = useState<PageData<ApiPost> | null>(null);
+  const [pageData, setPageData] = useState<PageData<Post> | null>(null);
   
   const [filter, setFilter] = useState<PostFilter>({
     category: 'all',
@@ -196,7 +172,7 @@ const Community: React.FC<CommunityProps> = ({ className }) => {
     setError(null);
     
     try {
-      let result: PageData<ApiPost>;
+      let result: PageData<Post>;
       
       if (currentCategory === 'all') {
         result = await communityApi.getAllPostsWithPaging(currentPage);
@@ -210,7 +186,7 @@ const Community: React.FC<CommunityProps> = ({ className }) => {
       const postsWithImages = await Promise.all(
         result.content.map(async (post) => {
           try {
-            const images = await communityApi.getImages(post.postId);
+            const images = await communityApi.getImages(post.post_id);
             return { ...post, images };
           } catch {
             return { ...post, images: [] };
@@ -222,18 +198,16 @@ const Community: React.FC<CommunityProps> = ({ className }) => {
       if (currentCategory === 'drink_review' || currentCategory === 'all') {
         const drinkReviews = postsWithImages.filter(p => p.category === 'drink_review');
         drinkReviews.forEach(post => {
-          const existing = cachedReviews.findIndex(c => c.post_id === post.postId);
-          const converted = convertApiToLegacyPost(post);
+          const existing = cachedReviews.findIndex(c => c.post_id === post.post_id);
           if (existing === -1) {
-            cachedReviews.push(converted);
+            cachedReviews.push(post);
           } else {
-            cachedReviews[existing] = converted;
+            cachedReviews[existing] = post;
           }
         });
       }
       
-      const convertedPosts = postsWithImages.map(convertApiToLegacyPost);
-      let filtered = [...convertedPosts];
+      let filtered = [...postsWithImages];
       
       if (filter.searchKeyword) {
         const keyword = filter.searchKeyword.toLowerCase();
@@ -292,8 +266,8 @@ const Community: React.FC<CommunityProps> = ({ className }) => {
   // 게시글 상세 조회 핸들러
   const handlePostClick = async (postId: number): Promise<Post | null> => {
     try {
-      const apiPost = await communityApi.getPostDetail(postId);
-      return convertApiToLegacyPost(apiPost);
+      return await communityApi.getPostDetail(postId);
+      
     } catch (err) {
       console.error('게시글 상세 조회 실패:', err);
       return null;
@@ -309,11 +283,12 @@ const Community: React.FC<CommunityProps> = ({ className }) => {
         await communityApi.likePost(postId);
       }
       
-      // 로컬 상태 업데이트
+      // 로컬 상태 업데이트 (is_liked 추가!)
       setPosts(prev => prev.map(post => {
         if (post.post_id === postId) {
           return {
             ...post,
+            is_liked: !isLiked,  // 좋아요 상태 토글
             like_count: isLiked ? post.like_count - 1 : post.like_count + 1
           };
         }

@@ -2,7 +2,7 @@
 
 import ProductCard from '../ProductCard/ProductCard';
 import Pagination from '../Pagination/Pagination';
-import { ProductWithDetails } from '../../../types/mockData';
+import { ProductWithDetails } from '../../../types/shop';
 import './ProductList.css';
 
 interface ProductListProps {
@@ -104,7 +104,7 @@ const ProductList: React.FC<ProductListProps> = ({
             ))}
           </div>
 
-          {/* 페이지네이션 - totalPages가 1보다 크면 표시 */}
+          {/* 페이지네이션 */}
           {totalPages > 1 && (
             <Pagination
               currentPage={currentPage}

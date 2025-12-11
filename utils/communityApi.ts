@@ -1,5 +1,5 @@
 import axios from 'axios';
-
+import { Post, PostImage } from '../types/community';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://16.184.16.198:61234';
 
 const getSessionId = (): string | null => {
@@ -25,6 +25,7 @@ export interface CommunityResponse {
   view_count: number;
   likes: number;
   comments: number;
+  is_liked: boolean;
 }
 
 export interface CommunityListResponse {
@@ -37,6 +38,7 @@ export interface CommunityListResponse {
   view_count: number;
   likes: number;
   comments: number;
+  is_liked?: boolean;
 }
 
 export interface CommunityImageResponse {
@@ -91,31 +93,6 @@ export interface CreateCommentRequest {
   content: string;
 }
 
-// 프론트엔드 타입
-export interface Post {
-  postId: number;
-  userId: number;
-  title: string;
-  content: string;
-  category: string;
-  subCategory: string | null;
-  productName: string | null;
-  breweryName: string | null;
-  rating: number | null;
-  tags: string[];
-  createdAt: string;
-  viewCount: number;
-  likeCount: number;
-  commentCount: number;
-  images: PostImage[];
-}
-
-export interface PostImage {
-  imageId: number;
-  communityId: number;
-  imageNum: number;
-  imageUrl: string;
-}
 
 export interface Comment {
   commentId: number;
@@ -182,46 +159,45 @@ const getFullImageUrl = (imageUrl: string): string => {
 
 // 변환 함수
 const transformCommunityToPost = (data: CommunityResponse): Post => ({
-  postId: data.community_id,
-  userId: data.user_id,
+  post_id: data.community_id,
   title: data.title,
   content: data.detail,
-  category: data.category,
-  subCategory: data.sub_category,
-  productName: data.product_name,
-  breweryName: data.brewery_name,
+  author: `사용자${data.user_id}`,
+  author_id: data.user_id,
+  category: data.category as any,
+  created_at: data.created_at,
+  view_count: data.view_count,
+  like_count: data.likes,
+  comment_count: data.comments,
   rating: data.star,
+  brewery_name: data.brewery_name,
+  product_name: data.product_name,
   tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(Boolean) : [],
-  createdAt: data.created_at,
-  viewCount: data.view_count,
-  likeCount: data.likes,
-  commentCount: data.comments,
-  images: []
+  images: [],
+  is_liked: data.is_liked
 });
 
 const transformListToPost = (data: CommunityListResponse): Post => ({
-  postId: data.community_id,
-  userId: data.user_id,
+  post_id: data.community_id,
   title: data.title,
   content: '',
-  category: data.category,
-  subCategory: data.sub_category,
-  productName: null,
-  breweryName: null,
-  rating: null,
+  author: `사용자${data.user_id}`,
+  author_id: data.user_id,
+  category: data.category as any,
+  created_at: data.created_at,
+  view_count: data.view_count,
+  like_count: data.likes,
+  comment_count: data.comments,
   tags: [],
-  createdAt: data.created_at,
-  viewCount: data.view_count,
-  likeCount: data.likes,
-  commentCount: data.comments,
-  images: []
+  images: [],
+  is_liked: data.is_liked || false
 });
 
 const transformImageResponse = (data: CommunityImageResponse): PostImage => ({
-  imageId: data.image_community_id,
-  communityId: data.community_id,
-  imageNum: data.image_num,
-  imageUrl: getFullImageUrl(data.image_url)
+  image_id: data.image_community_id,
+  image_url: getFullImageUrl(data.image_url),
+  image_order: data.image_num,
+  alt_text: `이미지 ${data.image_num}`
 });
 
 const transformCommentResponse = (data: CommentResponse): Comment => ({

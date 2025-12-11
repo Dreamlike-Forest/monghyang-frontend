@@ -234,12 +234,11 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
         region_type_id: parseInt(formData.region_type_id),
         is_regular_visit: formData.is_regular_visit === 'true',
         is_agreed_brewery: is_agreed,
-        images: imageFiles
       };
 
       console.log('양조장 관리자 회원가입 요청:', submitData);
       
-      const response = await signupBrewery(submitData);
+      const response = await signupBrewery(submitData as any, imageFiles);
       
       if (response.success) {
         alert(response.message || '양조장 회원가입이 완료되었습니다!');

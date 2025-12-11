@@ -11,11 +11,11 @@ import Cart from '../components/Cart/Cart';
 import OrderHistory from '../components/OrderHistory/OrderHistory';
 import ReservationHistory from '../components/ReservationHistory/ReservationHistory';
 import ProfileLayout from '../components/Profile/ProfileLayout';
-import Purchase from '../components/Purchase/Purchase'; // [추가]
+import Purchase from '../components/Purchase/Purchase';
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Brewery as BreweryType, ProductWithDetails } from '../types/mockData';
+import { Brewery as BreweryType, ProductWithDetails } from '../types/shop';
 import { getBreweryById, convertBreweryDetailToType, getLatestBreweries } from '../utils/brewery';
 import { getProductsByUserId, convertToProductWithDetails } from '../utils/shopApi';
 

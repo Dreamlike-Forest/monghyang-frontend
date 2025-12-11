@@ -1,4 +1,4 @@
-import { ProductWithDetails } from '../../types/mockData';
+import { ProductWithDetails } from '../../types/shop';
 import { getProductById, convertDetailToProductWithDetails } from '../../utils/shopApi';
 import { 
   getMyCart, 
