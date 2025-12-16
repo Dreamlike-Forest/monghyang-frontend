@@ -18,23 +18,30 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
   const [images, setImages] = useState<string[]>([]);
   const [imageLoadErrors, setImageLoadErrors] = useState<Set<string>>(new Set());
 
+  const formatPrice = (price: number): string => {
+    if (price === undefined || price === null) return '0';
+    return price.toLocaleString();
+  };
+
   const showToastMessage = (message: string) => {
     const toast = document.createElement('div');
     toast.textContent = message;
-    toast.style.position = 'fixed';
-    toast.style.top = '100px';
-    toast.style.right = '20px';
-    toast.style.backgroundColor = '#8b5a3c';
-    toast.style.color = 'white';
-    toast.style.padding = '16px 24px';
-    toast.style.borderRadius = '8px';
-    toast.style.fontSize = '14px';
-    toast.style.fontWeight = '600';
-    toast.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.2)';
-    toast.style.zIndex = '9999';
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateY(-20px)';
-    toast.style.transition = 'all 0.3s ease';
+    toast.style.cssText = `
+      position: fixed;
+      top: 100px;
+      right: 20px;
+      background-color: #8b5a3c;
+      color: white;
+      padding: 16px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      z-index: 9999;
+      opacity: 0;
+      transform: translateY(-20px);
+      transition: all 0.3s ease;
+    `;
 
     document.body.appendChild(toast);
     
@@ -95,11 +102,6 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
       });
     }
     
-    if (allImages.length === 0) {
-      const sampleImages: string[] = [];
-      allImages.push(...sampleImages);
-    }
-    
     return allImages.slice(0, 5);
   };
 
@@ -120,14 +122,6 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
       next[clickedGlobalIndex] = temp;
       return next;
     });
-  };
-
-  const formatPrice = (price: number): string => {
-    return price.toLocaleString();
-  };
-
-  const getDiscountRate = (): number => {
-    return product.discountRate || 0;
   };
 
   const handleAddToCart = () => {
@@ -152,7 +146,12 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
     }
   };
 
-  const discountRate = getDiscountRate();
+  const discountRate = product.discountRate ?? 0;
+  const originPrice = product.originPrice ?? 0;
+  const finalPrice = product.finalPrice ?? 0;
+  const alcohol = product.alcohol ?? 0;
+  const volume = product.volume ?? 0;
+
   const hasImages = images.length > 0;
   const mainImage = images[0];
   const thumbnails = images.slice(1);
@@ -229,16 +228,19 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
           <div className="productdetail-product-details-grid">
             <div className="productdetail-detail-item">
               <span className="productdetail-detail-label">도수</span>
-              <span className="productdetail-detail-value">{product.alcohol}%</span>
+              <span className="productdetail-detail-value">{alcohol}%</span>
             </div>
             <div className="productdetail-detail-item">
               <span className="productdetail-detail-label">용량</span>
-              <span className="productdetail-detail-value">{product.volume}ml</span>
+              <span className="productdetail-detail-value">{volume}ml</span>
             </div>
             <div className="productdetail-detail-item">
               <span className="productdetail-detail-label">등록일</span>
               <span className="productdetail-detail-value">
-                {new Date(product.registered_at).toLocaleDateString('ko-KR')}
+                {product.registered_at 
+                  ? new Date(product.registered_at).toLocaleDateString('ko-KR')
+                  : '-'
+                }
               </span>
             </div>
           </div>
@@ -282,11 +284,11 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
           </div>
 
           <div className="productdetail-product-price-section">
-            {discountRate > 0 && product.originPrice > product.finalPrice && (
+            {discountRate > 0 && originPrice > finalPrice && (
               <div className="productdetail-original-price-container">
                 <span className="productdetail-original-price-label">정가</span>
                 <span className="productdetail-original-price">
-                  {formatPrice(product.originPrice)}원
+                  {formatPrice(originPrice)}원
                 </span>
               </div>
             )}
@@ -294,7 +296,7 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
             <div className="productdetail-current-price-container">
               <div className="productdetail-price-info">
                 <span className={`productdetail-current-price ${discountRate > 0 ? 'discount-price' : ''}`}>
-                  {formatPrice(product.finalPrice)}원
+                  {formatPrice(finalPrice)}원
                 </span>
                 {discountRate > 0 && (
                   <span className="productdetail-discount-badge">{discountRate}% 할인</span>
@@ -308,7 +310,7 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
                 <div className="productdetail-price-options-list">
                   {product.options.map((option) => (
                     <div key={option.product_option_id} className="productdetail-price-option-item">
-                      <span className="productdetail-option-volume">{option.volume}ml</span>
+                      <span className="productdetail-option-volume">{option.volume ?? 0}ml</span>
                       <span className="productdetail-option-price">{formatPrice(option.price)}원</span>
                     </div>
                   ))}
