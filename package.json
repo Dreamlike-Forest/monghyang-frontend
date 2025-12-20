@@ -10,17 +10,18 @@
   },
   "dependencies": {
     "axios": "^1.10.0",
-    "next": "14.0.4",
+    "lucide-react": "^0.562.0",
+    "next": "14.0.0",
     "react": "18.2.0",
     "react-dom": "18.2.0"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2",
-    "wait-on": "^8.0.3",
-    "typescript": "^5.3.3",
-    "@types/react": "^18.2.39",
     "@types/node": "^20.11.30",
+    "@types/react": "^18.2.39",
+    "concurrently": "^9.1.2",
     "eslint": "8.56.0",
-    "eslint-config-next": "14.0.4"
+    "eslint-config-next": "14.0.4",
+    "typescript": "^5.3.3",
+    "wait-on": "^8.0.3"
   }
 }

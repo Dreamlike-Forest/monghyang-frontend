@@ -148,12 +148,10 @@ const getJsonHeaders = () => {
 const getFullImageUrl = (imageUrl: string): string => {
   if (!imageUrl) return '';
   
-  // 이미 전체 URL인 경우 그대로 반환
   if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
     return imageUrl;
   }
   
-  // 파일명만 있는 경우 API 이미지 엔드포인트 URL로 변환
   return `${API_BASE_URL}/api/image/${imageUrl}`;
 };
 
@@ -282,7 +280,7 @@ export const communityApi = {
   // 전체 게시글 조회 (페이징)
   async getAllPostsWithPaging(page: number = 0): Promise<PageData<Post>> {
     const response = await axios.get<ApiResponse<PageResponse<CommunityListResponse>>>(
-      `${API_BASE_URL}/api/community/page?page=${page}`,
+      `${API_BASE_URL}/api/community/page/${page}`,
       { headers: getJsonHeaders(), withCredentials: true }
     );
     return transformPageResponse(response.data.content, transformListToPost);
@@ -291,7 +289,7 @@ export const communityApi = {
   // 카테고리별 게시글 조회
   async getPostsByCategory(category: string): Promise<Post[]> {
     const response = await axios.get<ApiResponse<CommunityListResponse[]>>(
-      `${API_BASE_URL}/api/community/category/${category}`,
+      `${API_BASE_URL}/api/community/category/${encodeURIComponent(category)}`,
       { headers: getJsonHeaders(), withCredentials: true }
     );
     return response.data.content.map(transformListToPost);
@@ -300,7 +298,7 @@ export const communityApi = {
   // 카테고리별 게시글 조회 (페이징)
   async getPostsByCategoryWithPaging(category: string, page: number = 0): Promise<PageData<Post>> {
     const response = await axios.get<ApiResponse<PageResponse<CommunityListResponse>>>(
-      `${API_BASE_URL}/api/community/category/${category}/page?page=${page}`,
+      `${API_BASE_URL}/api/community/category/${encodeURIComponent(category)}/page/${page}`,
       { headers: getJsonHeaders(), withCredentials: true }
     );
     return transformPageResponse(response.data.content, transformListToPost);
@@ -318,7 +316,7 @@ export const communityApi = {
   // 사용자별 게시글 조회 (페이징)
   async getPostsByUserWithPaging(userId: number, page: number = 0): Promise<PageData<Post>> {
     const response = await axios.get<ApiResponse<PageResponse<CommunityListResponse>>>(
-      `${API_BASE_URL}/api/community/user/${userId}/page?page=${page}`,
+      `${API_BASE_URL}/api/community/user/${userId}/page/${page}`,
       { headers: getJsonHeaders(), withCredentials: true }
     );
     return transformPageResponse(response.data.content, transformListToPost);
