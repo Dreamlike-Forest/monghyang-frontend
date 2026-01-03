@@ -1,6 +1,6 @@
 import apiClient from './api';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://16.184.16.198:61234';
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 interface ApiResponse<T = any> {
   success: boolean;
@@ -115,7 +115,6 @@ export const signupSeller = async (data: any, images: File[] = []): Promise<ApiR
     
     Object.keys(data).forEach(key => {
       const value = data[key];
-      // null, undefined, 빈 문자열 제외
       if (value !== undefined && value !== null && value !== '') {
         formData.append(key, value);
       }
@@ -164,7 +163,6 @@ export const signupBrewery = async (data: any, images: File[] = []): Promise<Api
     
     Object.keys(data).forEach(key => {
       const value = data[key];
-      // null, undefined, 빈 문자열 제외 (선택 필드 처리)
       if (value !== undefined && value !== null && value !== '') {
         formData.append(key, value);
       }

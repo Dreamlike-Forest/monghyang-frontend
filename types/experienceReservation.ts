@@ -1,4 +1,3 @@
-// types/experienceReservation.ts
 export interface ExperienceReservationData {
   selectedDate: string | null;
   selectedExperience: number | null;

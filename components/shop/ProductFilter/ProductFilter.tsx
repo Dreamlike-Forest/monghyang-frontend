@@ -24,6 +24,13 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
   activeFilters,
   onFilterChange
 }) => {
+  // filterOptions가 undefined일 때 기본값 적용
+  const options = {
+    types: filterOptions?.types || [],
+    alcoholRanges: filterOptions?.alcoholRanges || [],
+    certifications: filterOptions?.certifications || []
+  };
+
   const [priceMin, setPriceMin] = useState<number | ''>(activeFilters.priceMin === 0 ? '' : activeFilters.priceMin);
   const [priceMax, setPriceMax] = useState<number | ''>(activeFilters.priceMax === 999999 ? '' : activeFilters.priceMax);
 
@@ -80,7 +87,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
     setPriceMax('');
   };
 
-  const activeFilterTags = generateFilterTags(activeFilters, filterOptions);
+  const activeFilterTags = generateFilterTags(activeFilters, options);
 
   return (
     <div className="product-filter">
@@ -125,7 +132,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
           </button>
         </div>
         <div className="filter-options">
-          {filterOptions.types.map(option => (
+          {options.types.map(option => (
             <label key={option.id} className="filter-option">
               <input 
                 type="checkbox" 
@@ -149,7 +156,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
           </button>
         </div>
         <div className="filter-options">
-          {filterOptions.alcoholRanges.map(option => (
+          {options.alcoholRanges.map(option => (
             <label key={option.id} className="filter-option">
               <input 
                 type="checkbox" 
@@ -198,7 +205,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
           </button>
         </div>
         <div className="filter-options">
-          {filterOptions.certifications.map(option => (
+          {options.certifications.map(option => (
             <label key={option.id} className="filter-option">
               <input 
                 type="checkbox" 

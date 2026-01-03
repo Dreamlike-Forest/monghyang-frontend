@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { Post, PostImage } from '../types/community';
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://16.184.16.198:61234';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const getSessionId = (): string | null => {
   if (typeof window !== 'undefined') {
@@ -9,7 +10,6 @@ const getSessionId = (): string | null => {
   return null;
 };
 
-// 백엔드 응답 타입
 export interface CommunityResponse {
   community_id: number;
   user_id: number;
@@ -74,7 +74,6 @@ export interface ApiResponse<T> {
   content: T;
 }
 
-// 요청 타입
 export interface CreateCommunityRequest {
   title: string;
   category: string;
@@ -92,7 +91,6 @@ export interface CreateCommentRequest {
   parentCommentId?: number;
   content: string;
 }
-
 
 export interface Comment {
   commentId: number;
@@ -116,7 +114,6 @@ export interface PageData<T> {
   isLast: boolean;
 }
 
-// 기본 설정
 const defaultSubCategories: Record<string, string> = {
   notice: 'announcement',
   free: 'general',
@@ -144,18 +141,14 @@ const getJsonHeaders = () => {
   return headers;
 };
 
-// 이미지 URL 변환 함수
 const getFullImageUrl = (imageUrl: string): string => {
   if (!imageUrl) return '';
-  
   if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
     return imageUrl;
   }
-  
   return `${API_BASE_URL}/api/image/${imageUrl}`;
 };
 
-// 변환 함수
 const transformCommunityToPost = (data: CommunityResponse): Post => ({
   post_id: data.community_id,
   title: data.title,
@@ -223,9 +216,7 @@ const transformPageResponse = <T, R>(
   isLast: data.is_last
 });
 
-// API 함수
 export const communityApi = {
-  // 게시글 작성
   async createPost(data: CreateCommunityRequest): Promise<Post> {
     const formData = new FormData();
     
@@ -268,7 +259,6 @@ export const communityApi = {
     return transformCommunityToPost(response.data.content);
   },
 
-  // 전체 게시글 조회
   async getAllPosts(): Promise<Post[]> {
     const response = await axios.get<ApiResponse<CommunityListResponse[]>>(
       `${API_BASE_URL}/api/community`,
@@ -277,7 +267,6 @@ export const communityApi = {
     return response.data.content.map(transformListToPost);
   },
 
-  // 전체 게시글 조회 (페이징)
   async getAllPostsWithPaging(page: number = 0): Promise<PageData<Post>> {
     const response = await axios.get<ApiResponse<PageResponse<CommunityListResponse>>>(
       `${API_BASE_URL}/api/community/page/${page}`,
@@ -286,7 +275,6 @@ export const communityApi = {
     return transformPageResponse(response.data.content, transformListToPost);
   },
 
-  // 카테고리별 게시글 조회
   async getPostsByCategory(category: string): Promise<Post[]> {
     const response = await axios.get<ApiResponse<CommunityListResponse[]>>(
       `${API_BASE_URL}/api/community/category/${encodeURIComponent(category)}`,
@@ -295,7 +283,6 @@ export const communityApi = {
     return response.data.content.map(transformListToPost);
   },
 
-  // 카테고리별 게시글 조회 (페이징)
   async getPostsByCategoryWithPaging(category: string, page: number = 0): Promise<PageData<Post>> {
     const response = await axios.get<ApiResponse<PageResponse<CommunityListResponse>>>(
       `${API_BASE_URL}/api/community/category/${encodeURIComponent(category)}/page/${page}`,
@@ -304,7 +291,6 @@ export const communityApi = {
     return transformPageResponse(response.data.content, transformListToPost);
   },
 
-  // 사용자별 게시글 조회
   async getPostsByUser(userId: number): Promise<Post[]> {
     const response = await axios.get<ApiResponse<CommunityListResponse[]>>(
       `${API_BASE_URL}/api/community/user/${userId}`,
@@ -313,7 +299,6 @@ export const communityApi = {
     return response.data.content.map(transformListToPost);
   },
 
-  // 사용자별 게시글 조회 (페이징)
   async getPostsByUserWithPaging(userId: number, page: number = 0): Promise<PageData<Post>> {
     const response = await axios.get<ApiResponse<PageResponse<CommunityListResponse>>>(
       `${API_BASE_URL}/api/community/user/${userId}/page/${page}`,
@@ -322,7 +307,6 @@ export const communityApi = {
     return transformPageResponse(response.data.content, transformListToPost);
   },
 
-  // 게시글 상세 조회
   async getPostDetail(communityId: number): Promise<Post> {
     const [postResponse, imagesResponse] = await Promise.all([
       axios.get<ApiResponse<CommunityResponse>>(
@@ -341,7 +325,6 @@ export const communityApi = {
     return post;
   },
 
-  // 게시글 수정
   async updatePost(communityId: number, data: CreateCommunityRequest): Promise<Post> {
     const formData = new FormData();
     
@@ -374,7 +357,6 @@ export const communityApi = {
     return transformCommunityToPost(response.data.content);
   },
 
-  // 게시글 삭제
   async deletePost(communityId: number): Promise<void> {
     await axios.delete(`${API_BASE_URL}/api/community/${communityId}`, {
       headers: getJsonHeaders(),
@@ -382,7 +364,6 @@ export const communityApi = {
     });
   },
 
-  // 좋아요
   async likePost(communityId: number): Promise<void> {
     await axios.post(
       `${API_BASE_URL}/api/community/${communityId}/like`,
@@ -391,7 +372,6 @@ export const communityApi = {
     );
   },
 
-  // 좋아요 취소
   async unlikePost(communityId: number): Promise<void> {
     await axios.delete(`${API_BASE_URL}/api/community/${communityId}/like`, {
       headers: getJsonHeaders(),
@@ -399,7 +379,6 @@ export const communityApi = {
     });
   },
 
-  // 이미지 업로드
   async uploadImage(communityId: number, imageNum: number, file: File): Promise<PostImage> {
     const formData = new FormData();
     formData.append('file', file);
@@ -413,7 +392,6 @@ export const communityApi = {
     return transformImageResponse(response.data.content);
   },
 
-  // 이미지 조회
   async getImages(communityId: number): Promise<PostImage[]> {
     const response = await axios.get<ApiResponse<CommunityImageResponse[]>>(
       `${API_BASE_URL}/api/community/image/${communityId}`,
@@ -422,7 +400,6 @@ export const communityApi = {
     return response.data.content.map(transformImageResponse);
   },
 
-  // 이미지 삭제
   async deleteImage(imageId: number): Promise<void> {
     await axios.delete(`${API_BASE_URL}/api/community/image/${imageId}`, {
       headers: getJsonHeaders(),
@@ -430,7 +407,6 @@ export const communityApi = {
     });
   },
 
-  // 댓글 작성
   async createComment(data: CreateCommentRequest): Promise<Comment> {
     const formData = new FormData();
     formData.append('communityId', data.communityId.toString());
@@ -448,7 +424,6 @@ export const communityApi = {
     return transformCommentResponse(response.data.content);
   },
 
-  // 댓글 조회
   async getComments(communityId: number): Promise<Comment[]> {
     const response = await axios.get<ApiResponse<CommentResponse[]>>(
       `${API_BASE_URL}/api/comment/community/${communityId}`,
@@ -457,7 +432,6 @@ export const communityApi = {
     return response.data.content.map(transformCommentResponse);
   },
 
-  // 대댓글 조회
   async getReplies(parentCommentId: number): Promise<Comment[]> {
     const response = await axios.get<ApiResponse<CommentResponse[]>>(
       `${API_BASE_URL}/api/comment/replies/${parentCommentId}`,
@@ -466,7 +440,6 @@ export const communityApi = {
     return response.data.content.map(transformCommentResponse);
   },
 
-  // 댓글 수정
   async updateComment(commentId: number, content: string): Promise<Comment> {
     const response = await axios.post<ApiResponse<CommentResponse>>(
       `${API_BASE_URL}/api/comment/${commentId}?content=${encodeURIComponent(content)}`,
@@ -477,7 +450,6 @@ export const communityApi = {
     return transformCommentResponse(response.data.content);
   },
 
-  // 댓글 삭제
   async deleteComment(commentId: number): Promise<void> {
     await axios.delete(`${API_BASE_URL}/api/comment/${commentId}`, {
       headers: getJsonHeaders(),
