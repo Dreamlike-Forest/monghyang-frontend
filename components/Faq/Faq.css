@@ -1,0 +1,210 @@
+/* components/Faq/Faq.css */
+
+/* 전체 컨테이너 */
+.faq-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  min-height: calc(100vh - 110px);
+}
+
+/* 헤더 영역 */
+.faq-page-header {
+  text-align: center;
+  margin-bottom: 60px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.faq-page-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 12px;
+}
+
+.faq-page-subtitle {
+  font-size: 16px;
+  color: #6b7280;
+}
+
+/* 레이아웃 (사이드바 + 메인) */
+.faq-layout-wrapper {
+  display: flex;
+  gap: 40px;
+  align-items: flex-start;
+}
+
+.faq-main-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* =========================================
+   사이드바 (카테고리 필터)
+   ========================================= */
+.faq-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 100px;
+}
+
+.faq-menu-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.faq-menu-item {
+  padding: 16px 20px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  color: #4b5563;
+  border-bottom: 1px solid #f3f4f6;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.faq-menu-item:last-child {
+  border-bottom: none;
+}
+
+.faq-menu-item:hover {
+  background-color: #f9fafb;
+  color: #8b5a3c;
+}
+
+/* 활성화 상태 */
+.faq-menu-item-active {
+  background-color: #8b5a3c;
+  color: white;
+  font-weight: 600;
+}
+
+.faq-menu-item-active:hover {
+  background-color: #8b5a3c;
+  color: white;
+}
+
+/* =========================================
+   FAQ 리스트 (아코디언)
+   ========================================= */
+.faq-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.faq-item {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.faq-item:hover {
+  border-color: #d1d5db;
+}
+
+/* 질문 (헤더) */
+.faq-question-header {
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  cursor: pointer;
+  background-color: #fff;
+}
+
+.faq-q-mark {
+  font-size: 18px;
+  font-weight: 800;
+  color: #8b5a3c;
+  flex-shrink: 0;
+}
+
+.faq-category-badge {
+  font-size: 12px;
+  padding: 4px 8px;
+  background-color: #f3f4f6;
+  color: #4b5563;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.faq-question-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  flex: 1;
+}
+
+.faq-toggle-icon {
+  color: #9ca3af;
+  transition: transform 0.3s ease;
+}
+
+.faq-item.open .faq-toggle-icon {
+  transform: rotate(180deg);
+}
+
+/* 답변 (바디) */
+.faq-answer-body {
+  padding: 24px 24px 24px 58px; /* Q마크 너비만큼 왼쪽 여백 */
+  background-color: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  font-size: 15px;
+  color: #4b5563;
+  line-height: 1.7;
+  white-space: pre-wrap; /* 줄바꿈 허용 */
+  animation: faqSlideDown 0.2s ease-out;
+}
+
+@keyframes faqSlideDown {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Empty State */
+.faq-empty-state {
+  text-align: center;
+  padding: 60px 0;
+  color: #9ca3af;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px dashed #d1d5db;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .faq-layout-wrapper {
+    flex-direction: column;
+  }
+  
+  .faq-sidebar {
+    width: 100%;
+    position: static;
+  }
+  
+  .faq-menu-list {
+    display: flex;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  
+  .faq-menu-item {
+    flex: 0 0 auto;
+    border-bottom: none;
+    border-right: 1px solid #f3f4f6;
+  }
+}
