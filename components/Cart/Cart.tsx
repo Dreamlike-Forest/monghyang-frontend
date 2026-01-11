@@ -21,13 +21,6 @@ interface OrderSummary {
 
 export const getCartItemsCount = getCartItemCount;
 
-// 최종 가격 계산 함수
-const getFinalPrice = (product: CartItem['product']): number => {
-  const basePrice = product.originalPrice ?? product.minPrice ?? 0;
-  const discount = product.discountRate ?? 0;
-  return Math.floor(basePrice * (1 - discount / 100));
-};
-
 const Cart: React.FC = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -62,7 +55,7 @@ const Cart: React.FC = () => {
 
   useEffect(() => {
     const subtotal = cartItems.reduce((sum, item) => {
-      const price = getFinalPrice(item.product);
+      const price = item.product.finalPrice || 0; 
       return sum + (price * item.quantity);
     }, 0);
     
@@ -104,7 +97,7 @@ const Cart: React.FC = () => {
       product_name: item.product.name,
       image_key: item.product.image_key,
       quantity: item.quantity,
-      price: getFinalPrice(item.product),
+      price: item.product.finalPrice || 0,
       brewery_name: item.product.brewery
     }));
 
@@ -155,7 +148,7 @@ const Cart: React.FC = () => {
 
             <div className="cart-items-list">
               {cartItems.map((item) => {
-                const itemPrice = getFinalPrice(item.product);
+                const itemPrice = item.product.finalPrice || 0;
                 const itemVolume = item.product.volume;
 
                 return (

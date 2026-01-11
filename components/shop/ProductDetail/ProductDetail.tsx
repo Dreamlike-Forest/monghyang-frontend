@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import ImageCarousel from '../../community/ImageCarousel/ImageCarousel';
-import { ProductWithDetails, ProductOptionItem } from '../../../types/shop';
+import { ProductWithDetails, ProductOption } from '../../../types/shop';
 import { PostImage } from '../../../types/community';
 import { addToCart } from '../../Cart/CartStore';
 import { getMyCart } from '../../../utils/cartApi';
@@ -28,17 +28,10 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
   isOpen,
   isPageMode = false
 }) => {
-  const [selectedOption, setSelectedOption] = useState<ProductOptionItem | null>(null);
+  const [selectedOption, setSelectedOption] = useState<ProductOption | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
-
-  // 최종 가격 계산
-  const getFinalPrice = (): number => {
-    const basePrice = product.originalPrice ?? product.minPrice ?? 0;
-    const discount = product.discountRate ?? 0;
-    return Math.floor(basePrice * (1 - discount / 100));
-  };
 
   useEffect(() => {
     if (isOpen) {
@@ -133,7 +126,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
     if (newQuantity >= 1 && newQuantity <= 99) setQuantity(newQuantity);
   };
 
-  const handleOptionSelect = (option: ProductOptionItem) => {
+  const handleOptionSelect = (option: ProductOption) => {
     setSelectedOption(option);
     setQuantity(1);
   };
@@ -164,8 +157,6 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
   const hasImages = product.images && product.images.length > 0;
   const productImages = hasImages ? convertToPostImages(product.images) : [];
   const discount = product.discountRate || 0;
-  const originalPrice = product.originalPrice ?? product.minPrice ?? 0;
-  const finalPrice = getFinalPrice();
 
   const content = (
     <>
@@ -198,23 +189,23 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
             <div className="product-detail-brewery">{product.brewery}</div>
             <h1 className="product-detail-name">{product.name}</h1>
             <div className="product-rating-section">
-              <div className="rating-stars">{renderRating(product.averageRating ?? 0)}</div>
-              <span className="rating-score">{(product.averageRating ?? 0).toFixed(1)}</span>
-              <span className="rating-count">({product.reviewCount ?? 0}개 리뷰)</span>
+              <div className="rating-stars">{renderRating(product.averageRating)}</div>
+              <span className="rating-score">{product.averageRating.toFixed(1)}</span>
+              <span className="rating-count">({product.reviewCount}개 리뷰)</span>
             </div>
             <div className="product-specs">
-              <div className="spec-item"><span>🌡 {product.alcohol ?? 0}%</span></div>
-              <div className="spec-item"><span>🍾 {product.volume ?? 0}ml</span></div>
+              <div className="spec-item"><span>🌡 {product.alcohol}%</span></div>
+              <div className="spec-item"><span>🍾 {product.volume}ml</span></div>
             </div>
           </div>
 
           <div className="product-pricing">
             <div className="price-container">
-              {discount > 0 && originalPrice > finalPrice && (
-                <span className="original-price">{formatPrice(originalPrice)}원</span>
+              {discount > 0 && product.originPrice > product.finalPrice && (
+                <span className="original-price">{formatPrice(product.originPrice)}원</span>
               )}
               <span className={`current-price ${discount > 0 ? 'discount-price' : ''}`}>
-                {formatPrice(selectedOption?.price || finalPrice)}원
+                {formatPrice(selectedOption?.price || product.finalPrice)}원
               </span>
               {discount > 0 && <span className="discount-badge">{discount}% 할인</span>}
             </div>
