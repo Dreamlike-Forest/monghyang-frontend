@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Brewery } from '../../../types/mockData';
+import { Brewery } from '../../../types/shop';
 import './BreweryImageGallery.css';
 
 interface BreweryImageGalleryProps {

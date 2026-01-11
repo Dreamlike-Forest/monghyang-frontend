@@ -3,29 +3,39 @@ import {
   ApiResponse,
   PageResponse,
   ProductListItem,
-  ProductDetail as ProductDetailType,
+  ProductDetail,
+  ProductImageDto,
   ProductSearchParams,
 } from '../types/product';
-import { ALCOHOL_TAG_IDS } from './brewery'; // 양조장에서 정의한 ID 상수 재사용
+import { ALCOHOL_TAG_IDS } from './brewery';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export const getImageUrl = (imageKey: string | null | undefined): string => {
   if (!imageKey) return '/images/no-image.png';
   if (imageKey.startsWith('http://') || imageKey.startsWith('https://')) return imageKey;
-  
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://16.184.16.198:61234';
   return `${API_URL}/api/image/${imageKey}`;
 };
 
-// 빈 페이지 응답 생성 헬퍼 함수
 const createEmptyPageResponse = <T>(): PageResponse<T> => ({
   content: [],
   pageable: {
-    pageNumber: 0, pageSize: 10, sort: { empty: true, sorted: false, unsorted: true },
-    offset: 0, paged: true, unpaged: false,
+    pageNumber: 0,
+    pageSize: 10,
+    sort: { empty: true, sorted: false, unsorted: true },
+    offset: 0,
+    paged: true,
+    unpaged: false,
   },
-  totalPages: 0, totalElements: 0, last: true, size: 10, number: 0,
+  totalPages: 0,
+  totalElements: 0,
+  last: true,
+  size: 10,
+  number: 0,
   sort: { empty: true, sorted: false, unsorted: true },
-  numberOfElements: 0, first: true, empty: true,
+  numberOfElements: 0,
+  first: true,
+  empty: true,
 });
 
 const normalizePageResponse = <T>(response: any): PageResponse<T> => {
@@ -51,45 +61,12 @@ const normalizePageResponse = <T>(response: any): PageResponse<T> => {
   };
 };
 
-export interface ProductImageDto {
-  product_image_image_key: string;
-  product_image_seq: number;
-}
-
-export interface ProductOwnerDto {
-  owner_id: number;
-  owner_role: 'ROLE_BREWERY' | 'ROLE_SELLER';
-  owner_region?: string;
-  image_key?: string;
-  tags_name?: string[];
-}
-
-export interface ProductDetailDto {
-  product_id: number;
-  product_name: string;
-  product_alcohol: number;
-  product_sales_volume: number;
-  product_volume: number;
-  product_description: string;
-  product_registered_at: string;
-  product_final_price: number;
-  product_discount_rate: number;
-  product_origin_price: number;
-  product_is_online_sell: boolean;
-  product_is_soldout: boolean;
-  user_nickname: string;
-  product_image_image_key: ProductImageDto[];
-  tags_name: string[];
-  owner: ProductOwnerDto;
-}
-
 export const searchProducts = async (
   params: ProductSearchParams
 ): Promise<PageResponse<ProductListItem>> => {
   try {
     const { startOffset, ...queryParams } = params;
-    
-    // 필터 파라미터가 undefined나 null이 아닌 경우에만 포함
+
     const filteredParams = Object.entries(queryParams).reduce((acc, [key, value]) => {
       if (value !== undefined && value !== null) {
         acc[key] = value;
@@ -147,6 +124,9 @@ export const getProductsByUserId = async (
 
     return normalizePageResponse<ProductListItem>(response.data.content);
   } catch (error: any) {
+    if (error.response?.status === 404) {
+      return createEmptyPageResponse<ProductListItem>();
+    }
     console.error('사용자별 상품 조회 실패:', error);
     return createEmptyPageResponse<ProductListItem>();
   }
@@ -154,9 +134,9 @@ export const getProductsByUserId = async (
 
 export const getProductById = async (
   productId: number
-): Promise<ProductDetailDto | null> => {
+): Promise<ProductDetail | null> => {
   try {
-    const response = await apiClient.get<ApiResponse<ProductDetailDto>>(
+    const response = await apiClient.get<ApiResponse<ProductDetail>>(
       `/api/product/${productId}`
     );
     return response.data.content;
@@ -187,28 +167,34 @@ export const convertToProductWithDetails = (item: ProductListItem): any => {
       product_tag_id: index,
       product_tag_type_id: index,
       product_id: item.product_id,
-      tagType: { product_tag_type_id: index, name: tag }
+      tagType: { product_tag_type_id: index, name: tag },
     })),
     registered_at: new Date().toISOString(),
     is_sell: true,
     is_delete: false,
     user_id: userId,
-    brewery_id: breweryId, 
-    options: [{
-        product_option_id: 1, 
-        product_id: item.product_id, 
+    brewery_id: breweryId,
+    options: [
+      {
+        product_option_id: 1,
+        product_id: item.product_id,
         volume: item.product_volume,
-        price: Number(item.product_final_price) 
-    }],
+        price: Number(item.product_final_price),
+      },
+    ],
     images: [],
     reviews: [],
     isBest: item.product_sales_volume > 100,
     isNew: false,
-    info: { product_info_id: 0, product_id: item.product_id, description: null }
+    info: {
+      product_info_id: 0,
+      product_id: item.product_id,
+      description: null,
+    },
   };
 };
 
-export const convertDetailToProductWithDetails = (detail: ProductDetailDto): any => {
+export const convertDetailToProductWithDetails = (detail: ProductDetail): any => {
   const processImages = (images: ProductImageDto[]) => {
     if (!images || !Array.isArray(images)) return [];
     return images.map((img, index) => ({
@@ -216,7 +202,7 @@ export const convertDetailToProductWithDetails = (detail: ProductDetailDto): any
       product_id: detail.product_id,
       key: img.product_image_image_key,
       image_key: getImageUrl(img.product_image_image_key),
-      seq: img.product_image_seq
+      seq: img.product_image_seq,
     }));
   };
 
@@ -226,33 +212,29 @@ export const convertDetailToProductWithDetails = (detail: ProductDetailDto): any
   let breweryId = 0;
   let breweryName = detail.user_nickname;
 
-  if (detail.owner) {
-    if (detail.owner.owner_role === 'ROLE_BREWERY') {
-      breweryId = detail.owner.owner_id;
-    } else if (detail.owner.owner_role === 'ROLE_SELLER') {
-      breweryId = 0; 
-    }
+  if (detail.owner?.owner_role === 'ROLE_BREWERY') {
+    breweryId = detail.owner.owner_id;
   }
 
   return {
     product_id: detail.product_id,
     name: detail.product_name,
-    brewery: breweryName, 
+    brewery: breweryName,
     alcohol: detail.product_alcohol,
     volume: detail.product_volume,
     minPrice: Number(detail.product_final_price),
     maxPrice: Number(detail.product_final_price),
     originalPrice: Number(detail.product_origin_price),
     discountRate: Number(detail.product_discount_rate),
-    averageRating: 0, 
-    reviewCount: 0,   
+    averageRating: 0,
+    reviewCount: 0,
     image_key: getImageUrl(firstImageKey),
     images: processedImages,
     tags: (detail.tags_name || []).map((tag, index) => ({
       product_tag_id: index,
       product_tag_type_id: index,
       product_id: detail.product_id,
-      tagType: { product_tag_type_id: index, name: tag }
+      tagType: { product_tag_type_id: index, name: tag },
     })),
     registered_at: detail.product_registered_at,
     is_sell: !detail.product_is_soldout && detail.product_is_online_sell,
@@ -264,8 +246,8 @@ export const convertDetailToProductWithDetails = (detail: ProductDetailDto): any
         product_option_id: 1,
         product_id: detail.product_id,
         volume: detail.product_volume,
-        price: Number(detail.product_final_price)
-      }
+        price: Number(detail.product_final_price),
+      },
     ],
     reviews: [],
     isBest: false,
@@ -273,7 +255,7 @@ export const convertDetailToProductWithDetails = (detail: ProductDetailDto): any
     info: {
       product_info_id: 0,
       product_id: detail.product_id,
-      description: detail.product_description 
-    }
+      description: detail.product_description,
+    },
   };
 };

@@ -169,15 +169,17 @@ const SellerSignupForm: React.FC<SellerSignupFormProps> = ({ onBack }) => {
       seller_account_number: formData.seller_account_number,
       seller_depositor: formData.seller_depositor,
       seller_bank_name: formData.seller_bank_name,
-      introduction: formData.introduction || '',
-      is_agreed_seller: is_agreed, // 판매자 약관도 동의한 것으로 처리
-      images: [] as File[] // 이미지 업로드 기능이 구현되면 추가
+      is_agreed_seller: is_agreed // 판매자 약관도 동의한 것으로 처리
     };
+
+    // 이미지 배열 (현재는 빈 배열, 추후 이미지 업로드 기능 구현 시 사용)
+    const images: File[] = [];
 
     console.log('판매자 회원가입 요청:', submitData);
     
     try {
-      const response = await signupSeller(submitData);
+      // signupSeller는 2개의 인자를 받음: (formData, images)
+      const response = await signupSeller(submitData, images);
       
       if (response.success) {
         alert(response.message || '판매자 회원가입이 완료되었습니다!');

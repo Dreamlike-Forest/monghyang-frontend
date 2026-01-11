@@ -11,117 +11,88 @@ import Cart from '../components/Cart/Cart';
 import OrderHistory from '../components/OrderHistory/OrderHistory';
 import ReservationHistory from '../components/ReservationHistory/ReservationHistory';
 import ProfileLayout from '../components/Profile/ProfileLayout';
-import Purchase from '../components/Purchase/Purchase'; // [추가]
+import Purchase from '../components/Purchase/Purchase';
+
+// 지원 페이지들
+import Guide from '../components/Guide/Guide';
+import Qna from '../components/Qna/Qna';
+import Faq from '../components/Faq/Faq';
+import Privacy from '../components/Privacy/Privacy'; // [추가됨]
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Brewery as BreweryType, ProductWithDetails } from '../types/mockData';
-import { getBreweryById, convertBreweryDetailToType, getLatestBreweries } from '../utils/brewery';
+import { Brewery as BreweryType, ProductWithDetails } from '../types/shop';
+import { getBreweryById, convertBreweryDetailToType } from '../utils/brewery';
 import { getProductsByUserId, convertToProductWithDetails } from '../utils/shopApi';
 
-type View = 'home' | 'about' | 'brewery' | 'shop' | 'community' | 'login' | 'brewery-detail' | 'product-detail' | 'cart' | 'order-history' | 'reservation-history' | 'profile' | 'purchase';
+// [수정됨] View 타입에 'privacy' 추가
+type View = 
+  | 'home' 
+  | 'about' 
+  | 'brewery' 
+  | 'shop' 
+  | 'community' 
+  | 'login' 
+  | 'brewery-detail' 
+  | 'product-detail' 
+  | 'cart' 
+  | 'order-history' 
+  | 'reservation-history' 
+  | 'profile' 
+  | 'purchase'
+  | 'guide'
+  | 'qna'
+  | 'faq'
+  | 'privacy'; // 추가
 
 export default function MainApp() {
   const searchParams = useSearchParams();
+  
   const [currentView, setCurrentView] = useState<View>('home');
   const [selectedBrewery, setSelectedBrewery] = useState<BreweryType | null>(null);
   const [breweryProducts, setBreweryProducts] = useState<ProductWithDetails[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const handleURLParams = async () => {
+    const handleNavigation = async () => {
       setIsLoading(true);
-      
       try {
-        const view = searchParams.get('view') as View;
-        const breweryId = searchParams.get('brewery');
-        const productId = searchParams.get('product');
+        const url = new URL(window.location.href);
+        const view = url.searchParams.get('view');
+        const breweryId = url.searchParams.get('brewery');
         
-        const searchKeyword = searchParams.get('search');
-        const searchType = searchParams.get('searchType');
-
-        if (productId) {
-          setCurrentView('shop');
-          setSelectedBrewery(null);
-          setBreweryProducts([]);
-          return;
+        if (breweryId) {
+          const id = parseInt(breweryId);
+          if (!isNaN(id)) {
+            const breweryData = await getBreweryById(id);
+            if (breweryData) {
+              setSelectedBrewery(convertBreweryDetailToType(breweryData));
+              const productsData = await getProductsByUserId(breweryData.users_id, 0);
+              const convertedProducts = productsData.content.map(convertToProductWithDetails);
+              setBreweryProducts(convertedProducts);
+              setCurrentView('brewery-detail');
+              setIsLoading(false);
+              return;
+            }
+          }
         }
 
-        if (breweryId) {
-          try {
-            const targetId = parseInt(breweryId);
-            let breweryDetail = await getBreweryById(targetId);
-            
-            if (!breweryDetail) {
-              const fallbackList = await getLatestBreweries(0, 50); 
-              const foundItem = fallbackList.content.find(item => item.brewery_id === targetId);
-              if (foundItem) {
-                // Fallback logic...
-                breweryDetail = {
-                    brewery_id: foundItem.brewery_id,
-                    users_id: 0, 
-                    users_email: '',
-                    users_phone: '',
-                    region_type_name: foundItem.region_type_name,
-                    brewery_name: foundItem.brewery_brewery_name || foundItem.brewery_name || '이름 없음',
-                    brewery_address: '주소 정보 없음',
-                    brewery_address_detail: '',
-                    brewery_introduction: foundItem.brewery_introduction || '소개글이 없습니다.',
-                    brewery_website: '',
-                    brewery_registered_at: new Date().toISOString(),
-                    brewery_is_regular_visit: foundItem.is_regular_visit,
-                    brewery_is_visiting_brewery: foundItem.is_visiting_brewery,
-                    brewery_image_image_key: [{
-                      brewery_image_image_key: foundItem.image_key,
-                      brewery_image_seq: 1
-                    }],
-                    tags_name: foundItem.tag_name || [],
-                    joy: [] 
-                  };
-              }
-            }
-
-            if (breweryDetail) {
-              const convertedBrewery = convertBreweryDetailToType(breweryDetail);
-              setSelectedBrewery(convertedBrewery);
-              if (convertedBrewery.users_id > 0) {
-                try {
-                  const productResponse = await getProductsByUserId(convertedBrewery.users_id, 0);
-                  const realProducts = productResponse.content.map(convertToProductWithDetails);
-                  setBreweryProducts(realProducts);
-                } catch (e) { setBreweryProducts([]); }
-              }
-              setCurrentView('brewery-detail');
-            } else {
-              setCurrentView('brewery');
-            }
-          } catch (error) {
-            setCurrentView('brewery');
-          }
-        } 
-        else if (view && ['home', 'about', 'brewery', 'shop', 'community', 'login', 'cart', 'order-history', 'reservation-history', 'profile', 'purchase'].includes(view)) { 
-          setCurrentView(view);
-          setSelectedBrewery(null);
-          setBreweryProducts([]);
+        if (view) {
+          setCurrentView(view as View);
         } else {
           setCurrentView('home');
         }
+
+      } catch (error) {
+        console.error('Navigation error:', error);
+        setCurrentView('home');
       } finally {
         setIsLoading(false);
       }
     };
 
-    handleURLParams();
+    handleNavigation();
   }, [searchParams]);
-
-  const navigateToView = (view: View) => {
-    const url = new URL(window.location.href);
-    url.searchParams.delete('view');
-    url.searchParams.delete('brewery');
-    url.searchParams.delete('product');
-    if (view !== 'home') url.searchParams.set('view', view);
-    window.location.href = url.toString();
-  };
 
   const renderView = () => {
     if (isLoading) {
@@ -144,15 +115,26 @@ export default function MainApp() {
       case 'reservation-history': return <ReservationHistory />;
       case 'profile': return <ProfileLayout />;
       case 'purchase': return <Purchase />;
+      
+      case 'guide': return <Guide />;
+      case 'qna': return <Qna />;
+      case 'faq': return <Faq />;
+      case 'privacy': return <Privacy />; // [추가됨] 연결
 
       case 'brewery-detail':
-        return selectedBrewery ? <BreweryDetail brewery={selectedBrewery} products={breweryProducts} /> : <Brewery />;
+        return selectedBrewery ? (
+          <BreweryDetail brewery={selectedBrewery} products={breweryProducts} />
+        ) : <Brewery />;
+
+      case 'product-detail': return <Shop />;
 
       default: return <Home />;
     }
   };
 
-  if (currentView === 'login') return <Login />;
-
-  return renderView();
+  return (
+    <div className="main-content">
+      {renderView()}
+    </div>
+  );
 }

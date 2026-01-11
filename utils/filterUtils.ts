@@ -1,4 +1,4 @@
-import { ProductActiveFilters } from '../types/mockData';
+import { ProductActiveFilters } from '../types/shop';
 import { ProductSearchParams } from '../types/product';
 
 // 주종 문자열 ID를 태그 ID로 매핑

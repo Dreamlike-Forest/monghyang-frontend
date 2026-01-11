@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import SearchBar from '../../shop/SearchBar/SearchBar';
-import { BreweryFilterOptions } from '../../../types/mockData';
+import { BreweryFilterOptions } from '../../../types/shop';
 import './BreweryFilter.css';
 
 interface BreweryFilterProps {

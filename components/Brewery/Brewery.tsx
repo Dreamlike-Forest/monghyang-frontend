@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import BreweryFilter from './BreweryFilter/BreweryFilter';
 import BreweryCard from './BreweryCard/BreweryCard';
 import Pagination from '../shop/Pagination/Pagination';
-import { Brewery, BreweryFilterOptions } from '../../types/mockData';
+import { Brewery, BreweryFilterOptions } from '../../types/shop';
 import { 
   searchBreweries, 
   getLatestBreweries, 

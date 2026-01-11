@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Joy } from '../../../types/mockData';
+import { Joy } from '../../../types/shop';
 import './ReservationSummary.css';
 
 interface ReservationSummaryProps {

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { Brewery } from '../../../types/mockData';
+import { Brewery } from '../../../types/shop';
 import ExperienceReservation from '../../ExperienceReservation/ExperienceReservation';
 import { checkAuthAndPrompt } from '../../../utils/authUtils';
 import './BreweryExperiencePrograms.css';

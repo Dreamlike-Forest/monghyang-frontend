@@ -23,7 +23,7 @@ const PostDetail: React.FC<PostDetailProps> = ({
   onComment,
   isOpen
 }) => {
-  const [isLiked, setIsLiked] = useState(false);
+  const [isLiked, setIsLiked] = useState(post.is_liked || false);
   const [likeCount, setLikeCount] = useState(post.like_count);
   const [commentText, setCommentText] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
@@ -32,8 +32,9 @@ const PostDetail: React.FC<PostDetailProps> = ({
   const commentInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    setIsLiked(post.is_liked || false);
     setLikeCount(post.like_count);
-  }, [post.like_count]);
+  }, [post.is_liked, post.like_count]);
 
   useEffect(() => {
     if (isOpen) {
@@ -74,19 +75,21 @@ const PostDetail: React.FC<PostDetailProps> = ({
     
     setIsLikeProcessing(true);
     
+    const previousLiked = isLiked;
     const newLiked = !isLiked;
+    
     setIsLiked(newLiked);
     setLikeCount(prev => newLiked ? prev + 1 : prev - 1);
     
     try {
-      const success = await onLike(post.post_id, !newLiked);
+      const success = await onLike(post.post_id, previousLiked);
       
       if (!success) {
-        setIsLiked(!newLiked);
+        setIsLiked(previousLiked);
         setLikeCount(prev => newLiked ? prev - 1 : prev + 1);
       }
     } catch (error) {
-      setIsLiked(!newLiked);
+      setIsLiked(previousLiked);
       setLikeCount(prev => newLiked ? prev - 1 : prev + 1);
     } finally {
       setIsLikeProcessing(false);
@@ -203,7 +206,6 @@ const PostDetail: React.FC<PostDetailProps> = ({
       onClick={handleOverlayClick}
     >
       <div className="post-detail-container">
-        {/* 닫기 버튼 (고정) */}
         <button
           className="post-detail-close"
           onClick={onClose}
@@ -212,9 +214,7 @@ const PostDetail: React.FC<PostDetailProps> = ({
           ×
         </button>
 
-        {/* 스크롤 가능한 전체 영역 */}
         <div className="post-detail-scroll">
-          {/* 헤더 */}
           <div className="post-detail-header">
             <div className="post-detail-category">
               {getCategoryText(post.category)}
@@ -224,7 +224,6 @@ const PostDetail: React.FC<PostDetailProps> = ({
             </div>
           </div>
 
-          {/* 이미지 캐러셀 */}
           {post.images && post.images.length > 0 && (
             <div className="post-detail-carousel">
               <ImageCarousel
@@ -238,9 +237,7 @@ const PostDetail: React.FC<PostDetailProps> = ({
             </div>
           )}
 
-          {/* 콘텐츠 */}
           <div className="post-detail-content">
-            {/* 작성자 정보 */}
             <div className="post-detail-author">
               <div className="author-info">
                 <div className="author-name">{post.author}</div>
@@ -250,10 +247,8 @@ const PostDetail: React.FC<PostDetailProps> = ({
               </div>
             </div>
 
-            {/* 제목 */}
             <h1 className="post-detail-title">{post.title}</h1>
 
-            {/* 평점 */}
             {(post.category === 'brewery_review' || post.category === 'drink_review') && post.rating && (
               <div className="post-detail-rating">
                 {renderStarRating(post.rating)}
@@ -261,7 +256,6 @@ const PostDetail: React.FC<PostDetailProps> = ({
               </div>
             )}
 
-            {/* 관련 업체/상품 정보 */}
             {(post.brewery_name || post.product_name) && (
               <div className="post-detail-info">
                 {post.brewery_name && (
@@ -279,12 +273,10 @@ const PostDetail: React.FC<PostDetailProps> = ({
               </div>
             )}
 
-            {/* 게시글 내용 */}
             <div className="post-detail-text">
               {post.content}
             </div>
 
-            {/* 태그 */}
             {post.tags && post.tags.length > 0 && (
               <div className="post-detail-tags">
                 {post.tags.map((tag, index) => (
@@ -295,7 +287,6 @@ const PostDetail: React.FC<PostDetailProps> = ({
               </div>
             )}
 
-            {/* 통계 */}
             <div className="post-stats-inline">
               <div className="stat-item">
                 <span className="stat-icon">👁</span>
@@ -315,7 +306,6 @@ const PostDetail: React.FC<PostDetailProps> = ({
               </div>
             </div>
 
-            {/* 액션 버튼들 */}
             <div className="action-buttons">
               <button 
                 className={`action-button like-button ${isLiked ? 'liked' : ''}`}
@@ -339,16 +329,14 @@ const PostDetail: React.FC<PostDetailProps> = ({
                 onClick={handleShare}
                 aria-label="공유"
               >
-                <span>📤</span>
+                <span>🔤</span>
                 공유
               </button>
             </div>
 
-            {/* 댓글 섹션 */}
             <div className="post-comments">
               <h3 className="comments-title">댓글 {comments.length}개</h3>
               
-              {/* 댓글 입력 */}
               <form className="comment-form" onSubmit={handleCommentSubmit}>
                 <input
                   ref={commentInputRef}
@@ -368,7 +356,6 @@ const PostDetail: React.FC<PostDetailProps> = ({
                 </button>
               </form>
 
-              {/* 댓글 목록 */}
               <div className="comments-list">
                 {organizedComments.length === 0 ? (
                   <div className="no-comments">

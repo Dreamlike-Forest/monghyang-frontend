@@ -88,7 +88,7 @@ const AddressSearch: React.FC<AddressSearchProps> = ({
       className={`address-search-btn ${className} ${disabled ? 'disabled' : ''}`}
       title="주소 검색"
     >
-      📍 주소검색
+      주소검색
     </button>
   );
 };

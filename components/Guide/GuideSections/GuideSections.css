@@ -1,0 +1,62 @@
+/* 각 섹션 컨테이너 */
+.guide-section-container {
+  animation: guideFadeIn 0.3s ease-in-out;
+}
+
+@keyframes guideFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.guide-section-heading {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 32px;
+  padding-left: 16px;
+  border-left: 4px solid #8b5a3c;
+}
+
+/* 안내 카드 박스 */
+.guide-info-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 32px;
+  margin-bottom: 24px;
+}
+
+.guide-card-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 16px 0;
+}
+
+.guide-card-text {
+  font-size: 15px;
+  color: #4b5563;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.guide-bullet-list {
+  padding-left: 20px;
+  margin: 0;
+  color: #4b5563;
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+/* 경고/주의 카드 스타일 구체화 */
+.guide-info-card-warning {
+  background-color: #fef2f2;
+  border-color: #fee2e2;
+}
+
+.guide-info-card-warning .guide-card-title {
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

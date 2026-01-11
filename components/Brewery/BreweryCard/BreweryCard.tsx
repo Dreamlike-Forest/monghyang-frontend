@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { Brewery } from '../../../types/mockData';
+import type { Brewery } from '../../../types/shop';
 import './BreweryCard.css';
 
 interface BreweryCardProps {

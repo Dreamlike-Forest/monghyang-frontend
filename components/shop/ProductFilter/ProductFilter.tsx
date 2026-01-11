@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import SearchBar from '../SearchBar/SearchBar';
-import { ProductFilterOptions, ProductActiveFilters } from '../../../types/mockData';
+import { ProductFilterOptions, ProductActiveFilters } from '../../../types/shop';
 import { 
   validatePriceInput, 
   generateFilterTags, 
@@ -24,6 +24,13 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
   activeFilters,
   onFilterChange
 }) => {
+  // filterOptions가 undefined일 때 기본값 적용
+  const options = {
+    types: filterOptions?.types || [],
+    alcoholRanges: filterOptions?.alcoholRanges || [],
+    certifications: filterOptions?.certifications || []
+  };
+
   const [priceMin, setPriceMin] = useState<number | ''>(activeFilters.priceMin === 0 ? '' : activeFilters.priceMin);
   const [priceMax, setPriceMax] = useState<number | ''>(activeFilters.priceMax === 999999 ? '' : activeFilters.priceMax);
 
@@ -80,7 +87,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
     setPriceMax('');
   };
 
-  const activeFilterTags = generateFilterTags(activeFilters, filterOptions);
+  const activeFilterTags = generateFilterTags(activeFilters, options);
 
   return (
     <div className="product-filter">
@@ -89,9 +96,8 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
         onSearch={handleSearchChange}
         placeholder="상품명, 양조장명 검색"
       />
-      {/* ... (필터 UI 렌더링 로직은 이전과 동일) ... */}
-      {/* 필터 렌더링 코드가 길어서 생략했으나, 이전에 드린 코드의 UI 부분과 동일합니다. */}
-      {/* 필요한 경우 이전 답변의 return 부분을 그대로 사용하세요. */}
+      
+      {/* 선택된 필터 표시 */}
       <div className={`active-filters ${activeFilterTags.length === 0 ? 'empty' : ''}`}>
         {activeFilterTags.length > 0 && (
           <>
@@ -102,7 +108,8 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
                   {tag.label}
                   <button className="remove-filter" onClick={() => {
                     if (tag.value === 'price') {
-                      setPriceMin(''); setPriceMax('');
+                      setPriceMin(''); 
+                      setPriceMax('');
                       onFilterChange({ priceMin: 0, priceMax: 999999 });
                     } else {
                       removeFilter(tag.category, tag.value);
@@ -118,20 +125,100 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
 
       {/* 주종 필터 */}
       <div className="filter-section">
-        <div className="filter-title">주종 <button className="filter-reset" onClick={() => onFilterChange({ types: [] })}>초기화</button></div>
+        <div className="filter-title">
+          주종 
+          <button className="filter-reset" onClick={() => onFilterChange({ types: [] })}>
+            초기화
+          </button>
+        </div>
         <div className="filter-options">
-          {filterOptions.types.map(option => (
+          {options.types.map(option => (
             <label key={option.id} className="filter-option">
-              <input type="checkbox" className="filter-checkbox" checked={activeFilters.types.includes(option.id)} onChange={() => handleCheckboxChange('types', option.id)} />
+              <input 
+                type="checkbox" 
+                className="filter-checkbox" 
+                checked={activeFilters.types.includes(option.id)} 
+                onChange={() => handleCheckboxChange('types', option.id)} 
+              />
               <span className="filter-option-label">{option.name}</span>
-              <span className="filter-option-count">({option.count})</span>
+              {option.count > 0 && <span className="filter-option-count">({option.count})</span>}
             </label>
           ))}
         </div>
       </div>
 
-      {/* 나머지 필터 (도수, 가격, 인증) UI는 동일한 패턴으로 작성 */}
-      {/* (이전 답변의 return 부분 참고) */}
+      {/* 도수 필터 */}
+      <div className="filter-section">
+        <div className="filter-title">
+          도수
+          <button className="filter-reset" onClick={() => onFilterChange({ alcoholRange: '' })}>
+            초기화
+          </button>
+        </div>
+        <div className="filter-options">
+          {options.alcoholRanges.map(option => (
+            <label key={option.id} className="filter-option">
+              <input 
+                type="checkbox" 
+                className="filter-checkbox" 
+                checked={activeFilters.alcoholRange === option.id} 
+                onChange={() => handleAlcoholCheckboxChange(option.id)} 
+              />
+              <span className="filter-option-label">{option.name}</span>
+              {option.count > 0 && <span className="filter-option-count">({option.count})</span>}
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* 가격 필터 */}
+      <div className="filter-section">
+        <div className="filter-title">가격</div>
+        <div className="price-input-container">
+          <input
+            type="text"
+            className="price-input"
+            placeholder="최소"
+            value={priceMin}
+            onChange={(e) => handlePriceInputChange('min', e.target.value)}
+          />
+          <span className="price-separator">~</span>
+          <input
+            type="text"
+            className="price-input"
+            placeholder="최대"
+            value={priceMax}
+            onChange={(e) => handlePriceInputChange('max', e.target.value)}
+          />
+          <button className="price-apply-btn" onClick={handlePriceApply}>
+            적용
+          </button>
+        </div>
+      </div>
+
+      {/* 인증 필터 */}
+      <div className="filter-section">
+        <div className="filter-title">
+          인증
+          <button className="filter-reset" onClick={() => onFilterChange({ certifications: [] })}>
+            초기화
+          </button>
+        </div>
+        <div className="filter-options">
+          {options.certifications.map(option => (
+            <label key={option.id} className="filter-option">
+              <input 
+                type="checkbox" 
+                className="filter-checkbox" 
+                checked={activeFilters.certifications.includes(option.id)} 
+                onChange={() => handleCheckboxChange('certifications', option.id)} 
+              />
+              <span className="filter-option-label">{option.name}</span>
+              {option.count > 0 && <span className="filter-option-count">({option.count})</span>}
+            </label>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
