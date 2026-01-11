@@ -1,13 +1,13 @@
 'use client';
 
 import React from 'react';
-import { Joy } from '../../../types/shop';
+import { JoyDto } from '../../../types/brewery';
 import './ReservationSummary.css';
 
 interface ReservationSummaryProps {
   selectedDate: string | null;
   selectedTime: string | null;
-  selectedExperience: Joy | null;
+  selectedExperience: JoyDto | null;
   headCount: number;
   totalAmount: number;
   onReservationSubmit: () => void;
@@ -52,7 +52,6 @@ const ReservationSummary: React.FC<ReservationSummaryProps> = ({
               
               <div className="reservation-summary-item">
                 <span className="reservation-summary-label">체험 프로그램</span>
-                {/* name -> joy_name */}
                 <span className="reservation-summary-value">{selectedExperience!.joy_name}</span>
               </div>
               
@@ -63,8 +62,7 @@ const ReservationSummary: React.FC<ReservationSummaryProps> = ({
               
               <div className="reservation-summary-item price">
                 <span className="reservation-summary-label">체험비 (1인)</span>
-                {/* price -> joy_final_price */}
-                <span className="reservation-summary-value">{selectedExperience!.joy_final_price.toLocaleString()}원</span>
+                <span className="reservation-summary-value">{(selectedExperience!.joy_final_price ?? 0).toLocaleString()}원</span>
               </div>
             </div>
             
@@ -74,8 +72,7 @@ const ReservationSummary: React.FC<ReservationSummaryProps> = ({
                 <span className="reservation-total-amount">{totalAmount.toLocaleString()}원</span>
               </div>
               <p className="reservation-total-note">
-                {/* price -> joy_final_price */}
-                {selectedExperience!.joy_final_price.toLocaleString()}원 × {headCount}명 = {totalAmount.toLocaleString()}원
+                {(selectedExperience!.joy_final_price ?? 0).toLocaleString()}원 × {headCount}명 = {totalAmount.toLocaleString()}원
               </p>
             </div>
           </>

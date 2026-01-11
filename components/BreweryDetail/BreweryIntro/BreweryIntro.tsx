@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import type { Brewery } from '../../../types/shop';
+import type { Brewery } from '../../../types/brewery';
 import './BreweryIntro.css';
 
 interface BreweryIntroProps {
@@ -10,12 +10,18 @@ interface BreweryIntroProps {
 }
 
 const BreweryIntro: React.FC<BreweryIntroProps> = ({ brewery, forwardRef }) => {
+  // Brewery 타입에 없는 필드들을 안전하게 접근하기 위해 확장
+  const breweryData = brewery as Brewery & {
+    users_phone?: string;
+    users_email?: string;
+    brewery_website?: string;
+  };
+
   return (
     <div ref={forwardRef} className="section-container" id="intro">
       <h2 className="section-title">양조장 소개</h2>
       <div className="brewery-intro-content">
         <div className="brewery-intro-description">
-          {/* introduction -> brewery_introduction */}
           <p>{brewery.brewery_introduction || '양조장 소개글이 준비 중입니다.'}</p>
         </div>
         
@@ -31,30 +37,29 @@ const BreweryIntro: React.FC<BreweryIntroProps> = ({ brewery, forwardRef }) => {
             <div className="brewery-detail-item">
               <span className="brewery-detail-label">주종</span>
               <span className="brewery-detail-value">
-                {/* alcohol_types -> tags_name (API 데이터 우선, 없으면 alcohol_types 사용) */}
                 {(brewery.tags_name || brewery.alcohol_types || []).join(', ')}
               </span>
             </div>
             
-            <div className="brewery-detail-item">
-              <span className="brewery-detail-label">연락처</span>
-              {/* business_phone -> users_phone (여기가 오류 났던 부분) */}
-              <span className="brewery-detail-value">{brewery.users_phone}</span>
-            </div>
-            
-            {/* business_email -> users_email */}
-            {brewery.users_email && (
+            {breweryData.users_phone && (
               <div className="brewery-detail-item">
-                <span className="brewery-detail-label">이메일</span>
-                <span className="brewery-detail-value">{brewery.users_email}</span>
+                <span className="brewery-detail-label">연락처</span>
+                <span className="brewery-detail-value">{breweryData.users_phone}</span>
               </div>
             )}
             
-            {brewery.brewery_website && (
+            {breweryData.users_email && (
+              <div className="brewery-detail-item">
+                <span className="brewery-detail-label">이메일</span>
+                <span className="brewery-detail-value">{breweryData.users_email}</span>
+              </div>
+            )}
+            
+            {breweryData.brewery_website && (
               <div className="brewery-detail-item">
                 <span className="brewery-detail-label">홈페이지</span>
                 <a 
-                  href={brewery.brewery_website} 
+                  href={breweryData.brewery_website} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="brewery-detail-link"

@@ -5,7 +5,8 @@ import { useSearchParams } from 'next/navigation';
 import ProductFilter from './ProductFilter/ProductFilter';
 import ProductList from './ProductList/ProductList';
 import ProductDetailMain from '../ProductDetailMain/ProductDetailMain'; 
-import { ProductWithDetails, ProductActiveFilters, Brewery, FILTER_OPTIONS } from '../../types/shop';
+import { ProductWithDetails, ProductActiveFilters, FILTER_OPTIONS } from '../../types/shop';
+import { Brewery } from '../../types/brewery';
 import { 
   searchProducts, 
   getLatestProducts, 
@@ -87,7 +88,6 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
     try {
       let response;
       if (hasActiveFilters) {
-        // 필터 파라미터 변환
         const tagIds = activeFilters.types
           .map(type => SHOP_TAG_MAP[type])
           .filter(id => id !== undefined);

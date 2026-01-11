@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { Brewery } from '../../../types/shop';
+import type { Brewery } from '../../../types/brewery';
 import './BreweryCard.css';
 
 interface BreweryCardProps {
@@ -54,13 +54,11 @@ const BreweryCard: React.FC<BreweryCardProps> = ({ brewery, onClick }) => {
     </div>
   );
 
-  // 체험 프로그램 정보 추출 (안전한 접근)
-  // brewery_joy_count가 undefined일 수 있으므로 0보다 큰지 확인
   const joyCount = brewery.brewery_joy_count || 0;
   const minPrice = brewery.brewery_joy_min_price || 0;
   const hasPrograms = joyCount > 0;
 
-  const tags = brewery.tag_name || brewery.tags_name || brewery.alcohol_types || [];
+  const tags = brewery.tags_name || brewery.alcohol_types || [];
 
   return (
     <div 
@@ -127,7 +125,6 @@ const BreweryCard: React.FC<BreweryCardProps> = ({ brewery, onClick }) => {
                 <div className="brewery-experience-price">{minPrice.toLocaleString()}원부터</div>
               </>
             ) : (
-              // 체험 프로그램이 없을 때
               <div className="brewery-experience-title" style={{ color: '#888' }}>
                 체험 프로그램 준비 중
               </div>

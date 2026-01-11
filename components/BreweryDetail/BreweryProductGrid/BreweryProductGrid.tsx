@@ -128,12 +128,19 @@ const BreweryProductGrid: React.FC<BreweryProductGridProps> = ({
       imageKey !== 'undefined';
   };
 
+  // 할인 적용된 최종 가격 계산
+  const getFinalPrice = (product: ProductWithDetails) => {
+    const basePrice = product.originalPrice ?? product.minPrice ?? 0;
+    const discount = product.discountRate ?? 0;
+    return Math.floor(basePrice * (1 - discount / 100));
+  };
+
   const getPriceDisplay = (product: ProductWithDetails) => {
-    return `${product.finalPrice.toLocaleString()}원`;
+    return `${getFinalPrice(product).toLocaleString()}원`;
   };
 
   const getDiscountRate = (product: ProductWithDetails) => {
-    return product.discountRate || 0;
+    return product.discountRate ?? 0;
   };
 
   return (
@@ -145,6 +152,8 @@ const BreweryProductGrid: React.FC<BreweryProductGridProps> = ({
           {products.map((product) => {
             const imageState = imageLoadStates[product.product_id] || 'loading';
             const discountRate = getDiscountRate(product);
+            const originalPrice = product.originalPrice ?? product.minPrice ?? 0;
+            const finalPrice = getFinalPrice(product);
             
             return (
               <article 
@@ -205,15 +214,15 @@ const BreweryProductGrid: React.FC<BreweryProductGridProps> = ({
                   
                   <div className="product-rating">
                     <span className="rating-star" aria-hidden="true">⭐</span>
-                    <span className="rating-score">{product.averageRating.toFixed(1)}</span>
-                    <span className="rating-count">({product.reviewCount})</span>
-                    <span className="product-specs">{product.alcohol}% | {product.volume}ml</span>
+                    <span className="rating-score">{(product.averageRating ?? 0).toFixed(1)}</span>
+                    <span className="rating-count">({product.reviewCount ?? 0})</span>
+                    <span className="product-specs">{product.alcohol ?? 0}% | {product.volume ?? 0}ml</span>
                   </div>
                   
                   <div className="product-price">
-                    {discountRate > 0 && product.originPrice > product.finalPrice && (
+                    {discountRate > 0 && originalPrice > finalPrice && (
                       <span className="original-price">
-                        {product.originPrice.toLocaleString()}원
+                        {originalPrice.toLocaleString()}원
                       </span>
                     )}
                     <span className="current-price">

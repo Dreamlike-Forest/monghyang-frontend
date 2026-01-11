@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Brewery, Joy } from '../../types/shop';
+import { Brewery, JoyDto } from '../../types/brewery';
 import ReservationCalendar from './ReservationCalendar/ReservationCalendar';
 import ExperienceSelector from './ExperienceSelector/ExperienceSelector';
 import CustomerInfoForm from './CustomerInfoForm/CustomerInfoForm';
@@ -22,8 +22,8 @@ interface CustomerInfo {
   headCount: number;
 }
 
-// Joy 인터페이스 확장 (API에 joy_max_count가 있다고 가정)
-interface ExtendedJoy extends Joy {
+// JoyDto 확장 (API에 joy_max_count가 있다고 가정)
+interface ExtendedJoy extends JoyDto {
   joy_max_count?: number;
 }
 
@@ -102,24 +102,19 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
     setCustomerInfo(prev => ({ ...prev, headCount: 1 })); 
   };
 
-  // [핵심 수정] 최대 인원 계산 로직 (임의값 제거)
   const getCurrentMaxHeadCount = () => {
     if (!selectedTime) return 1;
     
     const remaining = timeSlotCounts[selectedTime];
     
-    // 1. API 잔여석 정보가 있으면 그 값을 사용 (0 포함)
     if (remaining !== undefined) {
       return remaining;
     }
     
-    // 2. 잔여석 정보가 없으면(아무도 예약 안 함) -> 체험의 최대 정원(joy_max_count) 사용
     if (selectedExperience && selectedExperience.joy_max_count) {
       return selectedExperience.joy_max_count;
     }
 
-    // 3. 정원 정보도 없으면 0명 (임의의 값 20, 50 등 제거)
-    // 이렇게 하면 API에서 데이터를 제대로 안 주면 예약이 불가능해지므로 데이터 정합성 확보 가능
     return 0; 
   };
 
@@ -212,7 +207,7 @@ const ExperienceReservation: React.FC<ExperienceReservationProps> = ({
               <CustomerInfoForm
                 customerInfo={customerInfo}
                 onCustomerInfoChange={(field, value) => setCustomerInfo(prev => ({ ...prev, [field]: value }))}
-                maxHeadCount={currentMaxCount} // 0이면 예약 불가
+                maxHeadCount={currentMaxCount}
               />
               {selectedTime && (
                 <p className="max-count-info" style={{padding:'0 24px', color:'#666', fontSize:'14px', marginTop:'-10px'}}>

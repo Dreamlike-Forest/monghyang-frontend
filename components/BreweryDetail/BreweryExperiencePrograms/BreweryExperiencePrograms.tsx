@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { Brewery } from '../../../types/shop';
+import { Brewery } from '../../../types/brewery';
 import ExperienceReservation from '../../ExperienceReservation/ExperienceReservation';
 import { checkAuthAndPrompt } from '../../../utils/authUtils';
 import './BreweryExperiencePrograms.css';
@@ -21,15 +21,11 @@ const BreweryExperiencePrograms: React.FC<BreweryExperienceProgramsProps> = ({
   const [selectedExperienceId, setSelectedExperienceId] = useState<number | null>(null);
   const [imageLoadStates, setImageLoadStates] = useState<Record<number, 'loading' | 'loaded' | 'error'>>({});
 
-  // [수정] 이미지 URL을 백엔드 API로 연결
   const getImageUrl = useCallback((imageKey: string | undefined): string => {
     if (!imageKey) return '';
-    // 이미 전체 URL인 경우 (http로 시작)
     if (imageKey.startsWith('http://') || imageKey.startsWith('https://')) {
       return imageKey;
     }
-    
-    // API 명세서에 따른 이미지 요청 URL 생성
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://16.184.16.198:61234';
     return `${API_URL}/api/image/${imageKey}`;
   }, []);
@@ -135,7 +131,7 @@ const BreweryExperiencePrograms: React.FC<BreweryExperienceProgramsProps> = ({
                     <div className="brewery-experience-header">
                       <h3 className="brewery-experience-title">{program.joy_name}</h3>
                       <span className="brewery-experience-price">
-                        {program.joy_final_price.toLocaleString()}원
+                        {(program.joy_final_price ?? 0).toLocaleString()}원
                       </span>
                     </div>
                     

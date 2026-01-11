@@ -15,7 +15,8 @@ import Purchase from '../components/Purchase/Purchase';
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Brewery as BreweryType, ProductWithDetails } from '../types/shop';
+import { Brewery as BreweryType } from '../types/brewery';
+import { ProductWithDetails } from '../types/shop';
 import { getBreweryById, convertBreweryDetailToType, getLatestBreweries } from '../utils/brewery';
 import { getProductsByUserId, convertToProductWithDetails } from '../utils/shopApi';
 
@@ -56,28 +57,27 @@ export default function MainApp() {
               const fallbackList = await getLatestBreweries(0, 50); 
               const foundItem = fallbackList.content.find(item => item.brewery_id === targetId);
               if (foundItem) {
-                // Fallback logic...
                 breweryDetail = {
-                    brewery_id: foundItem.brewery_id,
-                    users_id: 0, 
-                    users_email: '',
-                    users_phone: '',
-                    region_type_name: foundItem.region_type_name,
-                    brewery_name: foundItem.brewery_brewery_name || foundItem.brewery_name || '이름 없음',
-                    brewery_address: '주소 정보 없음',
-                    brewery_address_detail: '',
-                    brewery_introduction: foundItem.brewery_introduction || '소개글이 없습니다.',
-                    brewery_website: '',
-                    brewery_registered_at: new Date().toISOString(),
-                    brewery_is_regular_visit: foundItem.is_regular_visit,
-                    brewery_is_visiting_brewery: foundItem.is_visiting_brewery,
-                    brewery_image_image_key: [{
-                      brewery_image_image_key: foundItem.image_key,
-                      brewery_image_seq: 1
-                    }],
-                    tags_name: foundItem.tag_name || [],
-                    joy: [] 
-                  };
+                  brewery_id: foundItem.brewery_id,
+                  users_id: 0, 
+                  users_email: '',
+                  users_phone: '',
+                  region_type_name: foundItem.region_type_name,
+                  brewery_name: foundItem.brewery_brewery_name || foundItem.brewery_name || '이름 없음',
+                  brewery_address: '주소 정보 없음',
+                  brewery_address_detail: '',
+                  brewery_introduction: foundItem.brewery_introduction || '소개글이 없습니다.',
+                  brewery_website: '',
+                  brewery_registered_at: new Date().toISOString(),
+                  brewery_is_regular_visit: foundItem.is_regular_visit,
+                  brewery_is_visiting_brewery: foundItem.is_visiting_brewery,
+                  brewery_image_image_key: [{
+                    brewery_image_image_key: foundItem.image_key,
+                    brewery_image_seq: 1
+                  }],
+                  tags_name: foundItem.tag_name || [],
+                  joy: [] 
+                };
               }
             }
 

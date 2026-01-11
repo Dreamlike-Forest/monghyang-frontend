@@ -23,6 +23,13 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
     return price.toLocaleString();
   };
 
+  // 최종 가격 계산
+  const getFinalPrice = (): number => {
+    const basePrice = product.originalPrice ?? product.minPrice ?? 0;
+    const discount = product.discountRate ?? 0;
+    return Math.floor(basePrice * (1 - discount / 100));
+  };
+
   const showToastMessage = (message: string) => {
     const toast = document.createElement('div');
     toast.textContent = message;
@@ -147,8 +154,8 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
   };
 
   const discountRate = product.discountRate ?? 0;
-  const originPrice = product.originPrice ?? 0;
-  const finalPrice = product.finalPrice ?? 0;
+  const originalPrice = product.originalPrice ?? product.minPrice ?? 0;
+  const finalPrice = getFinalPrice();
   const alcohol = product.alcohol ?? 0;
   const volume = product.volume ?? 0;
 
@@ -284,11 +291,11 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
           </div>
 
           <div className="productdetail-product-price-section">
-            {discountRate > 0 && originPrice > finalPrice && (
+            {discountRate > 0 && originalPrice > finalPrice && (
               <div className="productdetail-original-price-container">
                 <span className="productdetail-original-price-label">정가</span>
                 <span className="productdetail-original-price">
-                  {formatPrice(originPrice)}원
+                  {formatPrice(originalPrice)}원
                 </span>
               </div>
             )}

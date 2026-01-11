@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ProductWithDetails } from '../../../types/product';
+import { ProductWithDetails } from '../../../types/shop';
 import { addToCart } from '../../Cart/CartStore';
 import { checkAuthAndPrompt } from '../../../utils/authUtils'; 
 import './ProductCard.css';
@@ -25,6 +25,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const formatPrice = (price: number): string => {
     if (price === undefined || price === null) return '0';
     return price.toLocaleString();
+  };
+
+  // 최종 가격 계산
+  const getFinalPrice = (): number => {
+    const basePrice = product.originalPrice ?? product.minPrice ?? 0;
+    const discount = product.discountRate ?? 0;
+    return Math.floor(basePrice * (1 - discount / 100));
   };
 
   const showToastMessage = (message: string) => {
@@ -103,8 +110,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const handleImageError = () => setImageStatus('error');
 
   const discountRate = product.discountRate ?? 0;
-  const originPrice = product.originPrice ?? 0;
-  const finalPrice = product.finalPrice ?? 0;
+  const originalPrice = product.originalPrice ?? product.minPrice ?? 0;
+  const finalPrice = getFinalPrice();
   const averageRating = product.averageRating ?? 0;
   const reviewCount = product.reviewCount ?? 0;
   const alcohol = product.alcohol ?? 0;
@@ -136,14 +143,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
             />
             {imageStatus === 'error' && (
               <div className="product-image-placeholder">
-                <div className="placeholder-icon">�</div>
+                <div className="placeholder-icon">🍶</div>
                 <div className="placeholder-text">이미지를 불러올 수<br />없습니다</div>
               </div>
             )}
           </>
         ) : (
           <div className="product-image-placeholder">
-            <div className="placeholder-icon">�</div>
+            <div className="placeholder-icon">🍶</div>
             <div className="placeholder-text">상품 이미지<br />준비 중</div>
           </div>
         )}
@@ -181,9 +188,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
               <span className="discount-rate-badge">{discountRate}%</span>
             )}
             
-            {discountRate > 0 && originPrice > finalPrice && (
+            {discountRate > 0 && originalPrice > finalPrice && (
               <span className="original-price">
-                {formatPrice(originPrice)}원
+                {formatPrice(originalPrice)}원
               </span>
             )}
             
