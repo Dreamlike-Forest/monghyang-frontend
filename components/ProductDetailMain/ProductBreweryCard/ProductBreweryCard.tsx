@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Brewery } from '../../../types/brewery';
+import { Brewery } from '../../../types/shop';
 import './ProductBreweryCard.css';
 
 interface ProductBreweryCardProps {
@@ -17,6 +17,7 @@ const ProductBreweryCard: React.FC<ProductBreweryCardProps> = ({
 }) => {
   const [imageStatuses, setImageStatuses] = useState<Record<number, 'loading' | 'loaded' | 'error'>>({});
 
+  // 실제 양조장 데이터만 사용 (단일 brewery만 처리)
   if (!brewery) {
     return (
       <div ref={forwardRef} className="productdetail-product-section-container" id="productdetail-brewery">
@@ -131,6 +132,7 @@ const ProductBreweryCard: React.FC<ProductBreweryCardProps> = ({
           </div>
         )}
         
+        {/* 호버 오버레이는 항상 렌더링 */}
         <div className="productdetail-brewery-overlay-simple">
           <span className="productdetail-brewery-overlay-text-simple">상세보기</span>
         </div>
