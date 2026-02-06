@@ -8,7 +8,8 @@ import BreweryIntro from './BreweryIntro/BreweryIntro';
 import BreweryExperiencePrograms from './BreweryExperiencePrograms/BreweryExperiencePrograms';
 import BreweryProductGrid from './BreweryProductGrid/BreweryProductGrid';
 import BreweryReviewsSection from './BreweryReviewsSection/BreweryReviewsSection';
-import type { Brewery, ProductWithDetails } from '../../types/shop';
+import type { Brewery } from '../../types/brewery';
+import type { ProductWithDetails } from '../../types/shop';
 import './BreweryDetail.css';
 
 interface BreweryDetailProps {

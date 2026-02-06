@@ -1,111 +1,18 @@
 import apiClient from './api';
 import { ApiResponse, PageResponse } from '../types/product';
+import { 
+  BreweryListItem,
+  BreweryDetailDto,
+  BreweryTagDto,
+  TagSearchResult,
+  TagCategorySearchResult,
+  BrewerySearchParams,
+  Brewery,
+  REGION_IDS,
+  ALCOHOL_TAG_IDS
+} from '../types/brewery';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
-// 지역 ID 매핑
-export const REGION_IDS = {
-  UNKNOWN: 1,
-  SEOUL: 2,
-  GYEONGGI: 3,
-  GANGWON: 4,
-  CHUNGCHEONG: 5,
-  JEONLA: 6,
-  GYEONGSANG: 7,
-  JEJU: 8
-};
-
-// 주종 태그 ID 매핑
-export const ALCOHOL_TAG_IDS = {
-  MAKGEOLLI: 1,
-  CHEONGJU: 2,
-  SOJU: 3,
-  FRUIT: 5,
-  SPIRITS: 6,
-  LIQUEUR: 7,
-  OTHER: 8
-};
-
-export interface BreweryListItem {
-  brewery_id: number;
-  brewery_brewery_name?: string; 
-  brewery_name?: string; 
-  breweryName?: string;  
-  name?: string;         
-  users_nickname?: string;
-  region_type_name: string;
-  brewery_introduction: string;
-  brewery_joy_min_price?: number;
-  min_joy_price?: number;
-  brewery_joy_count?: number;
-  joy_count?: number;
-  image_key: string;
-  is_visiting_brewery: boolean;
-  is_regular_visit: boolean;
-  tag_name: string[];
-}
-
-export interface BreweryDetail {
-  brewery_id: number;
-  users_id: number;
-  users_email: string;
-  users_phone: string;
-  region_type_name: string;
-  brewery_name: string;
-  brewery_address: string;
-  brewery_address_detail: string;
-  brewery_introduction: string;
-  brewery_website?: string;
-  brewery_registered_at: string;
-  brewery_is_regular_visit: boolean;
-  brewery_is_visiting_brewery: boolean;
-  brewery_start_time?: any;
-  brewery_end_time?: any;
-  brewery_image_image_key: {
-    brewery_image_image_key: string;
-    brewery_image_seq: number;
-  }[];
-  tags_name: string[];
-  joy: {
-    joy_id: number;
-    joy_name: string;
-    joy_place: string;
-    joy_detail: string;
-    joy_origin_price: number;
-    joy_discount_rate: number;
-    joy_final_price: number;
-    joy_sales_volume: number;
-    joy_time_unit?: number;
-    joy_is_soldout: boolean;
-    joy_image_key?: string;
-  }[];
-}
-
-export interface BreweryTag {
-  tags_id: number;
-  tags_name: string;
-}
-
-export interface TagSearchResult {
-  tags_id: number;
-  tag_category_name: string;
-  tags_name: string;
-}
-
-export interface TagCategorySearchResult {
-  id: number;
-  name: string;
-}
-
-export interface BrewerySearchParams {
-  startOffset: number; 
-  size?: number;       
-  keyword?: string;
-  min_price?: number;
-  max_price?: number;
-  tag_id_list?: number[];
-  region_id_list?: number[];
-}
 
 // 양조장 검색
 export const searchBreweries = async (
@@ -142,10 +49,7 @@ export const getLatestBreweries = async (
 ): Promise<PageResponse<BreweryListItem>> => {
   try {
     const response = await apiClient.get<ApiResponse<PageResponse<BreweryListItem>>>(
-      `/api/brewery/latest/${startOffset}`,
-      { 
-        params: { size } 
-      }
+      `/api/brewery/latest/${startOffset}`
     );
 
     if (!response.data || !response.data.content) {
@@ -162,9 +66,9 @@ export const getLatestBreweries = async (
 // 양조장 상세 조회
 export const getBreweryById = async (
   breweryId: number
-): Promise<BreweryDetail | null> => {
+): Promise<BreweryDetailDto | null> => {
   try {
-    const response = await apiClient.get<ApiResponse<BreweryDetail>>(
+    const response = await apiClient.get<ApiResponse<BreweryDetailDto>>(
       `/api/brewery/${breweryId}`
     );
     return response.data.content;
@@ -177,9 +81,9 @@ export const getBreweryById = async (
 // 양조장 태그 리스트 조회
 export const getBreweryTags = async (
   breweryId: number
-): Promise<BreweryTag[]> => {
+): Promise<BreweryTagDto[]> => {
   try {
-    const response = await apiClient.get<ApiResponse<BreweryTag[]>>(
+    const response = await apiClient.get<ApiResponse<BreweryTagDto[]>>(
       `/api/brewery/tag-list/${breweryId}`
     );
     return response.data.content || [];
@@ -235,6 +139,7 @@ export const searchTagCategoriesByKeyword = async (
   }
 };
 
+// 빈 페이지 응답 생성
 const createEmptyPageResponse = <T>(): PageResponse<T> => ({
   content: [],
   pageable: {
@@ -256,6 +161,7 @@ const createEmptyPageResponse = <T>(): PageResponse<T> => ({
   empty: true,
 });
 
+// 페이지 응답 정규화
 const normalizePageResponse = <T>(response: any): PageResponse<T> => {
   return {
     content: response.content || [],
@@ -279,16 +185,19 @@ const normalizePageResponse = <T>(response: any): PageResponse<T> => {
   };
 };
 
+// 이미지 URL 생성
 export const getImageUrl = (imageKey: string | null | undefined): string => {
   if (!imageKey) return '/images/no-image.png';
   if (imageKey.startsWith('http://') || imageKey.startsWith('https://')) return imageKey;
   return `${API_URL}/api/image/${imageKey}`;
 };
 
-export const convertToBreweryType = (item: BreweryListItem): any => {
+// BreweryListItem을 Brewery로 변환
+export const convertToBreweryType = (item: BreweryListItem): Brewery => {
   return {
     id: item.brewery_id,
     brewery_id: item.brewery_id,
+    users_id: 0,
     brewery_name: item.brewery_brewery_name || item.brewery_name || item.users_nickname || item.breweryName || item.name || '이름 없음',
     region_type_name: item.region_type_name,
     brewery_introduction: item.brewery_introduction,
@@ -300,7 +209,6 @@ export const convertToBreweryType = (item: BreweryListItem): any => {
     tag_name: item.tag_name || [],
     tags_name: item.tag_name || [],
     alcohol_types: item.tag_name || [],
-    users_id: 0,
     brewery_address: '',
     brewery_address_detail: '',
     brewery_registered_at: new Date().toISOString(),
@@ -308,31 +216,35 @@ export const convertToBreweryType = (item: BreweryListItem): any => {
   };
 };
 
-export const convertBreweryDetailToType = (detail: BreweryDetail): any => {
+// BreweryDetailDto를 Brewery로 변환
+export const convertBreweryDetailToType = (detail: BreweryDetailDto): Brewery => {
   return {
     id: detail.brewery_id,
     brewery_id: detail.brewery_id,
     users_id: detail.users_id,
     users_email: detail.users_email,
     users_phone: detail.users_phone,
-    region_type_name: detail.region_type_name,
     brewery_name: detail.brewery_name,
+    region_type_name: detail.region_type_name,
     brewery_address: detail.brewery_address,
     brewery_address_detail: detail.brewery_address_detail,
-    brewery_introduction: detail.brewery_introduction,
     brewery_website: detail.brewery_website,
-    brewery_registered_at: detail.brewery_registered_at,
+    brewery_introduction: detail.brewery_introduction,
     brewery_is_regular_visit: detail.brewery_is_regular_visit,
     brewery_is_visiting_brewery: detail.brewery_is_visiting_brewery,
-    brewery_start_time: detail.brewery_start_time,
-    brewery_end_time: detail.brewery_end_time,
+    brewery_joy_min_price: detail.joy?.reduce((min, j) => Math.min(min, j.joy_final_price), Infinity) || 0,
+    brewery_joy_count: detail.joy?.length || 0,
+    image_key: detail.brewery_image_image_key?.[0]?.brewery_image_image_key 
+      ? getImageUrl(detail.brewery_image_image_key[0].brewery_image_image_key)
+      : '',
     brewery_image_image_key: detail.brewery_image_image_key,
     tags_name: detail.tags_name,
     tag_name: detail.tags_name,
     alcohol_types: detail.tags_name,
     joy: detail.joy,
-    image_key: detail.brewery_image_image_key?.[0]?.brewery_image_image_key 
-      ? getImageUrl(detail.brewery_image_image_key[0].brewery_image_image_key)
-      : '',
+    brewery_registered_at: detail.brewery_registered_at,
   };
 };
+
+// 상수 export
+export { REGION_IDS, ALCOHOL_TAG_IDS };

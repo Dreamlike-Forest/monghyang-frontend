@@ -1,14 +1,7 @@
-import axios from 'axios';
+import apiClient from './api';
 import { Post, PostImage } from '../types/community';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
-
-const getSessionId = (): string | null => {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('sessionId');
-  }
-  return null;
-};
 
 export interface CommunityResponse {
   community_id: number;
@@ -121,26 +114,6 @@ const defaultSubCategories: Record<string, string> = {
   brewery_review: 'visit'
 };
 
-const getFormDataHeaders = () => {
-  const headers: Record<string, string> = {};
-  const sessionId = getSessionId();
-  if (sessionId) {
-    headers['X-Session-Id'] = sessionId;
-  }
-  return headers;
-};
-
-const getJsonHeaders = () => {
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json'
-  };
-  const sessionId = getSessionId();
-  if (sessionId) {
-    headers['X-Session-Id'] = sessionId;
-  }
-  return headers;
-};
-
 const getFullImageUrl = (imageUrl: string): string => {
   if (!imageUrl) return '';
   if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
@@ -216,195 +189,149 @@ const transformPageResponse = <T, R>(
   isLast: data.is_last
 });
 
-export const communityApi = {
-  async createPost(data: CreateCommunityRequest): Promise<Post> {
-    const formData = new FormData();
-    
-    formData.append('title', data.title.trim());
-    formData.append('category', data.category.trim());
-    formData.append('detail', data.detail.trim());
-    
-    const subCategory = (data.subCategory && data.subCategory.trim()) 
-      ? data.subCategory.trim()
-      : defaultSubCategories[data.category] || 'general';
-    formData.append('subCategory', subCategory);
-    
-    if (data.productName && data.productName.trim()) {
-      formData.append('productName', data.productName.trim());
-    }
-    if (data.breweryName && data.breweryName.trim()) {
-      formData.append('breweryName', data.breweryName.trim());
-    }
-    if (data.star && data.star > 0) {
-      formData.append('star', data.star.toString());
-    }
-    if (data.tags && data.tags.trim()) {
-      formData.append('tags', data.tags.trim());
-    }
-    
-    if (data.images && data.images.length > 0) {
-      data.images.forEach((image) => {
-        if (image && image.size > 0) {
-          formData.append('images', image);
-        }
-      });
-    }
+// FormData 전송 시 Content-Type을 비워야 브라우저가 boundary를 자동 설정함
+const formDataConfig = {
+  headers: { 'Content-Type': undefined as unknown as string }
+};
 
-    const response = await axios.post<ApiResponse<CommunityResponse>>(
-      `${API_BASE_URL}/api/community`,
+const buildFormData = (data: CreateCommunityRequest): FormData => {
+  const formData = new FormData();
+
+  formData.append('title', data.title.trim());
+  formData.append('category', data.category.trim());
+  formData.append('detail', data.detail.trim());
+
+  const subCategory = data.subCategory?.trim() || defaultSubCategories[data.category] || 'general';
+  formData.append('subCategory', subCategory);
+
+  if (data.productName?.trim()) formData.append('productName', data.productName.trim());
+  if (data.breweryName?.trim()) formData.append('breweryName', data.breweryName.trim());
+  if (data.star && data.star > 0) formData.append('star', data.star.toString());
+  if (data.tags?.trim()) formData.append('tags', data.tags.trim());
+
+  if (data.images && data.images.length > 0) {
+    data.images.forEach((image) => {
+      if (image && image.size > 0) {
+        formData.append('images', image);
+      }
+    });
+  }
+
+  return formData;
+};
+
+export const communityApi = {
+
+  async createPost(data: CreateCommunityRequest): Promise<Post> {
+    const formData = buildFormData(data);
+    const response = await apiClient.post<ApiResponse<CommunityResponse>>(
+      '/api/community',
       formData,
-      { headers: getFormDataHeaders(), withCredentials: true }
+      formDataConfig
     );
-    
     return transformCommunityToPost(response.data.content);
   },
 
   async getAllPosts(): Promise<Post[]> {
-    const response = await axios.get<ApiResponse<CommunityListResponse[]>>(
-      `${API_BASE_URL}/api/community`,
-      { headers: getJsonHeaders(), withCredentials: true }
+    const response = await apiClient.get<ApiResponse<CommunityListResponse[]>>(
+      '/api/community'
     );
     return response.data.content.map(transformListToPost);
   },
 
   async getAllPostsWithPaging(page: number = 0): Promise<PageData<Post>> {
-    const response = await axios.get<ApiResponse<PageResponse<CommunityListResponse>>>(
-      `${API_BASE_URL}/api/community/page/${page}`,
-      { headers: getJsonHeaders(), withCredentials: true }
+    const response = await apiClient.get<ApiResponse<PageResponse<CommunityListResponse>>>(
+      `/api/community/page/${page}`
     );
     return transformPageResponse(response.data.content, transformListToPost);
   },
 
   async getPostsByCategory(category: string): Promise<Post[]> {
-    const response = await axios.get<ApiResponse<CommunityListResponse[]>>(
-      `${API_BASE_URL}/api/community/category/${encodeURIComponent(category)}`,
-      { headers: getJsonHeaders(), withCredentials: true }
+    const response = await apiClient.get<ApiResponse<CommunityListResponse[]>>(
+      `/api/community/category/${encodeURIComponent(category)}`
     );
     return response.data.content.map(transformListToPost);
   },
 
   async getPostsByCategoryWithPaging(category: string, page: number = 0): Promise<PageData<Post>> {
-    const response = await axios.get<ApiResponse<PageResponse<CommunityListResponse>>>(
-      `${API_BASE_URL}/api/community/category/${encodeURIComponent(category)}/page/${page}`,
-      { headers: getJsonHeaders(), withCredentials: true }
+    const response = await apiClient.get<ApiResponse<PageResponse<CommunityListResponse>>>(
+      `/api/community/category/${encodeURIComponent(category)}/page/${page}`
     );
     return transformPageResponse(response.data.content, transformListToPost);
   },
 
   async getPostsByUser(userId: number): Promise<Post[]> {
-    const response = await axios.get<ApiResponse<CommunityListResponse[]>>(
-      `${API_BASE_URL}/api/community/user/${userId}`,
-      { headers: getJsonHeaders(), withCredentials: true }
+    const response = await apiClient.get<ApiResponse<CommunityListResponse[]>>(
+      `/api/community/user/${userId}`
     );
     return response.data.content.map(transformListToPost);
   },
 
   async getPostsByUserWithPaging(userId: number, page: number = 0): Promise<PageData<Post>> {
-    const response = await axios.get<ApiResponse<PageResponse<CommunityListResponse>>>(
-      `${API_BASE_URL}/api/community/user/${userId}/page/${page}`,
-      { headers: getJsonHeaders(), withCredentials: true }
+    const response = await apiClient.get<ApiResponse<PageResponse<CommunityListResponse>>>(
+      `/api/community/user/${userId}/page/${page}`
     );
     return transformPageResponse(response.data.content, transformListToPost);
   },
 
   async getPostDetail(communityId: number): Promise<Post> {
     const [postResponse, imagesResponse] = await Promise.all([
-      axios.get<ApiResponse<CommunityResponse>>(
-        `${API_BASE_URL}/api/community/${communityId}`,
-        { headers: getJsonHeaders(), withCredentials: true }
+      apiClient.get<ApiResponse<CommunityResponse>>(
+        `/api/community/${communityId}`
       ),
-      axios.get<ApiResponse<CommunityImageResponse[]>>(
-        `${API_BASE_URL}/api/community/image/${communityId}`,
-        { headers: getJsonHeaders(), withCredentials: true }
+      apiClient.get<ApiResponse<CommunityImageResponse[]>>(
+        `/api/community/image/${communityId}`
       ).catch(() => ({ data: { content: [] } }))
     ]);
-    
+
     const post = transformCommunityToPost(postResponse.data.content);
     post.images = imagesResponse.data.content.map(transformImageResponse);
-    
     return post;
   },
 
   async updatePost(communityId: number, data: CreateCommunityRequest): Promise<Post> {
-    const formData = new FormData();
-    
-    formData.append('title', data.title.trim());
-    formData.append('category', data.category.trim());
-    formData.append('detail', data.detail.trim());
-    
-    const subCategory = (data.subCategory && data.subCategory.trim()) 
-      ? data.subCategory.trim()
-      : defaultSubCategories[data.category] || 'general';
-    formData.append('subCategory', subCategory);
-    
-    if (data.productName) formData.append('productName', data.productName.trim());
-    if (data.breweryName) formData.append('breweryName', data.breweryName.trim());
-    if (data.star && data.star > 0) formData.append('star', data.star.toString());
-    if (data.tags) formData.append('tags', data.tags.trim());
-    
-    if (data.images && data.images.length > 0) {
-      data.images.forEach((image) => {
-        if (image && image.size > 0) formData.append('images', image);
-      });
-    }
-
-    const response = await axios.post<ApiResponse<CommunityResponse>>(
-      `${API_BASE_URL}/api/community/${communityId}`,
+    const formData = buildFormData(data);
+    const response = await apiClient.post<ApiResponse<CommunityResponse>>(
+      `/api/community/${communityId}`,
       formData,
-      { headers: getFormDataHeaders(), withCredentials: true }
+      formDataConfig
     );
-    
     return transformCommunityToPost(response.data.content);
   },
 
   async deletePost(communityId: number): Promise<void> {
-    await axios.delete(`${API_BASE_URL}/api/community/${communityId}`, {
-      headers: getJsonHeaders(),
-      withCredentials: true
-    });
+    await apiClient.delete(`/api/community/${communityId}`);
   },
 
   async likePost(communityId: number): Promise<void> {
-    await axios.post(
-      `${API_BASE_URL}/api/community/${communityId}/like`,
-      {},
-      { headers: getJsonHeaders(), withCredentials: true }
-    );
+    await apiClient.post(`/api/community/${communityId}/like`, {});
   },
 
   async unlikePost(communityId: number): Promise<void> {
-    await axios.delete(`${API_BASE_URL}/api/community/${communityId}/like`, {
-      headers: getJsonHeaders(),
-      withCredentials: true
-    });
+    await apiClient.delete(`/api/community/${communityId}/like`);
   },
 
   async uploadImage(communityId: number, imageNum: number, file: File): Promise<PostImage> {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await axios.post<ApiResponse<CommunityImageResponse>>(
-      `${API_BASE_URL}/api/community/image/${communityId}?imageNum=${imageNum}`,
+    const response = await apiClient.post<ApiResponse<CommunityImageResponse>>(
+      `/api/community/image/${communityId}?imageNum=${imageNum}`,
       formData,
-      { headers: getFormDataHeaders(), withCredentials: true }
+      formDataConfig
     );
-    
     return transformImageResponse(response.data.content);
   },
 
   async getImages(communityId: number): Promise<PostImage[]> {
-    const response = await axios.get<ApiResponse<CommunityImageResponse[]>>(
-      `${API_BASE_URL}/api/community/image/${communityId}`,
-      { headers: getJsonHeaders(), withCredentials: true }
+    const response = await apiClient.get<ApiResponse<CommunityImageResponse[]>>(
+      `/api/community/image/${communityId}`
     );
     return response.data.content.map(transformImageResponse);
   },
 
   async deleteImage(imageId: number): Promise<void> {
-    await axios.delete(`${API_BASE_URL}/api/community/image/${imageId}`, {
-      headers: getJsonHeaders(),
-      withCredentials: true
-    });
+    await apiClient.delete(`/api/community/image/${imageId}`);
   },
 
   async createComment(data: CreateCommentRequest): Promise<Comment> {
@@ -415,46 +342,38 @@ export const communityApi = {
       formData.append('parentCommentId', data.parentCommentId.toString());
     }
 
-    const response = await axios.post<ApiResponse<CommentResponse>>(
-      `${API_BASE_URL}/api/comment`,
+    const response = await apiClient.post<ApiResponse<CommentResponse>>(
+      '/api/comment',
       formData,
-      { headers: getFormDataHeaders(), withCredentials: true }
+      formDataConfig
     );
-    
     return transformCommentResponse(response.data.content);
   },
 
   async getComments(communityId: number): Promise<Comment[]> {
-    const response = await axios.get<ApiResponse<CommentResponse[]>>(
-      `${API_BASE_URL}/api/comment/community/${communityId}`,
-      { headers: getJsonHeaders(), withCredentials: true }
+    const response = await apiClient.get<ApiResponse<CommentResponse[]>>(
+      `/api/comment/community/${communityId}`
     );
     return response.data.content.map(transformCommentResponse);
   },
 
   async getReplies(parentCommentId: number): Promise<Comment[]> {
-    const response = await axios.get<ApiResponse<CommentResponse[]>>(
-      `${API_BASE_URL}/api/comment/replies/${parentCommentId}`,
-      { headers: getJsonHeaders(), withCredentials: true }
+    const response = await apiClient.get<ApiResponse<CommentResponse[]>>(
+      `/api/comment/replies/${parentCommentId}`
     );
     return response.data.content.map(transformCommentResponse);
   },
 
   async updateComment(commentId: number, content: string): Promise<Comment> {
-    const response = await axios.post<ApiResponse<CommentResponse>>(
-      `${API_BASE_URL}/api/comment/${commentId}?content=${encodeURIComponent(content)}`,
-      {},
-      { headers: getJsonHeaders(), withCredentials: true }
+    const response = await apiClient.post<ApiResponse<CommentResponse>>(
+      `/api/comment/${commentId}?content=${encodeURIComponent(content)}`,
+      {}
     );
-    
     return transformCommentResponse(response.data.content);
   },
 
   async deleteComment(commentId: number): Promise<void> {
-    await axios.delete(`${API_BASE_URL}/api/comment/${commentId}`, {
-      headers: getJsonHeaders(),
-      withCredentials: true
-    });
+    await apiClient.delete(`/api/comment/${commentId}`);
   }
 };
 

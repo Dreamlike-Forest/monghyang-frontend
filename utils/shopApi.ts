@@ -7,6 +7,7 @@ import {
   ProductImageDto,
   ProductSearchParams,
 } from '../types/product';
+import type { ProductWithDetails } from '../types/shop';
 import { ALCOHOL_TAG_IDS } from './brewery';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -146,116 +147,52 @@ export const getProductById = async (
   }
 };
 
-export const convertToProductWithDetails = (item: ProductListItem): any => {
-  const breweryId = (item as any).owner_id || (item as any).brewery_id || 0;
-  const userId = (item as any).user_id || 0;
-
+// ProductListItem을 ProductWithDetails로 변환 (백엔드 API 형식 유지)
+export const convertToProductWithDetails = (item: ProductListItem): ProductWithDetails => {
   return {
     product_id: item.product_id,
-    name: item.product_name,
-    brewery: item.users_nickname,
-    alcohol: item.product_alcohol,
-    volume: item.product_volume,
-    minPrice: Number(item.product_final_price),
-    maxPrice: Number(item.product_final_price),
-    originalPrice: Number(item.product_origin_price),
-    discountRate: Number(item.product_discount_rate),
-    averageRating: item.product_review_star || 0,
-    reviewCount: item.product_review_count || 0,
+    product_name: item.product_name,
+    product_alcohol: item.product_alcohol,
+    product_volume: item.product_volume,
+    product_sales_volume: item.product_sales_volume,
+    product_registered_at: new Date().toISOString(),
+    product_final_price: item.product_final_price,
+    product_discount_rate: item.product_discount_rate,
+    product_origin_price: item.product_origin_price,
+    product_is_online_sell: item.product_is_online_sell,
+    product_is_soldout: item.product_is_soldout,
+    product_review_star: item.product_review_star,
+    product_review_count: item.product_review_count,
+    user_nickname: item.users_nickname,
     image_key: getImageUrl(item.image_key),
-    tags: (item.tag_name || []).map((tag, index) => ({
-      product_tag_id: index,
-      product_tag_type_id: index,
-      product_id: item.product_id,
-      tagType: { product_tag_type_id: index, name: tag },
-    })),
-    registered_at: new Date().toISOString(),
-    is_sell: true,
-    is_delete: false,
-    user_id: userId,
-    brewery_id: breweryId,
-    options: [
-      {
-        product_option_id: 1,
-        product_id: item.product_id,
-        volume: item.product_volume,
-        price: Number(item.product_final_price),
-      },
-    ],
-    images: [],
-    reviews: [],
-    isBest: item.product_sales_volume > 100,
-    isNew: false,
-    info: {
-      product_info_id: 0,
-      product_id: item.product_id,
-      description: null,
-    },
+    tags_name: item.tag_name || [],
   };
 };
 
-export const convertDetailToProductWithDetails = (detail: ProductDetail): any => {
-  const processImages = (images: ProductImageDto[]) => {
-    if (!images || !Array.isArray(images)) return [];
-    return images.map((img, index) => ({
-      product_image_id: index,
-      product_id: detail.product_id,
-      key: img.product_image_image_key,
-      image_key: getImageUrl(img.product_image_image_key),
-      seq: img.product_image_seq,
-    }));
-  };
-
-  const processedImages = processImages(detail.product_image_image_key);
+// ProductDetail을 ProductWithDetails로 변환 (백엔드 API 형식 유지)
+export const convertDetailToProductWithDetails = (detail: ProductDetail): ProductWithDetails => {
   const firstImageKey = detail.product_image_image_key?.[0]?.product_image_image_key || null;
-
-  let breweryId = 0;
-  let breweryName = detail.user_nickname;
-
-  if (detail.owner?.owner_role === 'ROLE_BREWERY') {
-    breweryId = detail.owner.owner_id;
-  }
 
   return {
     product_id: detail.product_id,
-    name: detail.product_name,
-    brewery: breweryName,
-    alcohol: detail.product_alcohol,
-    volume: detail.product_volume,
-    minPrice: Number(detail.product_final_price),
-    maxPrice: Number(detail.product_final_price),
-    originalPrice: Number(detail.product_origin_price),
-    discountRate: Number(detail.product_discount_rate),
-    averageRating: 0,
-    reviewCount: 0,
+    product_name: detail.product_name,
+    product_alcohol: detail.product_alcohol,
+    product_volume: detail.product_volume,
+    product_sales_volume: detail.product_sales_volume,
+    product_description: detail.product_description,
+    product_registered_at: detail.product_registered_at,
+    product_final_price: detail.product_final_price,
+    product_discount_rate: detail.product_discount_rate,
+    product_origin_price: detail.product_origin_price,
+    product_is_online_sell: detail.product_is_online_sell,
+    product_is_soldout: detail.product_is_soldout,
+    user_nickname: detail.user_nickname,
     image_key: getImageUrl(firstImageKey),
-    images: processedImages,
-    tags: (detail.tags_name || []).map((tag, index) => ({
-      product_tag_id: index,
-      product_tag_type_id: index,
-      product_id: detail.product_id,
-      tagType: { product_tag_type_id: index, name: tag },
+    product_image_image_key: detail.product_image_image_key?.map(img => ({
+      product_image_image_key: img.product_image_image_key,
+      product_image_seq: img.product_image_seq,
     })),
-    registered_at: detail.product_registered_at,
-    is_sell: !detail.product_is_soldout && detail.product_is_online_sell,
-    is_delete: false,
-    user_id: detail.owner?.owner_id || 0,
-    brewery_id: breweryId,
-    options: [
-      {
-        product_option_id: 1,
-        product_id: detail.product_id,
-        volume: detail.product_volume,
-        price: Number(detail.product_final_price),
-      },
-    ],
-    reviews: [],
-    isBest: false,
-    isNew: false,
-    info: {
-      product_info_id: 0,
-      product_id: detail.product_id,
-      description: detail.product_description,
-    },
+    tags_name: detail.tags_name || [],
+    owner: detail.owner,
   };
 };

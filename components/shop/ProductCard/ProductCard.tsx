@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ProductWithDetails } from '../../../types/product';
+import type { ProductWithDetails } from '../../../types/shop';
 import { addToCart } from '../../Cart/CartStore';
 import { checkAuthAndPrompt } from '../../../utils/authUtils'; 
 import './ProductCard.css';
@@ -60,7 +60,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       const success = addToCart(product);
       
       if (success) {
-        showToastMessage(`${product.name}이(가) 장바구니에 추가되었습니다.`);
+        showToastMessage(`${product.product_name}이(가) 장바구니에 추가되었습니다.`);
         onAddToCart?.(product.product_id);
       } else {
         alert('더 이상 담을 수 없습니다. 장바구니를 확인해주세요.');
@@ -89,8 +89,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
     } else {
       showToastMessage(
         isWishlisted 
-          ? `${product.name}을(를) 위시리스트에서 제거했습니다.`
-          : `${product.name}을(를) 위시리스트에 추가했습니다.`
+          ? `${product.product_name}을(를) 위시리스트에서 제거했습니다.`
+          : `${product.product_name}을(를) 위시리스트에 추가했습니다.`
       );
     }
   };
@@ -102,13 +102,22 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const handleImageLoad = () => setImageStatus('loaded');
   const handleImageError = () => setImageStatus('error');
 
-  const discountRate = product.discountRate ?? 0;
-  const originPrice = product.originPrice ?? 0;
-  const finalPrice = product.finalPrice ?? 0;
-  const averageRating = product.averageRating ?? 0;
-  const reviewCount = product.reviewCount ?? 0;
-  const alcohol = product.alcohol ?? 0;
-  const volume = product.volume ?? 0;
+  const discountRate = product.product_discount_rate ?? 0;
+  const originPrice = product.product_origin_price ?? 0;
+  const finalPrice = product.product_final_price ?? 0;
+  const averageRating = product.product_review_star ?? 0;
+  const reviewCount = product.product_review_count ?? 0;
+  const alcohol = product.product_alcohol ?? 0;
+  const volume = product.product_volume ?? 0;
+
+  const isBest = (product.product_review_star || 0) >= 4.5;
+  const isNew = (() => {
+    if (!product.product_registered_at) return false;
+    const registeredDate = new Date(product.product_registered_at);
+    const now = new Date();
+    const daysDiff = (now.getTime() - registeredDate.getTime()) / (1000 * 3600 * 24);
+    return daysDiff <= 30;
+  })();
 
   const hasValidImage = product.image_key && 
     !product.image_key.includes('/api/placeholder') && 
@@ -128,7 +137,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             )}
             <img
               src={product.image_key}
-              alt={product.name}
+              alt={product.product_name}
               className={`product-image ${imageStatus === 'loading' ? 'image-loading' : ''} ${imageStatus === 'error' ? 'image-error' : ''}`}
               onLoad={handleImageLoad}
               onError={handleImageError}
@@ -136,23 +145,23 @@ const ProductCard: React.FC<ProductCardProps> = ({
             />
             {imageStatus === 'error' && (
               <div className="product-image-placeholder">
-                <div className="placeholder-icon">�</div>
+                <div className="placeholder-icon">❌</div>
                 <div className="placeholder-text">이미지를 불러올 수<br />없습니다</div>
               </div>
             )}
           </>
         ) : (
           <div className="product-image-placeholder">
-            <div className="placeholder-icon">�</div>
+            <div className="placeholder-icon">🍶</div>
             <div className="placeholder-text">상품 이미지<br />준비 중</div>
           </div>
         )}
         
         <div className="product-badges">
-          {product.isBest && (
+          {isBest && (
             <span className="product-badge badge-best">베스트</span>
           )}
-          {product.isNew && (
+          {isNew && (
             <span className="product-badge badge-new">신상품</span>
           )}
         </div>
@@ -163,9 +172,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
       </div>
 
       <div className="product-info">
-        <div className="product-brewery">{product.brewery}</div>
+        <div className="product-brewery">{product.user_nickname}</div>
         
-        <h3 className="product-name">{product.name}</h3>
+        <h3 className="product-name">{product.product_name}</h3>
         
         <div className="product-rating-info">
           <span className="rating-star">⭐</span>

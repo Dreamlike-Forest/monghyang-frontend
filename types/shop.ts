@@ -1,4 +1,4 @@
- // 필터 옵션 타입
+// 필터 옵션 타입
 export interface FilterOption {
   id: string;
   name: string;
@@ -71,42 +71,45 @@ export const DEFAULT_FILTERS: ActiveFilters = {
   sortBy: 'latest',
 };
 
-// 프론트엔드용 상품 확장 타입 (변환 후 사용)
+// 상품 이미지 타입
+export interface ProductImage {
+  product_image_image_key: string;
+  product_image_seq: number;
+}
+
+// 상품 소유자 정보
+export interface ProductOwnerDto {
+  owner_id: number;
+  owner_role: 'ROLE_BREWERY' | 'ROLE_SELLER';
+  owner_region?: string;
+  image_key?: string;
+  tags_name?: string[];
+}
+
+// 프론트엔드용 상품 확장 타입 (실제 API 응답 형식에 맞춤)
 export interface ProductWithDetails {
   product_id: number;
-  name: string;
-  brewery: string;
-  alcohol: number;
-  volume: number;
-  minPrice: number;
-  maxPrice: number;
-  originalPrice: number;
-  discountRate: number;
-  averageRating: number;
-  reviewCount: number;
+  product_name: string;
+  product_alcohol: number;
+  product_volume: number;
+  product_sales_volume: number;
+  product_description?: string;
+  product_registered_at: string;
+  product_final_price: number;
+  product_discount_rate: number;
+  product_origin_price: number;
+  product_is_online_sell: boolean;
+  product_is_soldout: boolean;
+  product_review_star?: number;
+  product_review_count?: number;
+  user_nickname: string;
   image_key: string;
-  images: ProductImage[];
-  tags: ProductTagWithType[];
-  registered_at: string;
-  is_sell: boolean;
-  is_delete: boolean;
-  user_id: number;
-  brewery_id: number;
-  options: ProductOptionItem[];
-  reviews: any[];
-  isBest: boolean;
-  isNew: boolean;
-  info: ProductInfoItem;
+  product_image_image_key?: ProductImage[];
+  tags_name: string[];
+  owner?: ProductOwnerDto;
 }
 
-export interface ProductImage {
-  product_image_id: number;
-  product_id: number;
-  key: string;
-  image_key: string;
-  seq: number;
-}
-
+// 레거시 타입들 (하위 호환성)
 export interface ProductTagWithType {
   product_tag_id: number;
   product_tag_type_id: number;

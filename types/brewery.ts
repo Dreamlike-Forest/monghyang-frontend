@@ -15,6 +15,7 @@ export interface JoyDto {
   joy_final_price: number;
   joy_sales_volume: number;
   joy_time_unit?: number;
+  joy_max_count?: number;
   joy_is_soldout: boolean;
   joy_image_key?: string;
 }
@@ -126,18 +127,34 @@ export interface BreweryBadge {
 export interface Brewery {
   id: number;
   brewery_id: number;
+  users_id: number;
+  users_email?: string;
+  users_phone?: string;
   brewery_name: string;
   region_type_name: string;
   brewery_introduction: string;
   brewery_address: string;
   brewery_address_detail: string;
+  brewery_website?: string;
   brewery_is_visiting_brewery: boolean;
   brewery_is_regular_visit: boolean;
   brewery_joy_min_price: number;
   brewery_joy_count: number;
   image_key: string;
+  brewery_image_image_key?: BreweryImageDto[];
   tags_name: string[];
+  tag_name?: string[];
   alcohol_types: string[];
   joy: JoyDto[];
+  brewery_registered_at: string;
   badges?: BreweryBadge[];
+}
+
+// 양조장 필터 옵션 (Brewery 컴포넌트용)
+export interface BreweryFilterOptions {
+  regions: string[];
+  priceRange: { min: number | ''; max: number | '' };
+  alcoholTypes: string[];
+  badges: string[];
+  searchKeyword: string;
 }

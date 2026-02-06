@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import ImageCarousel from '../../community/ImageCarousel/ImageCarousel';
-import { ProductWithDetails, ProductOption } from '../../../types/shop';
+import type { ProductWithDetails } from '../../../types/shop';
 import { PostImage } from '../../../types/community';
 import { addToCart } from '../../Cart/CartStore';
 import { getMyCart } from '../../../utils/cartApi';
@@ -12,8 +12,8 @@ import './ProductDetail.css';
 interface ProductDetailProps {
   product: ProductWithDetails;
   onClose: () => void;
-  onAddToCart?: (productId: number, optionId: number, quantity: number) => void;
-  onBuyNow?: (productId: number, optionId: number, quantity: number) => void;
+  onAddToCart?: (productId: number) => void;
+  onBuyNow?: (productId: number) => void;
   onToggleWishlist?: (productId: number) => void;
   isOpen: boolean;
   isPageMode?: boolean;
@@ -28,7 +28,6 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
   isOpen,
   isPageMode = false
 }) => {
-  const [selectedOption, setSelectedOption] = useState<ProductOption | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -36,14 +35,11 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
-      if (product.options && product.options.length > 0) {
-        setSelectedOption(product.options[0]);
-      }
     } else {
       document.body.style.overflow = 'unset';
     }
     return () => { document.body.style.overflow = 'unset'; };
-  }, [isOpen, product.options]);
+  }, [isOpen]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -71,12 +67,10 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
     const canProceed = checkAuthAndPrompt('장바구니 담기');
     if (!canProceed) return;
 
-    if (selectedOption) {
-      const success = await addToCart(product, selectedOption.product_option_id, quantity);
-      if (success) {
-        alert(`${product.name}이(가) 장바구니에 담겼습니다.`);
-        if (propOnAddToCart) propOnAddToCart(product.product_id, selectedOption.product_option_id, quantity);
-      }
+    const success = await addToCart(product);
+    if (success) {
+      alert(`${product.product_name}이(가) 장바구니에 담겼습니다.`);
+      if (propOnAddToCart) propOnAddToCart(product.product_id);
     }
   };
 
@@ -84,10 +78,8 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
     const canProceed = checkAuthAndPrompt('구매 기능');
     if (!canProceed) return;
 
-    if (!selectedOption) return;
-
     try {
-      const success = await addToCart(product, selectedOption.product_option_id, quantity);
+      const success = await addToCart(product);
       if (!success) return;
 
       const cartList = await getMyCart();
@@ -99,11 +91,11 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
         const checkoutItem = [{
           cart_id: targetItem.cart_id,
           product_id: product.product_id,
-          product_name: product.name,
+          product_name: product.product_name,
           image_key: product.image_key,
           quantity: quantity,
-          price: selectedOption.price,
-          brewery_name: product.brewery
+          price: product.product_final_price,
+          brewery_name: product.user_nickname
         }];
         
         sessionStorage.setItem('checkoutItems', JSON.stringify(checkoutItem));
@@ -126,25 +118,21 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
     if (newQuantity >= 1 && newQuantity <= 99) setQuantity(newQuantity);
   };
 
-  const handleOptionSelect = (option: ProductOption) => {
-    setSelectedOption(option);
-    setQuantity(1);
-  };
-
-  const convertToPostImages = (images: typeof product.images): PostImage[] => {
-    if (!images) return [];
-    return [...images]
-      .sort((a, b) => a.seq - b.seq)
-      .map((image) => ({
-        image_id: image.product_image_id,
-        image_url: image.key,
-        image_order: image.seq,
-        alt_text: `${product.name} 상품 이미지 ${image.seq}`
+  const convertToPostImages = (): PostImage[] => {
+    if (!product.product_image_image_key || product.product_image_image_key.length === 0) return [];
+    
+    return [...product.product_image_image_key]
+      .sort((a, b) => (a.product_image_seq || 0) - (b.product_image_seq || 0))
+      .map((image, index) => ({
+        image_id: index,
+        image_url: image.product_image_image_key,
+        image_order: image.product_image_seq || index,
+        alt_text: `${product.product_name} 상품 이미지 ${index + 1}`
       }));
   };
 
   const formatPrice = (price: number): string => price.toLocaleString();
-  const getTotalPrice = (): number => selectedOption ? selectedOption.price * quantity : 0;
+  const getTotalPrice = (): number => product.product_final_price * quantity;
 
   const renderRating = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
@@ -154,9 +142,20 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
 
   if (!isOpen) return null;
 
-  const hasImages = product.images && product.images.length > 0;
-  const productImages = hasImages ? convertToPostImages(product.images) : [];
-  const discount = product.discountRate || 0;
+  const productImages = convertToPostImages();
+  const hasImages = productImages.length > 0;
+  const discount = product.product_discount_rate || 0;
+  const averageRating = product.product_review_star || 0;
+  const reviewCount = product.product_review_count || 0;
+
+  const isBest = (product.product_review_star || 0) >= 4.5;
+  const isNew = (() => {
+    if (!product.product_registered_at) return false;
+    const registeredDate = new Date(product.product_registered_at);
+    const now = new Date();
+    const daysDiff = (now.getTime() - registeredDate.getTime()) / (1000 * 3600 * 24);
+    return daysDiff <= 30;
+  })();
 
   const content = (
     <>
@@ -164,7 +163,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
         <div className="product-detail-breadcrumb">
           <button onClick={onClose} className="breadcrumb-link" style={{ background:'none', border:'none', color:'#8b5a3c', cursor:'pointer', textDecoration:'underline', fontSize:'14px' }}>
             ← 전통주 쇼핑
-          </button> &gt; {product.brewery} &gt; {product.name}
+          </button> &gt; {product.user_nickname} &gt; {product.product_name}
         </div>
         {!isPageMode && (
           <button className="product-detail-close" onClick={onClose}>×</button>
@@ -183,48 +182,34 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
         <div className="product-detail-info">
           <div className="product-basic-info">
             <div className="product-badges">
-              {product.isBest && <span className="product-badge badge-best">베스트</span>}
-              {product.isNew && <span className="product-badge badge-new">신상품</span>}
+              {isBest && <span className="product-badge badge-best">베스트</span>}
+              {isNew && <span className="product-badge badge-new">신상품</span>}
             </div>
-            <div className="product-detail-brewery">{product.brewery}</div>
-            <h1 className="product-detail-name">{product.name}</h1>
+            <div className="product-detail-brewery">{product.user_nickname}</div>
+            <h1 className="product-detail-name">{product.product_name}</h1>
             <div className="product-rating-section">
-              <div className="rating-stars">{renderRating(product.averageRating)}</div>
-              <span className="rating-score">{product.averageRating.toFixed(1)}</span>
-              <span className="rating-count">({product.reviewCount}개 리뷰)</span>
+              <div className="rating-stars">{renderRating(averageRating)}</div>
+              <span className="rating-score">{averageRating.toFixed(1)}</span>
+              <span className="rating-count">({reviewCount}개 리뷰)</span>
             </div>
             <div className="product-specs">
-              <div className="spec-item"><span>🌡 {product.alcohol}%</span></div>
-              <div className="spec-item"><span>🍾 {product.volume}ml</span></div>
+              <div className="spec-item"><span>🌡 {product.product_alcohol}%</span></div>
+              <div className="spec-item"><span>🍾 {product.product_volume}ml</span></div>
             </div>
           </div>
 
           <div className="product-pricing">
             <div className="price-container">
-              {discount > 0 && product.originPrice > product.finalPrice && (
-                <span className="original-price">{formatPrice(product.originPrice)}원</span>
+              {discount > 0 && product.product_origin_price > product.product_final_price && (
+                <span className="original-price">{formatPrice(product.product_origin_price)}원</span>
               )}
               <span className={`current-price ${discount > 0 ? 'discount-price' : ''}`}>
-                {formatPrice(selectedOption?.price || product.finalPrice)}원
+                {formatPrice(product.product_final_price)}원
               </span>
               {discount > 0 && <span className="discount-badge">{discount}% 할인</span>}
             </div>
             <div className="price-note">배송비 별도 • 5만원 이상 무료배송</div>
           </div>
-
-          {product.options && product.options.length > 1 && (
-            <div className="product-options">
-              <div className="option-title">용량 선택</div>
-              <div className="option-list">
-                {product.options.map(option => (
-                  <div key={option.product_option_id} className={`option-item ${selectedOption?.product_option_id === option.product_option_id ? 'selected' : ''}`} onClick={() => handleOptionSelect(option)}>
-                    <span className="option-volume">{option.volume}ml</span>
-                    <span className="option-price">{formatPrice(option.price)}원</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           <div className="quantity-selector">
             <div className="quantity-title">수량</div>
@@ -239,15 +224,15 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
           </div>
 
           <div className="product-actions">
-            <button className="action-button cart-button" onClick={handleAddToCart} disabled={!selectedOption}>🛒 장바구니 담기</button>
-            <button className="action-button buy-button" onClick={handleBuyNow} disabled={!selectedOption}>💳 바로구매</button>
+            <button className="action-button cart-button" onClick={handleAddToCart}>🛒 장바구니 담기</button>
+            <button className="action-button buy-button" onClick={handleBuyNow}>💳 바로구매</button>
             <button className={`action-button wishlist-button ${isWishlisted ? 'active' : ''}`} onClick={handleToggleWishlist}>{isWishlisted ? '❤️' : '🤍'}</button>
           </div>
 
-          {product.info?.description && (
+          {product.product_description && (
             <div className="product-description">
               <h3 className="description-title">상품 소개</h3>
-              <div className="description-content">{product.info.description}</div>
+              <div className="description-content">{product.product_description}</div>
             </div>
           )}
         </div>

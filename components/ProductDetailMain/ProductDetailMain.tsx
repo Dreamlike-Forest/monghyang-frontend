@@ -4,7 +4,8 @@ import { useState, useRef, useEffect } from 'react';
 import ProductOverviewSection from './ProductOverviewSection/ProductOverviewSection';
 import ProductBreweryCard from './ProductBreweryCard/ProductBreweryCard';
 import ProductReviewsSection from './ProductReviewsSection/ProductReviewsSection';
-import { ProductWithDetails, Brewery } from '../../types/shop';
+import type { ProductWithDetails } from '../../types/shop';
+import type { Brewery } from '../../types/brewery';
 import './ProductDetailMain.css';
 
 interface ProductDetailMainProps {
@@ -58,29 +59,26 @@ const ProductDetailMain: React.FC<ProductDetailMainProps> = ({
     return null;
   }
 
-  console.log(' ProductDetailMain 렌더링 중:', product.name, 'pageMode:', isPageMode);
+  console.log(' ProductDetailMain 렌더링 중:', product.product_name, 'pageMode:', isPageMode);
 
   if (isPageMode) {
     return (
       <div className="productdetail-product-detail-container-full">
         <div className="productdetail-product-main-content">
-          {/* 상품 개요 */}
           <ProductOverviewSection 
             product={product} 
             forwardRef={overviewRef} 
           />
 
-          {/* 양조장 정보 */}
           <ProductBreweryCard 
             brewery={brewery || undefined}
             forwardRef={breweryRef}
             onBreweryClick={handleBreweryClick}
           />
 
-          {/* 상품 리뷰 섹션 */}
           <div ref={reviewsRef} className="productdetail-product-section-container" id="productdetail-reviews">
             <ProductReviewsSection 
-              productName={product.name}
+              productName={product.product_name}
               productId={product.product_id}
               hideTitle={true}
             />

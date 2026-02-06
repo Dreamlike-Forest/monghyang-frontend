@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ProductWithDetails } from '../../../types/shop';
+import type { ProductWithDetails } from '../../../types/shop';
 import { addToCart } from '../../Cart/CartStore';
 import { checkAuthAndPrompt } from '../../../utils/authUtils';
 import './ProductOverviewSection.css';
@@ -78,24 +78,13 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
       allImages.push(product.image_key);
     }
     
-    if (product.images && product.images.length > 0) {
-      const sortedImages = [...product.images].sort((a, b) => {
-        const getSeq = (image: any): number => {
-          if ('image_seq' in image) return image.image_seq;
-          if ('seq' in image) return image.seq;
-          return 0;
-        };
-        return getSeq(a) - getSeq(b);
+    if (product.product_image_image_key && product.product_image_image_key.length > 0) {
+      const sortedImages = [...product.product_image_image_key].sort((a, b) => {
+        return (a.product_image_seq || 0) - (b.product_image_seq || 0);
       });
 
       sortedImages.forEach(image => {
-        const getImageUrl = (image: any): string => {
-          if ('image_key' in image) return image.image_key;
-          if ('key' in image) return image.key;
-          return '';
-        };
-        
-        const imageUrl = getImageUrl(image);
+        const imageUrl = image.product_image_image_key;
         if (isValidImageUrl(imageUrl) && !allImages.includes(imageUrl)) {
           allImages.push(imageUrl);
         }
@@ -136,7 +125,7 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
     try {
       const success = addToCart(product);
       if (success) {
-        showToastMessage(`${product.name}이(가) 장바구니에 추가되었습니다.`);
+        showToastMessage(`${product.product_name}이(가) 장바구니에 추가되었습니다.`);
       } else {
         alert('더 이상 담을 수 없습니다. 장바구니를 확인해주세요.');
       }
@@ -146,11 +135,20 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
     }
   };
 
-  const discountRate = product.discountRate ?? 0;
-  const originPrice = product.originPrice ?? 0;
-  const finalPrice = product.finalPrice ?? 0;
-  const alcohol = product.alcohol ?? 0;
-  const volume = product.volume ?? 0;
+  const discountRate = product.product_discount_rate ?? 0;
+  const originPrice = product.product_origin_price ?? 0;
+  const finalPrice = product.product_final_price ?? 0;
+  const alcohol = product.product_alcohol ?? 0;
+  const volume = product.product_volume ?? 0;
+
+  const isBest = (product.product_review_star || 0) >= 4.5;
+  const isNew = (() => {
+    if (!product.product_registered_at) return false;
+    const registeredDate = new Date(product.product_registered_at);
+    const now = new Date();
+    const daysDiff = (now.getTime() - registeredDate.getTime()) / (1000 * 3600 * 24);
+    return daysDiff <= 30;
+  })();
 
   const hasImages = images.length > 0;
   const mainImage = images[0];
@@ -165,7 +163,7 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
             {hasImages && !imageLoadErrors.has(mainImage) ? (
               <img 
                 src={mainImage} 
-                alt={`${product.name} 대표 이미지`}
+                alt={`${product.product_name} 대표 이미지`}
                 className="productdetail-product-main-image-absolute"
                 onError={() => handleImageError(mainImage)}
                 loading="eager"
@@ -213,13 +211,13 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
 
         <div className="productdetail-product-info-section">
           <div className="productdetail-product-title-section">
-            <h1 className="productdetail-product-name">{product.name}</h1>
-            <p className="productdetail-product-brewery">{product.brewery}</p>
+            <h1 className="productdetail-product-name">{product.product_name}</h1>
+            <p className="productdetail-product-brewery">{product.user_nickname}</p>
             <div className="productdetail-product-badges">
-              {product.isBest && (
+              {isBest && (
                 <span className="productdetail-product-badge best">베스트</span>
               )}
-              {product.isNew && (
+              {isNew && (
                 <span className="productdetail-product-badge new">신상품</span>
               )}
             </div>
@@ -237,8 +235,8 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
             <div className="productdetail-detail-item">
               <span className="productdetail-detail-label">등록일</span>
               <span className="productdetail-detail-value">
-                {product.registered_at 
-                  ? new Date(product.registered_at).toLocaleDateString('ko-KR')
+                {product.product_registered_at 
+                  ? new Date(product.product_registered_at).toLocaleDateString('ko-KR')
                   : '-'
                 }
               </span>
@@ -248,17 +246,17 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
           <div className="productdetail-product-description">
             <h3 className="productdetail-description-title">상품 설명</h3>
             <p className="productdetail-description-text">
-              {product.info?.description || `${product.name}은 ${product.brewery}에서 정성스럽게 빚은 전통주입니다. 깊은 맛과 향이 특징이며, 한국의 전통 양조 기법을 바탕으로 제조되었습니다.`}
+              {product.product_description || `${product.product_name}은 ${product.user_nickname}에서 정성스럽게 빚은 전통주입니다. 깊은 맛과 향이 특징이며, 한국의 전통 양조 기법을 바탕으로 제조되었습니다.`}
             </p>
           </div>
 
-          {product.tags && product.tags.length > 0 && Array.isArray(product.tags) && typeof product.tags[0] === 'object' && (
+          {product.tags_name && product.tags_name.length > 0 && (
             <div className="productdetail-product-tags">
               <h4 className="productdetail-tags-title">태그</h4>
               <div className="productdetail-tags-list">
-                {product.tags.map((tag: any, index) => (
+                {product.tags_name.map((tag, index) => (
                   <span key={index} className="productdetail-product-tag">
-                    #{tag.tagType?.name || tag}
+                    #{tag}
                   </span>
                 ))}
               </div>
@@ -303,20 +301,6 @@ const ProductOverviewSection: React.FC<ProductOverviewSectionProps> = ({
                 )}
               </div>
             </div>
-
-            {product.options && product.options.length > 1 && (
-              <div className="productdetail-price-options-info">
-                <span className="productdetail-price-note">용량별 가격이 다를 수 있습니다</span>
-                <div className="productdetail-price-options-list">
-                  {product.options.map((option) => (
-                    <div key={option.product_option_id} className="productdetail-price-option-item">
-                      <span className="productdetail-option-volume">{option.volume ?? 0}ml</span>
-                      <span className="productdetail-option-price">{formatPrice(option.price)}원</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
           <div className="productdetail-add-to-cart-section">
