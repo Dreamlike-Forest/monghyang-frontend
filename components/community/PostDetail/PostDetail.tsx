@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import ImageCarousel from '../ImageCarousel/ImageCarousel';
 import { Post } from '../../../types/community';
 import { Comment } from '../../../utils/communityApi';
+import { followUser, unfollowUser, getFollowStatus, getCurrentUserId } from '../../../utils/followApi';
 import './PostDetail.css';
 
 interface PostDetailProps {
@@ -28,13 +29,28 @@ const PostDetail: React.FC<PostDetailProps> = ({
   const [commentText, setCommentText] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [isLikeProcessing, setIsLikeProcessing] = useState(false);
-  const [isPostFollowed, setIsPostFollowed] = useState(false);
+  const [isAuthorFollowed, setIsAuthorFollowed] = useState(false);
+  const [isFollowProcessing, setIsFollowProcessing] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
   const commentInputRef = useRef<HTMLInputElement>(null);
+
+  const myUserId = getCurrentUserId();
+  const isMyPost = myUserId > 0 && post.author_id === myUserId;
 
   useEffect(() => {
     setLikeCount(post.like_count);
   }, [post.like_count]);
+
+  // 게시글 작성자 팔로우 상태 초기 조회
+  useEffect(() => {
+    if (!isOpen || !post.author_id || isMyPost) return;
+
+    const fetchFollowStatus = async () => {
+      const status = await getFollowStatus(post.author_id);
+      setIsAuthorFollowed(status);
+    };
+    fetchFollowStatus();
+  }, [isOpen, post.author_id, isMyPost]);
 
   useEffect(() => {
     if (isOpen) {
@@ -143,6 +159,31 @@ const PostDetail: React.FC<PostDetailProps> = ({
     commentInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
+  // 작성자 팔로우/언팔로우 핸들러 (실제 API 연동)
+  const handleAuthorFollowClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    if (!myUserId) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+    if (isMyPost) return;
+    if (isFollowProcessing) return;
+
+    setIsFollowProcessing(true);
+    try {
+      if (isAuthorFollowed) {
+        const ok = await unfollowUser(post.author_id);
+        if (ok) setIsAuthorFollowed(false);
+      } else {
+        const ok = await followUser(post.author_id);
+        if (ok) setIsAuthorFollowed(true);
+      }
+    } finally {
+      setIsFollowProcessing(false);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -181,22 +222,6 @@ const PostDetail: React.FC<PostDetailProps> = ({
         ))}
       </div>
     );
-  };
-
-  // 게시글 팔로우 버튼 클릭 핸들러
-  const handlePostFollowClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    const newFollowState = !isPostFollowed;
-    setIsPostFollowed(newFollowState);
-    
-    if (newFollowState) {
-      // TODO: 게시글 팔로우 API 호출
-      console.log('게시글 팔로우:', post.post_id);
-    } else {
-      // TODO: 게시글 언팔로우 API 호출
-      console.log('게시글 언팔로우:', post.post_id);
-    }
   };
 
   const organizeComments = (commentList: Comment[]) => {
@@ -351,14 +376,22 @@ const PostDetail: React.FC<PostDetailProps> = ({
                 <span>💬</span>
                 댓글
               </button>
-              <button 
-                className={`action-button follow-button ${isPostFollowed ? 'followed' : ''}`}
-                onClick={handlePostFollowClick}
-                aria-label="게시글 팔로우"
-              >
-                <span>{isPostFollowed ? '⭐' : '☆'}</span>
-                {isPostFollowed ? '팔로잉' : '팔로우'}
-              </button>
+              {/* 자기 게시글이 아닐 때만 팔로우 버튼 표시 */}
+              {!isMyPost && (
+                <button
+                  className={`action-button follow-button ${isAuthorFollowed ? 'followed' : ''}`}
+                  onClick={handleAuthorFollowClick}
+                  disabled={isFollowProcessing}
+                  aria-label="작성자 팔로우"
+                >
+                  <span>{isAuthorFollowed ? '⭐' : '☆'}</span>
+                  {isFollowProcessing
+                    ? '처리 중...'
+                    : isAuthorFollowed
+                    ? '팔로잉'
+                    : '팔로우'}
+                </button>
+              )}
               <button 
                 className="action-button share-button"
                 onClick={handleShare}
