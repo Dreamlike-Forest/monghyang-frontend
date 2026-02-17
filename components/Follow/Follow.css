@@ -1,0 +1,342 @@
+/* components/Follow/Follow.css */
+
+/* 전체 컨테이너 */
+.follow-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  min-height: calc(100vh - 110px);
+}
+
+/* 헤더 영역 */
+.follow-page-header {
+  text-align: center;
+  margin-bottom: 60px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.follow-page-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 12px;
+}
+
+.follow-page-subtitle {
+  font-size: 16px;
+  color: #6b7280;
+}
+
+/* 레이아웃 (사이드바 + 메인) */
+.follow-layout-wrapper {
+  display: flex;
+  gap: 40px;
+  align-items: flex-start;
+}
+
+.follow-main-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* =========================================
+   사이드바
+   ========================================= */
+.follow-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 100px;
+}
+
+.follow-menu-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.follow-menu-item {
+  padding: 16px 20px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  color: #4b5563;
+  border-bottom: 1px solid #f3f4f6;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.follow-menu-item:last-child {
+  border-bottom: none;
+}
+
+.follow-menu-item:hover {
+  background-color: #f9fafb;
+  color: #8b5a3c;
+}
+
+.follow-menu-item-active {
+  background-color: #8b5a3c;
+  color: white;
+  font-weight: 600;
+}
+
+.follow-menu-item-active:hover {
+  background-color: #8b5a3c;
+  color: white;
+}
+
+.follow-menu-count {
+  font-size: 13px;
+  background: rgba(255, 255, 255, 0.25);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.follow-menu-item:not(.follow-menu-item-active) .follow-menu-count {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+/* =========================================
+   메인 콘텐츠
+   ========================================= */
+
+/* 로딩 */
+.follow-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  color: #6b7280;
+  font-size: 15px;
+  gap: 10px;
+}
+
+.follow-loading-spinner {
+  width: 22px;
+  height: 22px;
+  border: 3px solid #f3f4f6;
+  border-top: 3px solid #8b5a3c;
+  border-radius: 50%;
+  animation: followSpin 0.8s linear infinite;
+}
+
+@keyframes followSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 빈 상태 */
+.follow-empty-state {
+  text-align: center;
+  padding: 60px 0;
+  color: #9ca3af;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px dashed #d1d5db;
+}
+
+.follow-empty-icon {
+  font-size: 40px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.follow-empty-text {
+  font-size: 15px;
+  color: #6b7280;
+}
+
+/* 유저 목록 */
+.follow-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.follow-user-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  transition: box-shadow 0.2s ease;
+}
+
+.follow-user-item:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* 아바타 */
+.follow-user-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8b5a3c, #f59e0b);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+  color: white;
+  font-weight: 700;
+}
+
+/* 유저 정보 */
+.follow-user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.follow-user-nickname {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 3px;
+}
+
+.follow-user-email {
+  font-size: 13px;
+  color: #6b7280;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.follow-user-date {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 3px;
+}
+
+/* 팔로우/언팔로우 버튼 */
+.follow-action-btn {
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.follow-action-btn.is-following {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+}
+
+.follow-action-btn.is-following:hover {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.follow-action-btn.not-following {
+  background: #8b5a3c;
+  color: white;
+}
+
+.follow-action-btn.not-following:hover {
+  background: #7c4d34;
+}
+
+.follow-action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 페이지네이션 */
+.follow-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.follow-pagination-btn {
+  padding: 8px 20px;
+  background: #f5f5f5;
+  color: #333;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.follow-pagination-btn:hover:not(:disabled) {
+  background: #8b5a3c;
+  color: white;
+  border-color: #8b5a3c;
+}
+
+.follow-pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.follow-pagination-info {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .follow-layout-wrapper {
+    flex-direction: column;
+  }
+
+  .follow-sidebar {
+    width: 100%;
+    position: static;
+  }
+
+  .follow-menu-list {
+    display: flex;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .follow-menu-item {
+    flex: 0 0 auto;
+    border-bottom: none;
+    border-right: 1px solid #f3f4f6;
+  }
+}
+
+@media (max-width: 480px) {
+  .follow-user-item {
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .follow-user-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+
+  .follow-action-btn {
+    padding: 7px 14px;
+    font-size: 12px;
+  }
+}
