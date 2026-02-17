@@ -16,6 +16,7 @@ import Guide from '../components/Guide/Guide';
 import Qna from '../components/Qna/Qna';
 import Faq from '../components/Faq/Faq';
 import Privacy from '../components/Privacy/Privacy';
+import Follow from '../components/Follow/Follow'; 
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -41,7 +42,8 @@ type View =
   | 'guide'
   | 'qna'
   | 'faq'
-  | 'privacy';
+  | 'privacy'
+  | 'follow';
 
 export default function MainApp() {
   const searchParams = useSearchParams();
@@ -112,7 +114,7 @@ export default function MainApp() {
             setCurrentView('brewery');
           }
         } 
-        else if (view && ['home', 'about', 'brewery', 'shop', 'community', 'login', 'cart', 'order-history', 'reservation-history', 'profile', 'purchase', 'guide', 'qna', 'faq', 'privacy'].includes(view)) { 
+        else if (view && ['home', 'about', 'brewery', 'shop', 'community', 'login', 'cart', 'order-history', 'reservation-history', 'profile', 'purchase', 'guide', 'qna', 'faq', 'privacy', 'follow'].includes(view)) {
           setCurrentView(view as View);
           setSelectedBrewery(null);
           setBreweryProducts([]);
@@ -168,6 +170,7 @@ export default function MainApp() {
       case 'qna': return <Qna />;
       case 'faq': return <Faq />;
       case 'privacy': return <Privacy />;
+      case 'follow': return <Follow />;
       case 'brewery-detail':
         return selectedBrewery ? (
           <BreweryDetail brewery={selectedBrewery} products={breweryProducts} />

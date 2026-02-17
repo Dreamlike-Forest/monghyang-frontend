@@ -96,7 +96,7 @@ const Header: React.FC = () => {
             setIsUserLoggedIn(true);
             setUser({
               id: parsed.users_id?.toString() || '',
-              nickname: parsed.users_nickname || '',  // ✅ users_nickname 매핑
+              nickname: parsed.users_nickname || '',  
               email: parsed.users_email || ''
             });
           } else {
@@ -233,7 +233,7 @@ const Header: React.FC = () => {
 
       localStorage.removeItem('isLoggedIn');
       localStorage.removeItem('userData');
-      localStorage.removeItem('loginInfo');  // ✅ loginInfo도 삭제
+      localStorage.removeItem('loginInfo');  
       localStorage.removeItem('sessionId');
       localStorage.removeItem('refreshToken');
       sessionStorage.removeItem('returnToProduct');
@@ -342,6 +342,14 @@ const Header: React.FC = () => {
                           onClick={() => handleNavigation('reservation-history')}
                         >
                           🎫 체험 예약 내역
+                        </button>
+                      </li>
+                      <li role="menuitem">
+                        <button 
+                          className="profile-option"
+                          onClick={() => handleNavigation('follow')}
+                        >
+                          👥 팔로우 관리
                         </button>
                       </li>
                       <li role="menuitem" className="logout-item">
