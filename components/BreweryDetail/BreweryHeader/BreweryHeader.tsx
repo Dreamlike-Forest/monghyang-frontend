@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import type { Brewery } from '../../../types/mockData';
+import type { Brewery } from '../../../types/brewery';
 import './BreweryHeader.css';
 
 interface BreweryHeaderProps {
@@ -12,7 +12,6 @@ const BreweryHeader: React.FC<BreweryHeaderProps> = ({ brewery }) => {
   return (
     <div className="brewery-header">
       <h1 className="brewery-header-name">{brewery.brewery_name}</h1>
-      {/* region_name -> region_type_name (API) */}
       <p className="brewery-header-region">{brewery.region_type_name}</p>
     </div>
   );

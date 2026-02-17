@@ -5,15 +5,15 @@ import { useSearchParams } from 'next/navigation';
 import BreweryFilter from './BreweryFilter/BreweryFilter';
 import BreweryCard from './BreweryCard/BreweryCard';
 import Pagination from '../shop/Pagination/Pagination';
-import { Brewery, BreweryFilterOptions } from '../../types/mockData';
+import type { Brewery, BreweryFilterOptions } from '../../types/brewery';
 import { 
   searchBreweries, 
   getLatestBreweries, 
   convertToBreweryType,
-  BrewerySearchParams,
-  REGION_IDS,      // ID 매핑 상수
-  ALCOHOL_TAG_IDS  // ID 매핑 상수
+  REGION_IDS,
+  ALCOHOL_TAG_IDS
 } from '../../utils/brewery';
+import type { BrewerySearchParams } from '../../types/brewery';
 import './Brewery.css';
 
 interface BreweryProps {

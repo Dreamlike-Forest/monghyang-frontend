@@ -1,4 +1,4 @@
-// 커뮤니티 관련 타입 정의
+// 게시글 이미지
 export interface PostImage {
   image_id: number;
   image_url: string;
@@ -8,6 +8,7 @@ export interface PostImage {
   height?: number;
 }
 
+// 게시글
 export interface Post {
   post_id: number;
   title: string;
@@ -20,12 +21,13 @@ export interface Post {
   like_count: number;
   comment_count: number;
   is_notice?: boolean;
-  rating?: number; // 리뷰 게시글일 때만 사용
-  brewery_name?: string; // 양조장 리뷰일 때만 사용
-  product_name?: string; // 술 리뷰일 때만 사용
+  rating?: number;
+  brewery_name?: string;
+  product_name?: string;
   tags: string[];
-  images: PostImage[]; // 게시글 이미지들 (최대 5개)
-  thumbnail_url?: string; // 썸네일 이미지 (첫번째 이미지 또는 대표 이미지)
+  images: PostImage[];
+  thumbnail_url?: string;
+  is_liked?: boolean;
 }
 
 export type PostCategory = 'notice' | 'free' | 'drink_review' | 'brewery_review';
@@ -35,7 +37,7 @@ export interface PostFilter {
   subcategory: string;
   searchKeyword: string;
   sortBy: 'latest' | 'popular' | 'views' | 'likes';
-  hasImages?: boolean; // 이미지가 있는 게시글만 필터링
+  hasImages?: boolean;
 }
 
 export interface WritePostData {
@@ -47,8 +49,8 @@ export interface WritePostData {
   brewery_name?: string;
   product_name?: string;
   tags: string[];
-  images: File[]; // 업로드할 이미지 파일들
-  imageDescriptions: string[]; // 각 이미지의 설명
+  images: File[];
+  imageDescriptions: string[];
 }
 
 export interface CategoryConfig {
@@ -57,8 +59,8 @@ export interface CategoryConfig {
   subcategories: { id: string; name: string; count: number }[];
   hasRating: boolean;
   placeholder: string;
-  allowImages: boolean; // 이미지 업로드 허용 여부
-  maxImages: number; // 최대 이미지 개수
+  allowImages: boolean;
+  maxImages: number;
 }
 
 export interface CommunityStats {
@@ -66,10 +68,10 @@ export interface CommunityStats {
   todayPosts: number;
   totalMembers: number;
   onlineMembers: number;
-  postsWithImages: number; // 이미지가 있는 게시글 수
+  postsWithImages: number;
 }
 
-// 컴포넌트 Props 타입들
+// 컴포넌트 Props
 export interface CommunityProps {
   className?: string;
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import type { Brewery } from '../../../types/mockData';
+import type { Brewery } from '../../../types/brewery';
 import './BreweryIntro.css';
 
 interface BreweryIntroProps {
@@ -15,7 +15,6 @@ const BreweryIntro: React.FC<BreweryIntroProps> = ({ brewery, forwardRef }) => {
       <h2 className="section-title">양조장 소개</h2>
       <div className="brewery-intro-content">
         <div className="brewery-intro-description">
-          {/* introduction -> brewery_introduction */}
           <p>{brewery.brewery_introduction || '양조장 소개글이 준비 중입니다.'}</p>
         </div>
         
@@ -31,18 +30,15 @@ const BreweryIntro: React.FC<BreweryIntroProps> = ({ brewery, forwardRef }) => {
             <div className="brewery-detail-item">
               <span className="brewery-detail-label">주종</span>
               <span className="brewery-detail-value">
-                {/* alcohol_types -> tags_name (API 데이터 우선, 없으면 alcohol_types 사용) */}
                 {(brewery.tags_name || brewery.alcohol_types || []).join(', ')}
               </span>
             </div>
             
             <div className="brewery-detail-item">
               <span className="brewery-detail-label">연락처</span>
-              {/* business_phone -> users_phone (여기가 오류 났던 부분) */}
               <span className="brewery-detail-value">{brewery.users_phone}</span>
             </div>
             
-            {/* business_email -> users_email */}
             {brewery.users_email && (
               <div className="brewery-detail-item">
                 <span className="brewery-detail-label">이메일</span>

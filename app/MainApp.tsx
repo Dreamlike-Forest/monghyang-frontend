@@ -11,41 +11,53 @@ import Cart from '../components/Cart/Cart';
 import OrderHistory from '../components/OrderHistory/OrderHistory';
 import ReservationHistory from '../components/ReservationHistory/ReservationHistory';
 import ProfileLayout from '../components/Profile/ProfileLayout';
-import Purchase from '../components/Purchase/Purchase'; // [추가]
+import Purchase from '../components/Purchase/Purchase';
+import Guide from '../components/Guide/Guide';
+import Qna from '../components/Qna/Qna';
+import Faq from '../components/Faq/Faq';
+import Privacy from '../components/Privacy/Privacy';
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Brewery as BreweryType, ProductWithDetails } from '../types/mockData';
+import type { Brewery as BreweryType } from '../types/brewery';
+import type { ProductWithDetails } from '../types/shop';
 import { getBreweryById, convertBreweryDetailToType, getLatestBreweries } from '../utils/brewery';
 import { getProductsByUserId, convertToProductWithDetails } from '../utils/shopApi';
 
-type View = 'home' | 'about' | 'brewery' | 'shop' | 'community' | 'login' | 'brewery-detail' | 'product-detail' | 'cart' | 'order-history' | 'reservation-history' | 'profile' | 'purchase';
+type View = 
+  | 'home' 
+  | 'about' 
+  | 'brewery' 
+  | 'shop' 
+  | 'community' 
+  | 'login' 
+  | 'brewery-detail' 
+  | 'product-detail' 
+  | 'cart' 
+  | 'order-history' 
+  | 'reservation-history' 
+  | 'profile' 
+  | 'purchase'
+  | 'guide'
+  | 'qna'
+  | 'faq'
+  | 'privacy';
 
 export default function MainApp() {
   const searchParams = useSearchParams();
+  
   const [currentView, setCurrentView] = useState<View>('home');
   const [selectedBrewery, setSelectedBrewery] = useState<BreweryType | null>(null);
   const [breweryProducts, setBreweryProducts] = useState<ProductWithDetails[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const handleURLParams = async () => {
+    const handleNavigation = async () => {
       setIsLoading(true);
-      
       try {
-        const view = searchParams.get('view') as View;
-        const breweryId = searchParams.get('brewery');
-        const productId = searchParams.get('product');
-        
-        const searchKeyword = searchParams.get('search');
-        const searchType = searchParams.get('searchType');
-
-        if (productId) {
-          setCurrentView('shop');
-          setSelectedBrewery(null);
-          setBreweryProducts([]);
-          return;
-        }
+        const url = new URL(window.location.href);
+        const view = url.searchParams.get('view');
+        const breweryId = url.searchParams.get('brewery');
 
         if (breweryId) {
           try {
@@ -56,7 +68,6 @@ export default function MainApp() {
               const fallbackList = await getLatestBreweries(0, 50); 
               const foundItem = fallbackList.content.find(item => item.brewery_id === targetId);
               if (foundItem) {
-                // Fallback logic...
                 breweryDetail = {
                     brewery_id: foundItem.brewery_id,
                     users_id: 0, 
@@ -89,7 +100,9 @@ export default function MainApp() {
                   const productResponse = await getProductsByUserId(convertedBrewery.users_id, 0);
                   const realProducts = productResponse.content.map(convertToProductWithDetails);
                   setBreweryProducts(realProducts);
-                } catch (e) { setBreweryProducts([]); }
+                } catch (e) { 
+                  setBreweryProducts([]); 
+                }
               }
               setCurrentView('brewery-detail');
             } else {
@@ -99,35 +112,42 @@ export default function MainApp() {
             setCurrentView('brewery');
           }
         } 
-        else if (view && ['home', 'about', 'brewery', 'shop', 'community', 'login', 'cart', 'order-history', 'reservation-history', 'profile', 'purchase'].includes(view)) { 
-          setCurrentView(view);
+        else if (view && ['home', 'about', 'brewery', 'shop', 'community', 'login', 'cart', 'order-history', 'reservation-history', 'profile', 'purchase', 'guide', 'qna', 'faq', 'privacy'].includes(view)) { 
+          setCurrentView(view as View);
           setSelectedBrewery(null);
           setBreweryProducts([]);
         } else {
           setCurrentView('home');
         }
+
+      } catch (error) {
+        console.error('Navigation error:', error);
+        setCurrentView('home');
       } finally {
         setIsLoading(false);
       }
     };
 
-    handleURLParams();
+    handleNavigation();
   }, [searchParams]);
-
-  const navigateToView = (view: View) => {
-    const url = new URL(window.location.href);
-    url.searchParams.delete('view');
-    url.searchParams.delete('brewery');
-    url.searchParams.delete('product');
-    if (view !== 'home') url.searchParams.set('view', view);
-    window.location.href = url.toString();
-  };
 
   const renderView = () => {
     if (isLoading) {
       return (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 'calc(100vh - 110px)' }}>
-          <div style={{ width: '40px', height: '40px', border: '4px solid #f3f3f3', borderTop: '4px solid #8b5a3c', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: 'calc(100vh - 110px)' 
+        }}>
+          <div style={{ 
+            width: '40px', 
+            height: '40px', 
+            border: '4px solid #f3f3f3', 
+            borderTop: '4px solid #8b5a3c', 
+            borderRadius: '50%', 
+            animation: 'spin 1s linear infinite' 
+          }}></div>
         </div>
       );
     }
@@ -144,15 +164,22 @@ export default function MainApp() {
       case 'reservation-history': return <ReservationHistory />;
       case 'profile': return <ProfileLayout />;
       case 'purchase': return <Purchase />;
-
+      case 'guide': return <Guide />;
+      case 'qna': return <Qna />;
+      case 'faq': return <Faq />;
+      case 'privacy': return <Privacy />;
       case 'brewery-detail':
-        return selectedBrewery ? <BreweryDetail brewery={selectedBrewery} products={breweryProducts} /> : <Brewery />;
-
+        return selectedBrewery ? (
+          <BreweryDetail brewery={selectedBrewery} products={breweryProducts} />
+        ) : <Brewery />;
+      case 'product-detail': return <Shop />;
       default: return <Home />;
     }
   };
 
-  if (currentView === 'login') return <Login />;
-
-  return renderView();
+  return (
+    <div className="main-content">
+      {renderView()}
+    </div>
+  );
 }

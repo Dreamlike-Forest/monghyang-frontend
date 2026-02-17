@@ -1,8 +1,9 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://16.184.16.198:61234',
+  baseURL: API_URL,
   timeout: 10000,
   withCredentials: true,
   headers: {
@@ -25,24 +26,20 @@ apiClient.interceptors.request.use(
   }
 );
 
-// 응답 인터셉터: 401 에러 시 토큰 갱신 시도
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-    // 401 아직 재시도하지 않았으면
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
-        // 토큰 갱신 시도
         const refreshed = await refreshSession();
         if (refreshed) {
           return apiClient(originalRequest);
         }
       } catch (refreshError) {
-        // 토큰 갱신 실패 시 로그아웃
         if (typeof window !== 'undefined') {
           localStorage.removeItem('sessionId');
           localStorage.removeItem('refreshToken');
@@ -58,7 +55,6 @@ apiClient.interceptors.response.use(
   }
 );
 
-// 세션 갱신 함수
 async function refreshSession(): Promise<boolean> {
   try {
     if (typeof window === 'undefined') return false;
@@ -69,7 +65,7 @@ async function refreshSession(): Promise<boolean> {
     if (!refreshToken || !sessionId) return false;
 
     const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL || 'http://16.184.16.198:61234'}/api/auth/refresh`,
+      `${API_URL}/api/auth/refresh`,
       {},
       {
         headers: {
@@ -81,7 +77,6 @@ async function refreshSession(): Promise<boolean> {
     );
 
     if (response.status === 200) {
-      // 새로운 세션 ID와 리프레시 토큰 저장
       const newSessionId = response.headers['x-session-id'];
       const newRefreshToken = response.headers['x-refresh-token'];
 
@@ -99,7 +94,6 @@ async function refreshSession(): Promise<boolean> {
   } catch (error) {
     console.error('세션 갱신 실패:', error);
     
-    // 409 에러 (중복 접속) 처리
     if (axios.isAxiosError(error) && error.response?.status === 409) {
       alert('다른 기기에서 로그인되어 로그아웃됩니다.');
     }

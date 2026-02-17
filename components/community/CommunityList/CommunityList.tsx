@@ -52,7 +52,6 @@ const CommunityList: React.FC<CommunityListProps> = ({
     onFilterChange({ sortBy: sortBy as PostFilter['sortBy'] });
   };
 
-  // 게시글 클릭 시 상세 데이터 + 댓글 조회
   const handlePostClick = useCallback(async (postId: number) => {
     setIsLoadingDetail(true);
     
@@ -68,7 +67,6 @@ const CommunityList: React.FC<CommunityListProps> = ({
       }
     } catch (err) {
       console.error('게시글 상세 조회 실패:', err);
-      // 기존 목록에서 찾아서 표시
       const post = posts.find(p => p.post_id === postId);
       if (post) {
         setSelectedPost(post);
@@ -84,7 +82,6 @@ const CommunityList: React.FC<CommunityListProps> = ({
     setComments([]);
   };
 
-  // 좋아요 처리
   const handleLike = async (postId: number, currentLiked: boolean) => {
     const success = await onLike(postId, currentLiked);
     
@@ -93,6 +90,7 @@ const CommunityList: React.FC<CommunityListProps> = ({
         if (!prev) return null;
         return {
           ...prev,
+          is_liked: !currentLiked,
           like_count: currentLiked ? prev.like_count - 1 : prev.like_count + 1
         };
       });
@@ -101,16 +99,13 @@ const CommunityList: React.FC<CommunityListProps> = ({
     return success;
   };
 
-  // 댓글 작성
   const handleComment = async (postId: number, content: string) => {
     const success = await onComment(postId, content);
     
     if (success) {
-      // 댓글 목록 새로고침
       const updatedComments = await onGetComments(postId);
       setComments(updatedComments);
       
-      // 선택된 게시글 댓글 수 업데이트
       if (selectedPost && selectedPost.post_id === postId) {
         setSelectedPost(prev => {
           if (!prev) return null;
@@ -127,7 +122,6 @@ const CommunityList: React.FC<CommunityListProps> = ({
     onFilterChange({ hasImages: checked });
   };
 
-  // 공지사항과 일반 게시글 분리
   const noticePosts = posts.filter(post => post.is_notice);
   const regularPosts = posts.filter(post => !post.is_notice);
 
@@ -144,7 +138,6 @@ const CommunityList: React.FC<CommunityListProps> = ({
 
   return (
     <div className="community-list-container">
-      {/* 헤더 */}
       <div className="community-list-header">
         <div className="header-left">
           <div className="post-count">
@@ -204,7 +197,6 @@ const CommunityList: React.FC<CommunityListProps> = ({
         </div>
       </div>
 
-      {/* 공지사항 섹션 */}
       {noticePosts.length > 0 && !showImageOnly && (
         <div className="notice-section">
           <h3 className="notice-title">
@@ -235,7 +227,6 @@ const CommunityList: React.FC<CommunityListProps> = ({
         </div>
       )}
 
-      {/* 게시글 목록 */}
       {regularPosts.length === 0 ? (
         <div className="no-posts">
           <div className="no-posts-icon">📝</div>
@@ -267,14 +258,12 @@ const CommunityList: React.FC<CommunityListProps> = ({
         </div>
       )}
 
-      {/* 상세 로딩 오버레이 */}
       {isLoadingDetail && (
         <div className="detail-loading-overlay">
           <div className="loading-spinner"></div>
         </div>
       )}
 
-      {/* 게시글 상세 모달 */}
       {selectedPost && (
         <PostDetail
           post={selectedPost}

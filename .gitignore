@@ -5,7 +5,8 @@ dist/
 
 # environment variables
 .env
-.env.*
+.env.local
+.env*.local
 
 # cache
 .vite/
@@ -26,3 +27,13 @@ coverage/
 # misc
 .eslintcache
 *.tsbuildinfo
+
+# 의존성
+node_modules/
+
+# 빌드 결과물
+.next/
+dist/
+build/
+
+# 환경변수

@@ -5,8 +5,9 @@ import { useSearchParams } from 'next/navigation';
 import ProductFilter from './ProductFilter/ProductFilter';
 import ProductList from './ProductList/ProductList';
 import ProductDetailMain from '../ProductDetailMain/ProductDetailMain'; 
-import { ProductWithDetails, ProductActiveFilters, Brewery } from '../../types/mockData';
-import { getProductsWithBrewery, mockFilterOptions, getBreweriesWithExperience } from '../../data/mockData';
+import type { ProductWithDetails, ProductActiveFilters } from '../../types/shop';
+import type { Brewery } from '../../types/brewery';
+import { FILTER_OPTIONS } from '../../types/shop';
 import { 
   searchProducts, 
   getLatestProducts, 
@@ -17,7 +18,7 @@ import {
 import { 
   getBreweryById, 
   convertBreweryDetailToType,
-  ALCOHOL_TAG_IDS // ID 상수 재사용
+  ALCOHOL_TAG_IDS
 } from '../../utils/brewery';
 import { 
   hasActiveFilters as checkActiveFilters,
@@ -31,7 +32,6 @@ interface ShopProps {
   className?: string;
 }
 
-// 주종 문자열 -> ID 매핑 (Brewery와 동일)
 const SHOP_TAG_MAP: Record<string, number> = {
   'takju': ALCOHOL_TAG_IDS.MAKGEOLLI,
   'cheongju': ALCOHOL_TAG_IDS.CHEONGJU,
@@ -44,9 +44,6 @@ const SHOP_TAG_MAP: Record<string, number> = {
 
 const Shop: React.FC<ShopProps> = ({ className }) => {
   const searchParams = useSearchParams();
-  
-  const [allProducts] = useState<ProductWithDetails[]>(getProductsWithBrewery());
-  const [allBreweries] = useState<Brewery[]>(getBreweriesWithExperience());
   
   const [filteredProducts, setFilteredProducts] = useState<ProductWithDetails[]>([]);
   const [activeFilters, setActiveFilters] = useState<ProductActiveFilters>(getInitialFilters());
@@ -91,14 +88,10 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
     try {
       let response;
       if (hasActiveFilters) {
-        // [수정] 필터 파라미터 변환
-        
-        // 1. 주종 ID 변환
         const tagIds = activeFilters.types
           .map(type => SHOP_TAG_MAP[type])
           .filter(id => id !== undefined);
 
-        // 2. 도수 범위 변환
         let minAlcohol, maxAlcohol;
         if (activeFilters.alcoholRange === 'low') { minAlcohol = 0; maxAlcohol = 6; }
         else if (activeFilters.alcoholRange === 'medium') { minAlcohol = 7; maxAlcohol = 15; }
@@ -152,8 +145,7 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
   };
 
   const handleProductClick = async (productId: number) => {
-    const basicProduct = filteredProducts.find(p => p.product_id === productId) || 
-                         allProducts.find(p => p.product_id === productId);
+    const basicProduct = filteredProducts.find(p => p.product_id === productId);
 
     if (basicProduct) {
       setSelectedProduct(basicProduct);
@@ -169,16 +161,15 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
         const mergedProduct = {
           ...basicProduct,
           ...fullProduct,
-          averageRating: basicProduct?.averageRating || fullProduct.averageRating,
-          reviewCount: basicProduct?.reviewCount || fullProduct.reviewCount,
+          product_review_star: basicProduct?.product_review_star || fullProduct.product_review_star,
+          product_review_count: basicProduct?.product_review_count || fullProduct.product_review_count,
         };
 
-        console.log('상품 상세 로드 완료. Brewery ID:', mergedProduct.brewery_id);
+        console.log('상품 상세 로드 완료. Owner ID:', mergedProduct.owner?.owner_id);
         setSelectedProduct(mergedProduct);
         
-        // [핵심] owner_id로부터 추출한 brewery_id를 사용하여 양조장 상세 정보 조회
-        const breweryId = mergedProduct.brewery_id;
-        if (breweryId && breweryId > 0) {
+        const breweryId = mergedProduct.owner?.owner_id;
+        if (breweryId && breweryId > 0 && mergedProduct.owner?.owner_role === 'ROLE_BREWERY') {
           try {
             console.log(`양조장 정보 조회 시도 (ID: ${breweryId})`);
             const breweryDetail = await getBreweryById(breweryId);
@@ -196,7 +187,7 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
             setSelectedProductBrewery(null);
           }
         } else {
-           console.warn('⚠️ 상품 정보에 양조장 ID(owner_id)가 없습니다.');
+           console.warn('⚠️ 상품 정보에 양조장 ID(owner_id)가 없거나 owner_role이 ROLE_BREWERY가 아닙니다.');
            setSelectedProductBrewery(null);
         }
 
@@ -262,7 +253,7 @@ const Shop: React.FC<ShopProps> = ({ className }) => {
       <div className="shop-content">
         <div className="shop-filter-section">
           <ProductFilter
-            filterOptions={mockFilterOptions}
+            filterOptions={FILTER_OPTIONS}
             activeFilters={activeFilters}
             onFilterChange={handleFilterChange}
           />

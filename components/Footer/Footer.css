@@ -1,21 +1,25 @@
-/* Footer.css */
-.footer {
+/* components/Footer/Footer.css */
+
+/* 최상위 컨테이너 */
+.footer-root {
   background-color: #f8f9fa;
   border-top: 1px solid #e5e7eb;
   margin-top: auto;
   padding: 48px 0 24px;
   position: relative;
+  width: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.footer-container {
+.footer-inner-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 20px;
   position: relative;
 }
 
-/* 상단 콘텐츠 영역 */
-.footer-content {
+/* 상단 콘텐츠 영역 (로고 + 메뉴) */
+.footer-top-content {
   display: flex;
   gap: 80px;
   align-items: flex-start;
@@ -23,122 +27,126 @@
 }
 
 /* 로고 섹션 */
-.footer-logo-section {
+.footer-logo-wrapper {
   flex-shrink: 0;
 }
 
-.footer-logo {
+.footer-logo-box {
   margin-bottom: 16px;
 }
 
-.footer-logo-image {
+.footer-logo-img {
   height: 40px;
   width: auto;
   object-fit: contain;
 }
 
 /* 메뉴 섹션들 컨테이너 */
-.footer-sections {
+.footer-menu-groups {
   display: flex;
   gap: 64px;
   flex: 1;
 }
 
-/* 각 메뉴 섹션 */
-.footer-section {
+/* 각 메뉴 그룹 */
+.footer-menu-group {
   flex: 1;
   min-width: 160px;
 }
 
-.footer-section-title {
+.footer-menu-title {
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   color: #111827;
   margin-bottom: 20px;
   line-height: 1.2;
 }
 
-/* 메뉴 리스트 */
 .footer-menu-list {
   list-style: none;
-  margin: 0;
   padding: 0;
+  margin: 0;
 }
 
-.footer-menu-list li {
+.footer-menu-item {
   margin-bottom: 12px;
 }
 
+.footer-menu-item:last-child {
+  margin-bottom: 0;
+}
+
+/* 링크 버튼 스타일 초기화 및 커스텀 */
 .footer-menu-link {
+  background: none;
+  border: none;
+  padding: 0;
   color: #6b7280;
-  text-decoration: none;
   font-size: 14px;
-  line-height: 1.4;
+  cursor: pointer;
   transition: color 0.2s ease;
+  font-family: inherit;
+  text-align: left;
 }
 
 .footer-menu-link:hover {
   color: #8b5a3c;
+  text-decoration: underline;
 }
 
-/* 소셜 미디어 링크 */
-.footer-social-links {
+/* 소셜 미디어 아이콘 */
+.footer-social-wrapper {
   display: flex;
   gap: 12px;
-  flex-wrap: wrap;
 }
 
 .footer-social-link {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: #f3f4f6;
-  text-decoration: none;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-decoration: none;
+}
+
+.footer-social-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
 }
 
 .footer-social-link:hover {
+  border-color: #8b5a3c;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-/* 소셜 미디어 아이콘 이미지 */
-.footer-social-icon {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
-  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .footer-social-link:hover .footer-social-icon {
-  transform: scale(1.1);
+  opacity: 1;
 }
 
-/* 소셜 미디어 색상 */
-.footer-social-link.instagram:hover {
-  background: linear-gradient(45deg, #405de6, #5851db, #833ab4, #c13584, #e1306c, #fd1d1d);
+/* 소셜 아이콘별 호버 색상 (선택 사항) */
+.footer-social-link.footer-icon-instagram:hover {
+  border-color: #E1306C;
+}
+.footer-social-link.footer-icon-youtube:hover {
+  border-color: #FF0000;
+}
+.footer-social-link.footer-icon-kakao:hover {
+  border-color: #FEE500;
+  background-color: #FEE500;
 }
 
-.footer-social-link.facebook:hover {
-  background-color: #1877f2;
-}
-
-.footer-social-link.youtube:hover {
-  background-color: #ff0000;
-}
-
-.footer-social-link.twitter:hover {
-  background-color: #1da1f2;
-}
-
-/* 회사 정보 */
-.footer-bottom {
-  border-top: 1px solid #e5e7eb;
+/* 하단 정보 영역 (사업자 정보 등) */
+.footer-bottom-info {
   padding-top: 24px;
+  border-top: 1px solid #e5e7eb;
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
@@ -146,84 +154,119 @@
   gap: 16px;
 }
 
-.footer-company-info {
+.footer-info-details {
   flex: 1;
 }
 
-.footer-company-details {
+.footer-biz-info {
   display: flex;
   flex-wrap: wrap;
   gap: 4px 16px;
   margin-bottom: 8px;
-  font-size: 14px;
+  font-size: 13px;
   color: #6b7280;
+  line-height: 1.5;
 }
 
-.footer-company-details span:not(:last-child)::after {
+.footer-biz-info span:not(:last-child)::after {
   content: '|';
   margin-left: 16px;
   color: #d1d5db;
 }
 
-.footer-address {
-  font-size: 14px;
+.footer-address-text {
+  font-size: 13px;
   color: #6b7280;
   margin-bottom: 8px;
 }
 
-.footer-contact {
+.footer-contact-info {
   display: flex;
   flex-wrap: wrap;
   gap: 4px 16px;
-  font-size: 14px;
+  font-size: 13px;
   color: #6b7280;
 }
 
-.footer-contact span:not(:last-child)::after {
+.footer-contact-info span:not(:last-child)::after {
   content: '|';
   margin-left: 16px;
   color: #d1d5db;
 }
 
-.footer-copyright {
-  font-size: 14px;
+.footer-copyright-text {
+  font-size: 13px;
   color: #9ca3af;
   font-weight: 500;
   white-space: nowrap;
 }
 
-/* 숨겨진 관리자 영역 */
-.footer-admin-area {
+/* 숨겨진 관리자 트리거 (우측 하단 투명 영역) */
+.footer-admin-trigger {
   position: absolute;
-  bottom: 24px;
-  right: 20px;
-  width: 60px;
-  height: 24px;
-  background: linear-gradient(135deg, #ffffff, #ffffff);
-  border-radius: 12px;
-  cursor: pointer;
-  opacity: 0.7;
-  transition: all 0.3s ease;
+  bottom: 0;
+  right: 0;
+  width: 30px;
+  height: 30px;
+  opacity: 0;
+  cursor: default;
   z-index: 10;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1024px) {
+  .footer-top-content {
+    gap: 40px;
+  }
   
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: black;
-  font-size: 11px;
-  font-weight: 600;
-  text-align: center;
-  user-select: none;
+  .footer-menu-groups {
+    gap: 32px;
+    flex-wrap: wrap;
+  }
 }
 
-.footer-admin-area:hover {
-  opacity: 1;
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(59, 59, 59, 0.4);
+@media (max-width: 768px) {
+  .footer-root {
+    padding: 32px 0 20px;
+  }
+
+  .footer-top-content {
+    flex-direction: column;
+    gap: 32px;
+    margin-bottom: 32px;
+  }
+
+  .footer-menu-groups {
+    width: 100%;
+    gap: 24px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 모바일에서 2열 배치 */
+  }
+
+  .footer-menu-group {
+    min-width: 0; /* grid 레이아웃을 위해 최소 너비 해제 */
+  }
+
+  .footer-bottom-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  .footer-biz-info, 
+  .footer-contact-info {
+    gap: 4px 12px;
+  }
+  
+  .footer-biz-info span:not(:last-child)::after,
+  .footer-contact-info span:not(:last-child)::after {
+    margin-left: 12px;
+  }
 }
 
-/* 관리자 영역 */
-.footer-admin-area:active {
-  transform: scale(0.95);
-  box-shadow: 0 2px 8px rgba(233, 30, 99, 0.6);
+@media (max-width: 480px) {
+  .footer-menu-groups {
+    grid-template-columns: 1fr; /* 아주 작은 화면에서는 1열 */
+    gap: 32px;
+  }
 }

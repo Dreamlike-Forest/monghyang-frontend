@@ -61,18 +61,44 @@ const Header: React.FC = () => {
   const languageDropdownRef = useRef<HTMLDivElement>(null);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
 
-  // 로그인 상태 확인
+  // 로그인 상태 확인 (수정됨: loginInfo 우선 사용 + userData 필드명 매핑)
   useEffect(() => {
     const checkAuthStatus = () => {
       if (typeof window !== 'undefined') {
         try {
           const isAuthenticated = localStorage.getItem('isLoggedIn') === 'true';
-          const userData = localStorage.getItem('userData');
           
-          if (isAuthenticated && userData) {
-            const parsedUserData = JSON.parse(userData);
+          if (!isAuthenticated) {
+            setIsUserLoggedIn(false);
+            setUser(null);
+            return;
+          }
+
+          // 1. loginInfo에서 먼저 확인 (빠르고 간단)
+          const loginInfo = localStorage.getItem('loginInfo');
+          if (loginInfo) {
+            const parsed = JSON.parse(loginInfo);
+            if (parsed.nickname) {
+              setIsUserLoggedIn(true);
+              setUser({
+                id: '',
+                nickname: parsed.nickname,
+                email: ''
+              });
+              return;
+            }
+          }
+
+          // 2. userData에서 확인 (백엔드 필드명 매핑 필요)
+          const userData = localStorage.getItem('userData');
+          if (userData) {
+            const parsed = JSON.parse(userData);
             setIsUserLoggedIn(true);
-            setUser(parsedUserData);
+            setUser({
+              id: parsed.users_id?.toString() || '',
+              nickname: parsed.users_nickname || '',  // ✅ users_nickname 매핑
+              email: parsed.users_email || ''
+            });
           } else {
             setIsUserLoggedIn(false);
             setUser(null);
@@ -82,6 +108,7 @@ const Header: React.FC = () => {
           if (typeof window !== 'undefined') {
             localStorage.removeItem('isLoggedIn');
             localStorage.removeItem('userData');
+            localStorage.removeItem('loginInfo');
           }
           setIsUserLoggedIn(false);
           setUser(null);
@@ -92,7 +119,7 @@ const Header: React.FC = () => {
     checkAuthStatus();
 
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'isLoggedIn' || e.key === 'userData') {
+      if (e.key === 'isLoggedIn' || e.key === 'userData' || e.key === 'loginInfo') {
         checkAuthStatus();
       }
     };
@@ -193,7 +220,7 @@ const Header: React.FC = () => {
     setIsProfileDropdownOpen(!isProfileDropdownOpen);
   };
 
-  // 로그아웃
+  // 로그아웃 (수정됨: loginInfo도 삭제)
   const handleLogout = () => {
     if (typeof window === 'undefined') return;
     
@@ -206,6 +233,9 @@ const Header: React.FC = () => {
 
       localStorage.removeItem('isLoggedIn');
       localStorage.removeItem('userData');
+      localStorage.removeItem('loginInfo');  // ✅ loginInfo도 삭제
+      localStorage.removeItem('sessionId');
+      localStorage.removeItem('refreshToken');
       sessionStorage.removeItem('returnToProduct');
       sessionStorage.removeItem('returnUrl');
       
@@ -291,7 +321,6 @@ const Header: React.FC = () => {
                   <div className="profile-dropdown">
                     <ul role="menu" className="profile-list">
                       <li role="menuitem">
-                        {/* [수정] 프로필 수정 버튼 클릭 시 profile 뷰로 이동 */}
                         <button 
                           className="profile-option"
                           onClick={() => handleNavigation('profile')}

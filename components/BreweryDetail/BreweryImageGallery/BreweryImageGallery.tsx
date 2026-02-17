@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Brewery } from '../../../types/mockData';
+import type { Brewery } from '../../../types/brewery';
 import './BreweryImageGallery.css';
 
 interface BreweryImageGalleryProps {
@@ -13,23 +13,16 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [imageLoadErrors, setImageLoadErrors] = useState<Set<number>>(new Set());
 
-  // image_key를 실제 이미지 URL로 변환하는 함수
   const getImageUrl = (imageKey: string | undefined): string => {
     if (!imageKey) return '';
-    
-    // 이미지 키가 이미 전체 URL인 경우
     if (imageKey.startsWith('http://') || imageKey.startsWith('https://') || imageKey.startsWith('/')) {
       return imageKey;
     }
-    
-    // 이미지 키를 기반으로 실제 URL 생성
     return `/images/breweries/${imageKey}`;
   };
 
-  // 이미지 URL 유효성 검사 함수
   const isValidImageUrl = (url: string): boolean => {
     if (!url || url.trim() === '') return false;
-    
     const invalidPatterns = [
       '/api/placeholder',
       'placeholder',
@@ -37,15 +30,12 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
       '/images/brewery-placeholder.jpg',
       '/images/brewery-default.jpg'
     ];
-    
     return !invalidPatterns.some(pattern => url.toLowerCase().includes(pattern.toLowerCase()));
   };
 
-  // 양조장 이미지 수집 및 처리 (최대 5개)
   const getBreweryImages = (): string[] => {
     const allImages: string[] = [];
     
-    // 1. 메인 이미지 (image_key) 추가 - 리스트 API 등에서 옴
     if (brewery.image_key) {
       const mainImageUrl = getImageUrl(brewery.image_key);
       if (isValidImageUrl(mainImageUrl)) {
@@ -53,22 +43,16 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
       }
     }
     
-    // 2. 추가 이미지들 (API 필드: brewery_image_image_key) 추가
-    // [수정] brewery_images -> brewery_image_image_key, 객체 구조 접근
     if (brewery.brewery_image_image_key && brewery.brewery_image_image_key.length > 0) {
       brewery.brewery_image_image_key.forEach(imageObj => {
-        // API 구조: { brewery_image_image_key: string, brewery_image_seq: number }
         const imageKey = imageObj.brewery_image_image_key;
         const imageUrl = getImageUrl(imageKey);
-        
-        // 중복 제외하고 추가
         if (isValidImageUrl(imageUrl) && !allImages.includes(imageUrl)) {
           allImages.push(imageUrl);
         }
       });
     }
     
-    // 3. 이미지가 없을 경우 샘플 이미지 추가 (개발용)
     if (allImages.length === 0) {
       const sampleImages = [
         'https://images.unsplash.com/photo-1571613316887-6f8d5cbf7ef7?w=800&h=400&fit=crop',
@@ -78,7 +62,6 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
       allImages.push(...sampleImages);
     }
     
-    // 4. 최대 5개까지만 반환
     return allImages.slice(0, 5);
   };
 
@@ -86,10 +69,8 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
   const hasImages = breweryImages.length > 0;
   const hasMultipleImages = breweryImages.length > 1;
 
-  // 이미지 로드 에러 처리
   const handleImageError = (index: number) => {
     setImageLoadErrors(prev => new Set(prev).add(index));
-    
     if (index === currentImageIndex) {
       const nextValidIndex = findNextValidImage(index);
       if (nextValidIndex !== -1) {
@@ -120,7 +101,6 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
 
   const nextImage = () => {
     if (!hasMultipleImages) return;
-    
     const nextIndex = findNextValidImage(currentImageIndex);
     if (nextIndex !== -1) {
       setCurrentImageIndex(nextIndex);
@@ -129,7 +109,6 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
 
   const prevImage = () => {
     if (!hasMultipleImages) return;
-    
     const prevIndex = findPrevValidImage(currentImageIndex);
     if (prevIndex !== -1) {
       setCurrentImageIndex(prevIndex);
@@ -144,7 +123,6 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!hasMultipleImages) return;
-      
       switch (e.key) {
         case 'ArrowLeft':
           e.preventDefault();
@@ -164,7 +142,6 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
           break;
       }
     };
-
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [hasMultipleImages, currentImageIndex, breweryImages.length]);
@@ -173,11 +150,9 @@ const BreweryImageGallery: React.FC<BreweryImageGalleryProps> = ({ brewery, forw
 
   useEffect(() => {
     if (!isAutoPlay || !hasMultipleImages) return;
-
     const interval = setInterval(() => {
       nextImage();
     }, 4000); 
-
     return () => clearInterval(interval);
   }, [isAutoPlay, hasMultipleImages, currentImageIndex]);
 

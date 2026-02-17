@@ -212,7 +212,7 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
 
       const genderValue = formData.gender === 'male' ? 'man' : 'woman';
 
-      const submitData = {
+      const submitData: Record<string, any> = {
         email: formData.email,
         password: formData.password,
         nickname: formData.nickname,
@@ -227,19 +227,24 @@ const BrewerySignupForm: React.FC<BrewerySignupFormProps> = ({ onBack }) => {
         brewery_depositor: formData.brewery_depositor,
         brewery_account_number: formData.brewery_account_number,
         brewery_bank_name: formData.brewery_bank_name,
-        introduction: formData.introduction || '',
-        brewery_website: formData.brewery_website || '',
         start_time: formData.start_time,
         end_time: formData.end_time,
         region_type_id: parseInt(formData.region_type_id),
         is_regular_visit: formData.is_regular_visit === 'true',
         is_agreed_brewery: is_agreed,
-        images: imageFiles
       };
+
+      // 선택 필드는 값이 있을 때만 추가
+      if (formData.introduction) {
+        submitData.introduction = formData.introduction;
+      }
+      if (formData.brewery_website) {
+        submitData.brewery_website = formData.brewery_website;
+      }
 
       console.log('양조장 관리자 회원가입 요청:', submitData);
       
-      const response = await signupBrewery(submitData);
+      const response = await signupBrewery(submitData as any, imageFiles);
       
       if (response.success) {
         alert(response.message || '양조장 회원가입이 완료되었습니다!');

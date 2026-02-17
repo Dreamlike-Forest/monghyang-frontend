@@ -28,6 +28,7 @@ const PostDetail: React.FC<PostDetailProps> = ({
   const [commentText, setCommentText] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [isLikeProcessing, setIsLikeProcessing] = useState(false);
+  const [isPostFollowed, setIsPostFollowed] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
   const commentInputRef = useRef<HTMLInputElement>(null);
 
@@ -182,6 +183,22 @@ const PostDetail: React.FC<PostDetailProps> = ({
     );
   };
 
+  // 게시글 팔로우 버튼 클릭 핸들러
+  const handlePostFollowClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    const newFollowState = !isPostFollowed;
+    setIsPostFollowed(newFollowState);
+    
+    if (newFollowState) {
+      // TODO: 게시글 팔로우 API 호출
+      console.log('게시글 팔로우:', post.post_id);
+    } else {
+      // TODO: 게시글 언팔로우 API 호출
+      console.log('게시글 언팔로우:', post.post_id);
+    }
+  };
+
   const organizeComments = (commentList: Comment[]) => {
     const parentComments = commentList.filter(c => !c.parentCommentId);
     const childComments = commentList.filter(c => c.parentCommentId);
@@ -333,6 +350,14 @@ const PostDetail: React.FC<PostDetailProps> = ({
               >
                 <span>💬</span>
                 댓글
+              </button>
+              <button 
+                className={`action-button follow-button ${isPostFollowed ? 'followed' : ''}`}
+                onClick={handlePostFollowClick}
+                aria-label="게시글 팔로우"
+              >
+                <span>{isPostFollowed ? '⭐' : '☆'}</span>
+                {isPostFollowed ? '팔로잉' : '팔로우'}
               </button>
               <button 
                 className="action-button share-button"
