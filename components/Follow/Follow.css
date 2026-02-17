@@ -255,6 +255,19 @@
   background: #7c4d34;
 }
 
+/* 팔로잉 탭 전용 언팔로우 버튼 */
+.follow-action-btn.unfollow {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+}
+
+.follow-action-btn.unfollow:hover {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
 .follow-action-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;

@@ -71,8 +71,33 @@ const Follow: React.FC = () => {
     loadUsers(activeTab, currentPage);
   }, [activeTab, currentPage, loadUsers]);
 
-  // 팔로우/언팔로우 토글
-  const handleFollowToggle = async (user: FollowUser) => {
+  // ─── 팔로잉 탭: 언팔로우 ───────────────────────────────────────────
+  // 팔로잉 목록에 있는 사람은 항상 내가 팔로우 중이므로 언팔로우만 수행
+  const handleUnfollow = async (user: FollowUser) => {
+    if (processingIds.has(user.userId)) return;
+
+    setProcessingIds(prev => new Set(prev).add(user.userId));
+    try {
+      const ok = await unfollowUser(user.userId);
+      if (ok) {
+        // 팔로잉 목록에서 해당 유저 제거
+        setUsers(prev => prev.filter(u => u.userId !== user.userId));
+        setFollowCount(prev => ({
+          ...prev,
+          followingCount: Math.max(0, prev.followingCount - 1)
+        }));
+      }
+    } finally {
+      setProcessingIds(prev => {
+        const next = new Set(prev);
+        next.delete(user.userId);
+        return next;
+      });
+    }
+  };
+
+  // ─── 팔로워 탭: 팔로우 / 언팔로우 토글 ──────────────────────────────
+  const handleFollowerToggle = async (user: FollowUser) => {
     if (processingIds.has(user.userId)) return;
 
     setProcessingIds(prev => new Set(prev).add(user.userId));
@@ -124,6 +149,40 @@ const Follow: React.FC = () => {
   const getAvatarChar = (nickname: string) =>
     nickname?.charAt(0)?.toUpperCase() || '?';
 
+  // ─── 팔로잉 탭 버튼 렌더 ─────────────────────────────────────────────
+  const renderFollowingButton = (user: FollowUser) => {
+    if (user.userId === myUserId) return null;
+    const isProcessing = processingIds.has(user.userId);
+    return (
+      <button
+        className="follow-action-btn unfollow"
+        onClick={() => handleUnfollow(user)}
+        disabled={isProcessing}
+      >
+        {isProcessing ? '처리 중...' : '언팔로우'}
+      </button>
+    );
+  };
+
+  // ─── 팔로워 탭 버튼 렌더 ─────────────────────────────────────────────
+  const renderFollowerButton = (user: FollowUser) => {
+    if (user.userId === myUserId) return null;
+    const isProcessing = processingIds.has(user.userId);
+    return (
+      <button
+        className={`follow-action-btn ${user.isFollowing ? 'is-following' : 'not-following'}`}
+        onClick={() => handleFollowerToggle(user)}
+        disabled={isProcessing}
+      >
+        {isProcessing
+          ? '처리 중...'
+          : user.isFollowing
+          ? '언팔로우'
+          : '팔로우'}
+      </button>
+    );
+  };
+
   const renderUserList = () => {
     if (isLoading) {
       return (
@@ -152,6 +211,7 @@ const Follow: React.FC = () => {
     return (
       <>
         <div className="follow-list-container">
+          {/* key를 userId + index 조합으로 사용해 중복 방지 */}
           {users.map((user, index) => (
             <div key={`${user.userId}-${index}`} className="follow-user-item">
               {/* 아바타 */}
@@ -168,20 +228,11 @@ const Follow: React.FC = () => {
                 </div>
               </div>
 
-              {/* 팔로우/언팔로우 버튼 (본인 제외) */}
-              {user.userId !== myUserId && (
-                <button
-                  className={`follow-action-btn ${user.isFollowing ? 'is-following' : 'not-following'}`}
-                  onClick={() => handleFollowToggle(user)}
-                  disabled={processingIds.has(user.userId)}
-                >
-                  {processingIds.has(user.userId)
-                    ? '처리 중...'
-                    : user.isFollowing
-                    ? '팔로잉'
-                    : '팔로우'}
-                </button>
-              )}
+              {/* 탭에 따라 다른 버튼 렌더링 */}
+              {activeTab === 'followings'
+                ? renderFollowingButton(user)
+                : renderFollowerButton(user)
+              }
             </div>
           ))}
         </div>
