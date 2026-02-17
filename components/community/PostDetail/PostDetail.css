@@ -103,8 +103,8 @@
 
 .author-info {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .author-name {
@@ -277,35 +277,18 @@
   cursor: not-allowed;
 }
 
-/* 좋아요 애니메이션 */
-@keyframes heartBeat {
-  0%, 100% { transform: scale(1); }
-  25% { transform: scale(1.15); }
-  50% { transform: scale(0.95); }
-  75% { transform: scale(1.05); }
-}
-
 .like-button {
   background: #f3f4f6;
   color: #374151;
 }
 
 .like-button:hover:not(:disabled) {
-  background: #ffe0e0;
-  color: #ff4444;
-  transform: scale(1.02);
+  background: #e5e7eb;
 }
 
 .like-button.liked {
-  background: #ff4444;
-  color: white;
-  animation: heartBeat 0.5s ease;
-  border: 2px solid #ff2222;
-}
-
-.like-button.liked:hover:not(:disabled) {
-  background: #ff2222;
-  transform: scale(1.02);
+  background: #fef2f2;
+  color: #dc2626;
 }
 
 .comment-button {
@@ -315,6 +298,24 @@
 
 .comment-button:hover {
   background: #7c4d34;
+}
+
+.action-button.follow-button {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.action-button.follow-button:hover {
+  background: #e5e7eb;
+}
+
+.action-button.follow-button.followed {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.action-button.follow-button.followed:hover {
+  background: #fde68a;
 }
 
 .share-button {
@@ -403,6 +404,7 @@
 .comment-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
   margin-bottom: 8px;
 }
@@ -416,6 +418,7 @@
 .comment-date {
   font-size: 12px;
   color: #999;
+  white-space: nowrap;
 }
 
 .comment-content {
@@ -494,6 +497,12 @@
   .comment-replies {
     margin-left: 12px;
     padding-left: 12px;
+  }
+
+  .comment-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
   }
 }
 
