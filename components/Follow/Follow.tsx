@@ -3,26 +3,20 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import FollowSidebar, { FollowTab } from './FollowSidebar';
 import {
-  getFollowCount,
   getFollowersWithPage,
   getFollowingsWithPage,
   followUser,
   unfollowUser,
   getCurrentUserId,
   FollowUser,
-  FollowCount,
   FollowPageResponse
 } from '../../utils/followApi';
 import './Follow.css';
 
 const Follow: React.FC = () => {
   const [activeTab, setActiveTab] = useState<FollowTab>('followers');
-  const [followCount, setFollowCount] = useState<FollowCount>({
-    userId: 0,
-    followerCount: 0,
-    followingCount: 0,
-    isFollowing: false
-  });
+  const [followerCount, setFollowerCount] = useState<number>(0);
+  const [followingCount, setFollowingCount] = useState<number>(0);
   const [users, setUsers] = useState<FollowUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);
@@ -31,11 +25,22 @@ const Follow: React.FC = () => {
 
   const myUserId = getCurrentUserId();
 
-  // 팔로우 카운트 조회
-  const loadFollowCount = useCallback(async () => {
-    if (!myUserId) return;
-    const count = await getFollowCount(myUserId);
-    if (count) setFollowCount(count);
+  // 초기 로드 시 두 탭 카운트 모두 가져오기
+  useEffect(() => {
+    const loadAllCounts = async () => {
+      if (!myUserId) return;
+      try {
+        const [followerResult, followingResult] = await Promise.all([
+          getFollowersWithPage(myUserId, 0),
+          getFollowingsWithPage(myUserId, 0),
+        ]);
+        setFollowerCount(followerResult.total_elements ?? followerResult.content?.length ?? 0);
+        setFollowingCount(followingResult.total_elements ?? followingResult.content?.length ?? 0);
+      } catch {
+        // 실패 시 0 유지
+      }
+    };
+    loadAllCounts();
   }, [myUserId]);
 
   // 유저 목록 조회
@@ -46,8 +51,14 @@ const Follow: React.FC = () => {
       let result: FollowPageResponse;
       if (tab === 'followers') {
         result = await getFollowersWithPage(myUserId, page);
+        if (page === 0) {
+          setFollowerCount(result.total_elements ?? result.content?.length ?? 0);
+        }
       } else {
         result = await getFollowingsWithPage(myUserId, page);
+        if (page === 0) {
+          setFollowingCount(result.total_elements ?? result.content?.length ?? 0);
+        }
       }
       setUsers(result.content || []);
       const { content, ...rest } = result;
@@ -60,10 +71,6 @@ const Follow: React.FC = () => {
   }, [myUserId]);
 
   useEffect(() => {
-    loadFollowCount();
-  }, [loadFollowCount]);
-
-  useEffect(() => {
     setCurrentPage(0);
   }, [activeTab]);
 
@@ -71,8 +78,7 @@ const Follow: React.FC = () => {
     loadUsers(activeTab, currentPage);
   }, [activeTab, currentPage, loadUsers]);
 
-  // ─── 팔로잉 탭: 언팔로우 ───────────────────────────────────────────
-  // 팔로잉 목록에 있는 사람은 항상 내가 팔로우 중이므로 언팔로우만 수행
+  // ─── 팔로잉 탭: 언팔로우 ─────────────────────────────────────────────────
   const handleUnfollow = async (user: FollowUser) => {
     if (processingIds.has(user.userId)) return;
 
@@ -80,12 +86,8 @@ const Follow: React.FC = () => {
     try {
       const ok = await unfollowUser(user.userId);
       if (ok) {
-        // 팔로잉 목록에서 해당 유저 제거
         setUsers(prev => prev.filter(u => u.userId !== user.userId));
-        setFollowCount(prev => ({
-          ...prev,
-          followingCount: Math.max(0, prev.followingCount - 1)
-        }));
+        setFollowingCount(prev => Math.max(0, prev - 1));
       }
     } finally {
       setProcessingIds(prev => {
@@ -96,7 +98,7 @@ const Follow: React.FC = () => {
     }
   };
 
-  // ─── 팔로워 탭: 팔로우 / 언팔로우 토글 ──────────────────────────────
+  // ─── 팔로워 탭: 팔로우 / 언팔로우 토글 ──────────────────────────────────
   const handleFollowerToggle = async (user: FollowUser) => {
     if (processingIds.has(user.userId)) return;
 
@@ -108,10 +110,7 @@ const Follow: React.FC = () => {
           setUsers(prev =>
             prev.map(u => u.userId === user.userId ? { ...u, isFollowing: false } : u)
           );
-          setFollowCount(prev => ({
-            ...prev,
-            followingCount: Math.max(0, prev.followingCount - 1)
-          }));
+          setFollowingCount(prev => Math.max(0, prev - 1));
         }
       } else {
         const ok = await followUser(user.userId);
@@ -119,10 +118,7 @@ const Follow: React.FC = () => {
           setUsers(prev =>
             prev.map(u => u.userId === user.userId ? { ...u, isFollowing: true } : u)
           );
-          setFollowCount(prev => ({
-            ...prev,
-            followingCount: prev.followingCount + 1
-          }));
+          setFollowingCount(prev => prev + 1);
         }
       }
     } finally {
@@ -149,7 +145,7 @@ const Follow: React.FC = () => {
   const getAvatarChar = (nickname: string) =>
     nickname?.charAt(0)?.toUpperCase() || '?';
 
-  // ─── 팔로잉 탭 버튼 렌더 ─────────────────────────────────────────────
+  // ─── 팔로잉 탭 버튼 ──────────────────────────────────────────────────────
   const renderFollowingButton = (user: FollowUser) => {
     if (user.userId === myUserId) return null;
     const isProcessing = processingIds.has(user.userId);
@@ -164,7 +160,7 @@ const Follow: React.FC = () => {
     );
   };
 
-  // ─── 팔로워 탭 버튼 렌더 ─────────────────────────────────────────────
+  // ─── 팔로워 탭 버튼 ──────────────────────────────────────────────────────
   const renderFollowerButton = (user: FollowUser) => {
     if (user.userId === myUserId) return null;
     const isProcessing = processingIds.has(user.userId);
@@ -211,15 +207,11 @@ const Follow: React.FC = () => {
     return (
       <>
         <div className="follow-list-container">
-          {/* key를 userId + index 조합으로 사용해 중복 방지 */}
           {users.map((user, index) => (
             <div key={`${user.userId}-${index}`} className="follow-user-item">
-              {/* 아바타 */}
               <div className="follow-user-avatar">
                 {getAvatarChar(user.nickname)}
               </div>
-
-              {/* 유저 정보 */}
               <div className="follow-user-info">
                 <div className="follow-user-nickname">{user.nickname}</div>
                 <div className="follow-user-email">{user.email}</div>
@@ -227,8 +219,6 @@ const Follow: React.FC = () => {
                   {activeTab === 'followers' ? '팔로우한 날짜' : '팔로잉한 날짜'}: {formatDate(user.followedAt)}
                 </div>
               </div>
-
-              {/* 탭에 따라 다른 버튼 렌더링 */}
               {activeTab === 'followings'
                 ? renderFollowingButton(user)
                 : renderFollowerButton(user)
@@ -237,7 +227,6 @@ const Follow: React.FC = () => {
           ))}
         </div>
 
-        {/* 페이지네이션 */}
         {pageInfo && pageInfo.total_pages > 1 && (
           <div className="follow-pagination">
             <button
@@ -271,15 +260,12 @@ const Follow: React.FC = () => {
       </div>
 
       <div className="follow-layout-wrapper">
-        {/* 사이드바 */}
         <FollowSidebar
           activeTab={activeTab}
           onTabChange={(tab) => setActiveTab(tab)}
-          followerCount={followCount.followerCount}
-          followingCount={followCount.followingCount}
+          followerCount={followerCount}
+          followingCount={followingCount}
         />
-
-        {/* 메인 콘텐츠 */}
         <main className="follow-main-content">
           {renderUserList()}
         </main>

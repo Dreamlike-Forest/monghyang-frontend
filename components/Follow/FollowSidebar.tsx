@@ -24,14 +24,14 @@ const FollowSidebar: React.FC<FollowSidebarProps> = ({
           onClick={() => onTabChange('followers')}
         >
           팔로워
-          <span className="follow-menu-count">{followerCount}</span>
+          <span className="follow-menu-count">{isNaN(followerCount) ? 0 : (followerCount || 0)}</span>
         </li>
         <li
           className={`follow-menu-item ${activeTab === 'followings' ? 'follow-menu-item-active' : ''}`}
           onClick={() => onTabChange('followings')}
         >
           팔로잉
-          <span className="follow-menu-count">{followingCount}</span>
+          <span className="follow-menu-count">{isNaN(followingCount) ? 0 : (followingCount || 0)}</span>
         </li>
       </ul>
     </aside>
